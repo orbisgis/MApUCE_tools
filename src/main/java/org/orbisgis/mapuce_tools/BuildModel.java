@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.orbisgis.mapuce_tools;
 
 import java.io.FileOutputStream;
@@ -13,16 +8,18 @@ import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
 /**
- *
- * @author mlgall
+ * Use to build the file .model and do some Evaluation 
+ * @author Melvin Le Gall
  */
 public class BuildModel {
     
-    
+    //Path to acess the .model
     private String pathModel;
     
     //use to make Evaluation after build
     private RandomForest rf;
+    
+    //Instances create to build the Random Forest
     private Instances learning;
     
     /**
@@ -89,11 +86,20 @@ public class BuildModel {
     }
     
     
+    /**
+     * 
+     * @return the Classifier Object in the file .model
+     * @throws Exception 
+     */
     public RandomForest getClassifier() throws Exception{
 
         return (RandomForest) weka.core.SerializationHelper.read(pathModel);
     }
     
+    /**
+     * Method use to evaluate the accuracy of the alogrithm
+     * @throws Exception 
+     */
     public void evaluate() throws Exception{
         
         Evaluation eval = new Evaluation(learning);

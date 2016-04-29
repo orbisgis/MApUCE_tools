@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.orbisgis.mapuce_tools;
 
 import java.sql.ResultSet;
@@ -18,8 +13,13 @@ import weka.experiment.InstanceQuery;
  */
 public class Classify {
 
+    //the model used to classifies
     RandomForest model;
+    
+    //Instances which is classified
     Instances dataToClassify;
+    
+    //Contains the class result for each line
     ArrayList<String> resultClassify;
     
     /**
@@ -48,7 +48,11 @@ public class Classify {
         
     }
     
-    
+    /**
+     * Execute request via a connection to the database
+     * @param query query like "SELECT * FROM the_table"
+     * @return ResultSet of the request
+     */
     public ResultSet executeQuery(String query){
         
         return null;
@@ -78,7 +82,9 @@ public class Classify {
         return resultClassify =ret;       
     }
     
-    
+    /**
+     * Method for update the class of line in database
+     */
     public void updateDataBase(){
         
 //        for(String item : resultClassify){
