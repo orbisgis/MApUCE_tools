@@ -1,4 +1,4 @@
-package org.orbisgis.mapuce_tools;
+package org.orbisgis.mapuce;
 
 import org.apache.commons.io.IOUtils;
 import org.orbisgis.wpsservice.LocalWpsService;

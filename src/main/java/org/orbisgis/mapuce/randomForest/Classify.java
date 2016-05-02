@@ -1,4 +1,4 @@
-package org.orbisgis.mapuce_tools;
+package org.orbisgis.mapuce.randomForest;
 
 import java.sql.ResultSet;
 import java.util.ArrayList;
