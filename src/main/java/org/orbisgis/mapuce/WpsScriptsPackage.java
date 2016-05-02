@@ -1,25 +1,23 @@
 package org.orbisgis.mapuce;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import org.apache.commons.io.IOUtils;
-import org.orbisgis.wpsservice.LocalWpsService;
-
-import org.orbisgis.wpsservice.controller.process.ProcessIdentifier;
 import org.orbisgis.wpsclient.WpsClient;
+import org.orbisgis.wpsservice.LocalWpsService;
+import org.orbisgis.wpsservice.controller.process.ProcessIdentifier;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
 
 /**
  * Main class of the plugin which declares the scripts to add, their locations in the process tree and the icons
@@ -133,16 +131,12 @@ public class WpsScriptsPackage {
      *      This methods adds each script one by one under a specific node for each one.
      */
     @Activate
-    public void activate(){
-        /*
+    public void activate(){        
         listIdProcess = new ArrayList<>();
         //Check the WpsService
         if(localWpsService != null){
             //Default method to load the scripts
-            defaultLoadScript("wps/script/sample", new String[]{"icon.png"});
-            //Custom method to load the scripts
-            customLoadScript();
-
+            defaultLoadScript("MApUCE", new String[]{"icon.png"});
             //Check the WpsClient
             if(wpsClient != null){
                 //Refresh the client
@@ -154,7 +148,7 @@ public class WpsScriptsPackage {
                     "Unable to retrieve the WpsService from OrbisGIS.\n" +
                             "The processes won't be loaded.");
         }
-        */
+        
     }
 
     /**
@@ -164,8 +158,7 @@ public class WpsScriptsPackage {
      * Then if the WpsClient is ready, refresh it.
      */
     @Deactivate
-    public void deactivate(){
-        /*
+    public void deactivate(){        
         if(localWpsService != null) {
             removeAllScripts();
             if(wpsClient != null) {
@@ -177,7 +170,7 @@ public class WpsScriptsPackage {
                     "Unable to retrieve the WpsService from OrbisGIS.\n" +
                             "The processes won't be removed.");
         }
-        */
+        
     }
 
     /**
@@ -230,26 +223,7 @@ public class WpsScriptsPackage {
         }
     }
 
-    /**
-     * This method loads the scripts one by one under different node path with different icons.
-     * (Be careful before any modification)
-     */
-    private void customLoadScript(){
-        try {
-            URL scriptUrl = this.getClass().getResource("scripts/scriptSample.groovy");
-            final File tempFile = File.createTempFile("wpsprocess", ".groovy");
-            tempFile.deleteOnExit();
-            try (FileOutputStream out = new FileOutputStream(tempFile)) {
-                IOUtils.copy(scriptUrl.openStream(), out);
-            }
-            localWpsService.addLocalScript(tempFile,
-                    new String[]{loadIcon("icon.png")},
-                    true,
-                    "wps/script/sample");
-        } catch (IOException e) {
-            LoggerFactory.getLogger(WpsScriptsPackage.class).error(e.getMessage());
-        }
-    }
+   
 
     /**
      * This method removes all the scripts contained in the 'listIdProcess' list. (Be careful before any modification)
@@ -292,25 +266,5 @@ public class WpsScriptsPackage {
             }
         }
         return names;
-    }
-
-    /**
-     * This method copy the an icon into the temporary system folder to make it accessible by the WpsClient
-     */
-    private String loadIcon(String iconName){
-        URL iconUrl = this.getClass().getResource("icons"+File.separator+iconName);
-        try {
-            //Create a temporary File object
-            final File tempFile = File.createTempFile("wpsprocessicon", ".png");
-            tempFile.deleteOnExit();
-            //Copy the content of the resource file in the temporary file.
-            try (FileOutputStream out = new FileOutputStream(tempFile)) {
-                IOUtils.copy(iconUrl.openStream(), out);
-            }
-            return tempFile.getAbsolutePath();
-        } catch (IOException e) {
-            LoggerFactory.getLogger(WpsScriptsPackage.class).error(e.getMessage());
-        }
-        return null;
-    }
+    }  
 }
