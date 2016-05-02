@@ -1,7 +1,14 @@
 package org.orbisgis.mapuce.randomForest;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
@@ -21,6 +28,9 @@ public class BuildModel {
     
     //Instances create to build the Random Forest
     private Instances learning;
+    
+    static final int BUFFER = 2048;
+    byte data[] = new byte[BUFFER];
     
     /**
      * Build the File .model by using RandomForest algorithm
@@ -107,5 +117,33 @@ public class BuildModel {
         
         System.out.println(eval.toSummaryString("\nResults\n======\n", false));       
         System.out.println(eval.toMatrixString());
+    }
+    
+    public void modelToZip(String path) throws FileNotFoundException, IOException{
+        
+        
+        FileOutputStream dest= new FileOutputStream(path);
+        BufferedOutputStream buff = new BufferedOutputStream(dest);
+        ZipOutputStream out = new ZipOutputStream(buff);
+        
+        out.setMethod(ZipOutputStream.DEFLATED);
+        out.setLevel(9);
+        
+        FileInputStream fi = new FileInputStream(pathModel);
+        BufferedInputStream buffi = new BufferedInputStream(fi, BUFFER);
+        ZipEntry entry= new ZipEntry(pathModel);
+        out.putNextEntry(entry);
+
+        int count;
+        while((count = buffi.read(data, 0, BUFFER)) != -1) {
+            out.write(data, 0, count);
+        }
+        
+         out.closeEntry();
+         buffi.close();
+         out.close();
+
+                
+
     }
 }
