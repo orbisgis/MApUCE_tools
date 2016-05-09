@@ -77,8 +77,7 @@
         <dependency>
             <groupId>org.orbisgis</groupId>
             <artifactId>h2spatial</artifactId>
-            <version>1.1.1-SNAPSHOT</version>
-            <scope>test</scope>
+            <version>1.2.4-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
         <dependency>

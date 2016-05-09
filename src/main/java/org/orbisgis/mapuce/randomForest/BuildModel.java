@@ -1,14 +1,8 @@
 package org.orbisgis.mapuce.randomForest;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
@@ -29,8 +23,7 @@ public class BuildModel {
     //Instances create to build the Random Forest
     private Instances learning;
     
-    static final int BUFFER = 2048;
-    byte data[] = new byte[BUFFER];
+
     
     /**
      * Build the File .model by using RandomForest algorithm
@@ -40,18 +33,22 @@ public class BuildModel {
      * @param options List of options (ref Weka.classifier.setOptions())
      * @throws Exception 
      */
-    public BuildModel(String path,String pathModelFile, int classIndex,String[] options) throws Exception{
+    public BuildModel(String path,String pathModelFile, int classIndex,String[] options,boolean saveFile) throws Exception{
         
+    
         learning = this.makeInstances(path, classIndex);
         
         rf = new RandomForest();
         rf.setOptions(options);
         rf.buildClassifier(learning);     
          
-        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(pathModelFile));
-        oos.writeObject(rf);
-        oos.flush();
-        oos.close();
+        if(saveFile){
+           ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(pathModelFile));
+           oos.writeObject(rf);
+           oos.flush();
+           oos.close(); 
+        }
+        
         
         pathModel = pathModelFile;
     }
@@ -63,18 +60,20 @@ public class BuildModel {
      * @param classIndex Collumun where the class is
      * @throws Exception 
      */
-    public BuildModel(String path,String pathModelFile, int classIndex) throws Exception{
+    public BuildModel(String path,String pathModelFile, int classIndex, boolean saveFile) throws Exception{
         
         Instances train = this.makeInstances(path, classIndex);
 
         rf = new RandomForest();
         rf.buildClassifier(train);
-         
-        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(pathModelFile));
+        if(saveFile){
+           ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(pathModelFile));
         oos.writeObject(rf);
         oos.flush();
         oos.close();
-        
+          
+        } 
+       
         pathModel = pathModelFile;
     }
     
@@ -119,31 +118,4 @@ public class BuildModel {
         System.out.println(eval.toMatrixString());
     }
     
-    public void modelToZip(String path) throws FileNotFoundException, IOException{
-        
-        
-        FileOutputStream dest= new FileOutputStream(path);
-        BufferedOutputStream buff = new BufferedOutputStream(dest);
-        ZipOutputStream out = new ZipOutputStream(buff);
-        
-        out.setMethod(ZipOutputStream.DEFLATED);
-        out.setLevel(9);
-        
-        FileInputStream fi = new FileInputStream(pathModel);
-        BufferedInputStream buffi = new BufferedInputStream(fi, BUFFER);
-        ZipEntry entry= new ZipEntry(pathModel);
-        out.putNextEntry(entry);
-
-        int count;
-        while((count = buffi.read(data, 0, BUFFER)) != -1) {
-            out.write(data, 0, count);
-        }
-        
-         out.closeEntry();
-         buffi.close();
-         out.close();
-
-                
-
-    }
 }

@@ -5,6 +5,7 @@ package org.orbisgis.mapuce.randomForest;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -35,7 +36,14 @@ public class RandomForestTest {
     @BeforeClass
     public static void tearUp() throws Exception {
         // Keep a connection alive to not close the DataBase on each unit test
-        connection = SpatialH2UT.createSpatialDataBase(DB_NAME);
+        //TODO si existence alors open else create
+       connection = SpatialH2UT.openSpatialDataBase(DB_NAME);
+       
+       if(connection == null){
+           connection = SpatialH2UT.createSpatialDataBase(DB_NAME);
+       }
+        
+        
         
     }
 
@@ -59,13 +67,16 @@ public class RandomForestTest {
     public void testCreateInstancesFromDB() throws SQLException, IOException, Exception {
         Statement stat = connection.createStatement();
         //Create the tables
-        String sql = "CREATE TABLE COMPANY " +
-                      "(ID INT PRIMARY KEY     NOT NULL," +
-                      " NAME           TEXT    NOT NULL, " +
-                      " AGE            INT     NOT NULL, " +
-                      " ADDRESS        VARCHAR(50), " +
-                      " SALARY         REAL)";
-        stat.executeUpdate(sql);
+        String sql = "DROP TABLE IF EXISTS COMPANY ";
+        stat.execute(sql);
+        
+        sql = "CREATE TABLE COMPANY " +
+                "(ID INT PRIMARY KEY     NOT NULL," +
+                " NAME           VARCHAR(50)   NOT NULL, " +
+                " AGE            INT     NOT NULL, " +
+                " ADDRESS        VARCHAR(50), " +
+                " SALARY         REAL)";
+        stat.execute(sql);
 
         sql = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) "
                + "VALUES (2, 'Allen', 25, 'Texas', 15000.00 );";
@@ -77,7 +88,9 @@ public class RandomForestTest {
 
         sql = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) "
                + "VALUES (4, 'Mark', 25, 'Rich-Mond', 65000.00 );";
+        
         stat.executeUpdate(sql);
+        
         
         
         sql = "SELECT * FROM COMPANY";
@@ -90,13 +103,9 @@ public class RandomForestTest {
         
         //===========Instances contains something==============
         res = stat.executeQuery(sql);
-        String pathname = "/home/mlgall/Documents/RandomForest/data/RandomForest.model";
-        Classify test = new Classify(pathname);
-        Instances inst = test.resultSetToInstances(res);
-        inst.setClassIndex(0);
         
-        //examples of representation of Instances
-        System.err.println(inst);
+        Classifier test = new Classifier();
+        Instances inst = test.resultSetToInstances(res);
         
         assertNotNull("Instances was null",inst.isEmpty());
         
