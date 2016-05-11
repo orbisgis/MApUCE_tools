@@ -2,7 +2,7 @@ package org.orbisgis.mapuce.randomForest;
 
 
 import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
+import org.slf4j.LoggerFactory;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
@@ -37,16 +37,17 @@ public class BuildModel {
         
     
         learning = this.makeInstances(path, classIndex);
+  
+        Object[] write = new Object[2];
         
         rf = new RandomForest();
-        rf.setOptions(options);
-        rf.buildClassifier(learning);     
-         
+        rf.setOptions(options);  
+        rf.buildClassifier(learning);
+        
+        write[0] = learning.classAttribute();
+        write[1] = rf; 
         if(saveFile){
-           ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(pathModelFile));
-           oos.writeObject(rf);
-           oos.flush();
-           oos.close(); 
+             weka.core.SerializationHelper.writeAll(new FileOutputStream(pathModelFile), write);
         }
         
         
@@ -62,15 +63,16 @@ public class BuildModel {
      */
     public BuildModel(String path,String pathModelFile, int classIndex, boolean saveFile) throws Exception{
         
-        Instances train = this.makeInstances(path, classIndex);
-
+        learning = this.makeInstances(path, classIndex);
+        Object[] write = new Object[2];
+        
         rf = new RandomForest();
-        rf.buildClassifier(train);
+        rf.buildClassifier(learning);
+        
+        write[0] = learning.classAttribute();
+        write[1] = rf;
         if(saveFile){
-           ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(pathModelFile));
-        oos.writeObject(rf);
-        oos.flush();
-        oos.close();
+            weka.core.SerializationHelper.writeAll(new FileOutputStream(pathModelFile), write);
           
         } 
        
@@ -85,11 +87,13 @@ public class BuildModel {
      * @return the Instances necessary to create Training data
      * @throws Exception 
      */
-    private Instances makeInstances(String path, int classIndex) throws Exception{
+    private Instances makeInstances(String path, int classIndex) 
+            throws Exception{
         
         ConverterUtils.DataSource sourceTestValue = new ConverterUtils.DataSource(path);
     	Instances value = sourceTestValue.getDataSet();
     	value.setClassIndex(classIndex);
+        value.setRelationName("classification");
         
         return value;
     }
@@ -100,9 +104,9 @@ public class BuildModel {
      * @return the Classifier Object in the file .model
      * @throws Exception 
      */
-    public RandomForest getClassifier() throws Exception{
+    public Object[] getClassifier() throws Exception{
 
-        return (RandomForest) weka.core.SerializationHelper.read(pathModel);
+        return (Object[]) weka.core.SerializationHelper.readAll(pathModel);
     }
     
     /**
@@ -113,9 +117,9 @@ public class BuildModel {
         
         Evaluation eval = new Evaluation(learning);
         eval.evaluateModel(rf,learning);
-        
-        System.out.println(eval.toSummaryString("\nResults\n======\n", false));       
-        System.out.println(eval.toMatrixString());
+        LoggerFactory.getLogger(BuildModel.class)
+                .info(eval.toSummaryString("\nResults\n======\n", false));
+       
     }
     
 }

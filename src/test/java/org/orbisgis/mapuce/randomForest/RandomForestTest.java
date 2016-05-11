@@ -5,145 +5,131 @@ package org.orbisgis.mapuce.randomForest;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-import java.io.File;
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import org.h2gis.h2spatial.ut.SpatialH2UT;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import java.util.HashMap;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import weka.core.Instances;
-import weka.experiment.InstanceQuery;
 
 /**
  *
- * @author ebocher
+ * @author ebocher Melvin Le Gall
  */
 public class RandomForestTest {
-
-    private static Connection connection;
-    private static final String DB_NAME = "RandomForestTest";
-    private Statement st;
-
-    
-    @BeforeClass
-    public static void tearUp() throws Exception {
-        // Keep a connection alive to not close the DataBase on each unit test
-        //TODO si existence alors open else create
-       connection = SpatialH2UT.openSpatialDataBase(DB_NAME);
-       
-       if(connection == null){
-           connection = SpatialH2UT.createSpatialDataBase(DB_NAME);
-       }
-        
-        
-        
-    }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        connection.close();
-    }
-    
-    @Before
-    public void setUpStatement() throws Exception {
-        st = connection.createStatement();
-    }
-
-    @After
-    public void tearDownStatement() throws Exception {
-        st.close();
-    }
-    
     
     @Test
     public void testCreateInstancesFromDB() throws SQLException, IOException, Exception {
-        Statement stat = connection.createStatement();
-        //Create the tables
-        String sql = "DROP TABLE IF EXISTS COMPANY ";
+        
+        ClassifyData test = new ClassifyData(this.getClass().getResource("iris.model").getPath());
+        Statement stat = test.getConnection().createStatement();
+        //=================== Create the tables ============
+        String sql = "DROP TABLE IF EXISTS IRIS ";
         stat.execute(sql);
         
-        sql = "CREATE TABLE COMPANY " +
-                "(ID INT PRIMARY KEY     NOT NULL," +
-                " NAME           VARCHAR(50)   NOT NULL, " +
-                " AGE            INT     NOT NULL, " +
-                " ADDRESS        VARCHAR(50), " +
-                " SALARY         REAL)";
+        sql = "CREATE TABLE IRIS " +
+                "(sepallength    REAL     NOT NULL," +
+                " sepalwidth     REAL   NOT NULL, " +
+                " petallength    REAL    NOT NULL, " +
+                " petalwidth        REAL)";
         stat.execute(sql);
-
-        sql = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) "
-               + "VALUES (2, 'Allen', 25, 'Texas', 15000.00 );";
+        //==================== End create ============
+        
+        //==================== Insert some rows ================
+        sql = "INSERT INTO IRIS (sepallength,sepalwidth,petallength,petalwidth) "
+               + "VALUES (5.3,3.7,1.5,0.2);";
         stat.executeUpdate(sql);
 
-        sql = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) "
-               + "VALUES (3, 'Teddy', 23, 'Norway', 20000.00 );";
+        sql = "INSERT INTO IRIS (sepallength,sepalwidth,petallength,petalwidth) "
+               + "VALUES (5.0,3.3,1.4,0.2);";
         stat.executeUpdate(sql);
 
-        sql = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) "
-               + "VALUES (4, 'Mark', 25, 'Rich-Mond', 65000.00 );";
-        
+        sql = "INSERT INTO IRIS (sepallength,sepalwidth,petallength,petalwidth) "
+               + "VALUES (6.3,3.3,4.7,1.6);";
         stat.executeUpdate(sql);
         
+        sql = "INSERT INTO IRIS (sepallength,sepalwidth,petallength,petalwidth) "
+               + "VALUES (4.9,2.4,3.3,1.0);";
+        stat.executeUpdate(sql);
         
+        sql = "INSERT INTO IRIS (sepallength,sepalwidth,petallength,petalwidth) "
+               + "VALUES (6.4,2.7,5.3,1.9);";
+        stat.executeUpdate(sql);
         
-        sql = "SELECT * FROM COMPANY";
+        sql = "INSERT INTO IRIS (sepallength,sepalwidth,petallength,petalwidth) "
+               + "VALUES (6.8,3.0,5.5,2.1);";
+        stat.executeUpdate(sql);
+        //==================== End insert =====================
+        
+        //Get all the data in my database
+        sql = "SELECT * FROM IRIS";
         
         //===========ResultSet contains something==============
-        ResultSet res = stat.executeQuery(sql);
+        ResultSet res = test.executeQuery(sql,"sepallength");
 
         assertTrue("failure - ResultSet have nothing", res.next());
         res.close();
         
         //===========Instances contains something==============
         res = stat.executeQuery(sql);
-        
-        Classifier test = new Classifier();
+                
         Instances inst = test.resultSetToInstances(res);
+        inst.setClassIndex(0);
+        HashMap<Double, String> map = test.classifyData("tableResultTest");
         
         assertNotNull("Instances was null",inst.isEmpty());
         
-        
         //===========Number of features=============
+        
         ResultSetMetaData rsmd = res.getMetaData();
-        int columnsNumber = rsmd.getColumnCount();
+        //add one because the class are not represent in the table
+        int columnsNumber = rsmd.getColumnCount()+1;
         int featureInst = inst.numAttributes();
         
         assertSame("Not the same number of features",columnsNumber,featureInst);
         
         
-        
+        /*
         //===========Compare each value for adress============
         res.close();
         res = stat.executeQuery(sql);
         //Compare value of each adress
         int j=0;
         while (res.next()) {
-            assertSame("should be same", res.getString(4), inst.get(j).stringValue(3));
+            //assertSame("should be same", res.getString(4), inst.get(j).stringValue(3));
             j++;
         }
+       */
         
         //===========Number of rows=============
-        int nbRowsResultSet = j;
+        res.close();
+        res = stat.executeQuery(sql);
+        
         int nbRowsInst = inst.numInstances();
+        int nbRowsResultSet = 0;
+        while (res.next()) { nbRowsResultSet++; }    
         assertSame("Not the same number of rows",nbRowsResultSet,nbRowsInst);
         
         
+        //======= End =========
         stat.close();
+        test.resetTableResult();
+        test.getConnection().close();
         
         
     }
     
     @Test
-    public void testCreateModel() throws SQLException, IOException {
-        Statement stat = connection.createStatement();
-        //Create the tables
+    public void testCreateModel() throws SQLException, IOException, Exception {
+
+        String arffFile=this.getClass().getResource("iris.arff").getPath();
+        String modelFile=this.getClass().getResource("iris.model").getPath();         
+        BuildModel model = new BuildModel(arffFile,modelFile,4,true);
+        Object[] obj= model.getClassifier();
+        model.evaluate();
         
     }
 
