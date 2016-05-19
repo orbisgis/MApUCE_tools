@@ -112,9 +112,21 @@ public class BuildModel {
      * @return the Classifier Object in the file .model
      * @throws Exception 
      */
-    public Object[] getClassifier() throws Exception{
+    public RandomForest getClassifier() throws Exception{
 
-        return (Object[]) weka.core.SerializationHelper.readAll(pathModel);
+        Object[] obj = weka.core.SerializationHelper.readAll(pathModel);
+        return (RandomForest) obj[0];
+    }
+    
+    /**
+     * 
+     * @return the Header contain in the file .model
+     * @throws Exception 
+     */
+    public Instances getHeader() throws Exception{
+
+        Object[] obj = weka.core.SerializationHelper.readAll(pathModel);
+        return (Instances) obj[1];
     }
     
     /**

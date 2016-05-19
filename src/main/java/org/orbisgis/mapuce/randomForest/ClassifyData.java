@@ -9,6 +9,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Set;
+import org.h2gis.utilities.TableLocation;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
@@ -39,15 +41,11 @@ public class ClassifyData {
 
     //Connection at DB
     private static Connection connection;
-    
-    //Statement for execute query
-    private static Statement stat;
-    
-    //name of the table where the results are stored
-    private static String nameTableResult;
-    
+       
     //used to optimize performance
     private static final int BATCH_MAX_SIZE = 100;
+    
+    private Logger LOGGER = LoggerFactory.getLogger(ClassifyData.class);
     
 
     /**
@@ -63,7 +61,6 @@ public class ClassifyData {
         attClass = inst.classAttribute();
 
         connection = conn;
-        stat = connection.createStatement();
     }
     
     /**
@@ -78,7 +75,6 @@ public class ClassifyData {
         attClass = inst.classAttribute();
         
         connection = conn;
-        stat = connection.createStatement();
     }
     
     /**
@@ -91,11 +87,12 @@ public class ClassifyData {
     public Instances resultSetToInstances(ResultSet rs,String nameColIndex) throws Exception{
 
         try{
-           nameTypeIndex = rs.getMetaData().getColumnTypeName(rs.findColumn(nameColIndex));
-           this.colIndex = rs.findColumn(nameColIndex)-1; 
+           int col = rs.findColumn(nameColIndex);
+           nameTypeIndex = rs.getMetaData().getColumnTypeName(col);
+           this.colIndex = col-1; 
         }
         catch(SQLException e){
-            LoggerFactory.getLogger(ClassifyData.class).error(e.getMessage());
+            LOGGER.error(e.getMessage());
         }
         
         
@@ -127,8 +124,8 @@ public class ClassifyData {
     
         HashMap<Object,String> ret = new HashMap<>();
         
-        this.nameTableResult = nameTableResult;
-        
+        TableLocation nameTable = new TableLocation(nameTableResult);
+
         if(!dataToClassify.isEmpty()){
          
           for (int i = 0; i < dataToClassify.numInstances(); i++) {
@@ -147,13 +144,13 @@ public class ClassifyData {
             
             ret.put(index,predString);
             if(ret.size() >= BATCH_MAX_SIZE){
-                tableResult(ret);
+                tableResult(ret,nameTable);
                 ret.clear();
             }
             
           }
           if(ret.size() < BATCH_MAX_SIZE){
-              tableResult(ret);
+              tableResult(ret,nameTable);
               ret.clear();
           }
           
@@ -167,19 +164,18 @@ public class ClassifyData {
      * @param map value to insert in table result
      * @ret HashMap wich stores the id and class
      */
-    private void tableResult(HashMap<Object,String> map) throws SQLException{
+    private void tableResult(HashMap<Object,String> map,TableLocation tab) throws SQLException{
         
         PreparedStatement st = null;
-        
-        String createTableSQL =  "CREATE TABLE IF NOT EXISTS "+nameTableResult+"("
+        Statement sta = connection.createStatement();
+
+        String createTableSQL =  "CREATE TABLE IF NOT EXISTS "+tab.toString()+"("
 				+ "INDEX "+nameTypeIndex+ " NOT NULL, "
 				+ "CLASS VARCHAR(50) NOT NULL, "
 				+ ")";
+        sta.execute(createTableSQL);
         
-        st = connection.prepareStatement(createTableSQL);
-        st.execute();
-        
-        String insertTableSQL = "INSERT INTO "+nameTableResult + "(INDEX, CLASS)"
+        String insertTableSQL = "INSERT INTO "+tab.toString() + "(INDEX, CLASS)"
                                 +"VALUES (?,?)";
         st = connection.prepareStatement(insertTableSQL);
         
@@ -198,36 +194,6 @@ public class ClassifyData {
           
         st.executeBatch();
         st.close();
-    }
-    
-    /**
-     * reset the table result use for this classification 
-     * @throws SQLException 
-     */
-    public void resetTableResult() throws SQLException{
-        String sql = "DROP TABLE IF EXISTS "+nameTableResult;
-        stat.execute(sql);
-    }
-    
-    /**
-     * 
-     * @return name of table result 
-     */
-    public String getNameTableResult(){ return this.nameTableResult;}
-    
-    /**
-     * Print the table result in the logger
-     * @throws SQLException 
-     */
-    public void printTableResult() throws SQLException{
-        
-        String sql = "SELECT * FROM "+nameTableResult;
-        ResultSet res = stat.executeQuery(sql);
-        String result="";
-        while(res.next()){
-            result+="ID: "+res.getObject(1)+" Class: "+res.getString(2)+"\n";
-        }
-        LoggerFactory.getLogger(ClassifyData.class).info("\n"+result);
     }
     
 }
