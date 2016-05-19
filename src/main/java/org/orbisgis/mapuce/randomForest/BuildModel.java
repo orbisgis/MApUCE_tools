@@ -1,7 +1,8 @@
 package org.orbisgis.mapuce.randomForest;
 
+
 import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
+import org.slf4j.LoggerFactory;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
@@ -22,6 +23,8 @@ public class BuildModel {
     //Instances create to build the Random Forest
     private Instances learning;
     
+
+    
     /**
      * Build the File .model by using RandomForest algorithm
      * @param path path where are stored the data use to build the forest
@@ -32,17 +35,25 @@ public class BuildModel {
      */
     public BuildModel(String path,String pathModelFile, int classIndex,String[] options) throws Exception{
         
+    
         learning = this.makeInstances(path, classIndex);
+  
+        Object[] write = new Object[2];
         
         rf = new RandomForest();
-        rf.setOptions(options);
-        rf.buildClassifier(learning);     
-         
-        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(pathModelFile));
-        oos.writeObject(rf);
-        oos.flush();
-        oos.close();
+        rf.setOptions(options);  
+        rf.buildClassifier(learning);
+        write[0] = rf; 
         
+        //Create new Instances for save only the header of learning Instances
+        Instances header = new Instances(learning);
+        //Delete each Instance
+        //Can't use directly the Instances learning because you can't evaluate after
+        header.delete();
+        write[1] = header;
+        
+        weka.core.SerializationHelper.writeAll(new FileOutputStream(pathModelFile), write);
+
         pathModel = pathModelFile;
     }
     
@@ -55,15 +66,23 @@ public class BuildModel {
      */
     public BuildModel(String path,String pathModelFile, int classIndex) throws Exception{
         
-        Instances train = this.makeInstances(path, classIndex);
-
+        learning = this.makeInstances(path, classIndex);  
+        
+        Object[] write = new Object[2];
+        
         rf = new RandomForest();
-        rf.buildClassifier(train);
-         
-        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(pathModelFile));
-        oos.writeObject(rf);
-        oos.flush();
-        oos.close();
+        rf.buildClassifier(learning);
+        write[0] = rf; 
+        
+        //Create new Instances for save only the header of learning Instances
+        Instances header = new Instances(learning);
+        //Delete each Instance
+        header.delete();
+        write[1] = header;
+        
+        weka.core.SerializationHelper.writeAll(new FileOutputStream(pathModelFile), write);
+
+        
         
         pathModel = pathModelFile;
     }
@@ -76,11 +95,13 @@ public class BuildModel {
      * @return the Instances necessary to create Training data
      * @throws Exception 
      */
-    private Instances makeInstances(String path, int classIndex) throws Exception{
+    private Instances makeInstances(String path, int classIndex) 
+            throws Exception{
         
         ConverterUtils.DataSource sourceTestValue = new ConverterUtils.DataSource(path);
     	Instances value = sourceTestValue.getDataSet();
     	value.setClassIndex(classIndex);
+        value.setRelationName("classification");
         
         return value;
     }
@@ -93,7 +114,19 @@ public class BuildModel {
      */
     public RandomForest getClassifier() throws Exception{
 
-        return (RandomForest) weka.core.SerializationHelper.read(pathModel);
+        Object[] obj = weka.core.SerializationHelper.readAll(pathModel);
+        return (RandomForest) obj[0];
+    }
+    
+    /**
+     * 
+     * @return the Header contain in the file .model
+     * @throws Exception 
+     */
+    public Instances getHeader() throws Exception{
+
+        Object[] obj = weka.core.SerializationHelper.readAll(pathModel);
+        return (Instances) obj[1];
     }
     
     /**
@@ -104,8 +137,9 @@ public class BuildModel {
         
         Evaluation eval = new Evaluation(learning);
         eval.evaluateModel(rf,learning);
-        
-        System.out.println(eval.toSummaryString("\nResults\n======\n", false));       
-        System.out.println(eval.toMatrixString());
+        LoggerFactory.getLogger(BuildModel.class)
+                .info(eval.toSummaryString("\nResults\n======\n", false));
+       
     }
+    
 }
