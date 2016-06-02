@@ -79,12 +79,11 @@ public class BuildModel {
         //Delete each Instance
         header.delete();
         write[1] = header;
-        
+
         weka.core.SerializationHelper.writeAll(new FileOutputStream(pathModelFile), write);
 
-        
-        
         pathModel = pathModelFile;
+        System.out.println(pathModelFile);
     }
     
  

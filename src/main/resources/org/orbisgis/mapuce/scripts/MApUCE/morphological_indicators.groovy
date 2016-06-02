@@ -1,19 +1,14 @@
-package org.orbisgis.orbistoolbox.view.utils.scripts;
-
 import org.orbisgis.wpsgroovyapi.input.*
 import org.orbisgis.wpsgroovyapi.output.*
 import org.orbisgis.wpsgroovyapi.process.*
 import java.sql.SQLException;
+import org.h2gis.utilities.*;
 
 
 /**
  * This process compute the morphological indicators needed for the
  * MApUCE project. These indicators are compute for a french NUTS.
- * The user has to specify (mandatory):
- *  - A login and a password to the remote database
- *  - Select an identifier for a city
- *  - A column identifier
- *
+ * 
  * @return 3 files that contains the indicators at USR, BLOCK and 
  * building scales.
  *
@@ -21,16 +16,12 @@ import java.sql.SQLException;
  */
 @Process(title = "Morphological indicators",
         resume = "Compute a set of morphological indicators.",
-        keywords = "Vector,MAPuce")
+        keywords = "Vector,MAPuCE")
 def processing() {
 
+sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS, USR_INDICATORS, BLOCK_INDICATORS"
 sql.execute "DROP SCHEMA IF EXISTS DATA_WORK"
 sql.execute "CREATE SCHEMA DATA_WORK"
-
-def buildIndicatorsTable = "BUILDING_INDICATORS"
-
-//Check if the output table already exist
-tableExists(buildIndicatorsTable);
 
 /**
 * Compute the building indicators
@@ -38,15 +29,15 @@ tableExists(buildIndicatorsTable);
 
 logger.warn "Compute area volume"
 
-sql.execute "CREATE TABLE DATA_WORK.BUILD_AREA_VOL (PK integer primary key, FLOOR_AREA double, VOL double) AS SELECT PK, (AREA * NB_NIV) AS FLOOR_AREA , (AREA * HAUTEUR) AS VOL FROM "+buildingsTable
+sql.execute "CREATE TABLE DATA_WORK.BUILD_AREA_VOL (PK integer primary key, FLOOR_AREA double, VOL double) AS SELECT PK, (AREA * NB_NIV) AS FLOOR_AREA , (AREA * HAUTEUR) AS VOL FROM BUILDINGS_MAPUCE"
 
 logger.warn "Compute form factor"
 
-sql.execute "CREATE TABLE DATA_WORK.BUILD_FORM_FACTOR (PK integer primary key , FORM_FACTOR double) AS SELECT PK , AREA / POWER(PERIMETER ,2) AS FORM_FACTOR FROM "+buildingsTable
+sql.execute "CREATE TABLE DATA_WORK.BUILD_FORM_FACTOR (PK integer primary key , FORM_FACTOR double) AS SELECT PK , AREA / POWER(PERIMETER ,2) AS FORM_FACTOR FROM BUILDINGS_MAPUCE"
 
 logger.warn "Compute concavity"
 
-sql.execute "CREATE TABLE DATA_WORK.BUILD_CONCAVITY (PK integer primary key, CONCAVITY double) AS SELECT PK, (AREA / ST_AREA(ST_CONVEXHULL(THE_GEOM))) AS CONCAVITY FROM "+buildingsTable
+sql.execute "CREATE TABLE DATA_WORK.BUILD_CONCAVITY (PK integer primary key, CONCAVITY double) AS SELECT PK, (AREA / ST_AREA(ST_CONVEXHULL(THE_GEOM))) AS CONCAVITY FROM BUILDINGS_MAPUCE"
 
 logger.warn "Compute contiguity"
 
@@ -74,11 +65,11 @@ sql.execute "UPDATE DATA_WORK.BUILD_COMPACITY SET COMPACITY_N = COMPACITY_R WHER
 
 logger.warn "Compute compactness"
 
-sql.execute "CREATE TABLE DATA_WORK.BUILD_COMPACTNESS (PK integer primary key, COMPACTNESS double) AS SELECT PK, (PERIMETER/(2 * SQRT(PI() * AREA))) AS COMPACTNESS FROM "+buildingsTable
+sql.execute "CREATE TABLE DATA_WORK.BUILD_COMPACTNESS (PK integer primary key, COMPACTNESS double) AS SELECT PK, (PERIMETER/(2 * SQRT(PI() * AREA))) AS COMPACTNESS FROM BUILDINGS_MAPUCE"
 
 logger.warn "Compute main direction"
 
-sql.execute "CREATE TABLE DATA_WORK.BUILD_MAIN_DIR (PK integer primary key, MAIN_DIR_DEG double) AS SELECT PK, MOD(CASEWHEN(ST_LENGTH(ST_MINIMUMDIAMETER(THE_GEOM))<0.1, DEGREES(ST_AZIMUTH(ST_STARTPOINT(THE_GEOM), ST_ENDPOINT(THE_GEOM))), DEGREES(ST_AZIMUTH(ST_STARTPOINT(ST_ROTATE(ST_MINIMUMDIAMETER(THE_GEOM),pi()/2)), ST_ENDPOINT(ST_ROTATE(ST_MINIMUMDIAMETER(THE_GEOM),pi()/2))))),180) as ROADS_MIN_DIR FROM "+buildingsTable
+sql.execute "CREATE TABLE DATA_WORK.BUILD_MAIN_DIR (PK integer primary key, MAIN_DIR_DEG double) AS SELECT PK, MOD(CASEWHEN(ST_LENGTH(ST_MINIMUMDIAMETER(THE_GEOM))<0.1, DEGREES(ST_AZIMUTH(ST_STARTPOINT(THE_GEOM), ST_ENDPOINT(THE_GEOM))), DEGREES(ST_AZIMUTH(ST_STARTPOINT(ST_ROTATE(ST_MINIMUMDIAMETER(THE_GEOM),pi()/2)), ST_ENDPOINT(ST_ROTATE(ST_MINIMUMDIAMETER(THE_GEOM),pi()/2))))),180) as ROADS_MIN_DIR FROM BUILDINGS_MAPUCE"
 
 logger.warn "Compute passive volume ratio"
 
@@ -113,7 +104,7 @@ sql.execute "CREATE INDEX ON DATA_WORK.BUILD_DIST(PK_USR)"
 
 logger.warn "Compute the number of points"
 
-sql.execute "CREATE TABLE DATA_WORK.BUILD_NUM_POINT (PK integer PRIMARY KEY, NUM_POINTS double) AS SELECT PK, (ST_NPoints(THE_GEOM) - (1+ ST_NUMINTERIORRING(THE_GEOM))) AS NUM_POINTS FROM "+buildingsTable
+sql.execute "CREATE TABLE DATA_WORK.BUILD_NUM_POINT (PK integer PRIMARY KEY, NUM_POINTS double) AS SELECT PK, (ST_NPoints(THE_GEOM) - (1+ ST_NUMINTERIORRING(THE_GEOM))) AS NUM_POINTS FROM BUILDINGS_MAPUCE"
 
 logger.warn "Compute the building wall near to the roads"
 
@@ -132,10 +123,31 @@ sql.execute "ALTER TABLE DATA_WORK.BUILD_NEXT_ROAD ADD COLUMN L_RATIO double as 
 sql.execute "ALTER TABLE DATA_WORK.BUILD_NEXT_ROAD ADD COLUMN L_RATIO_CVX double as ROUND(((L_3M*100)/L_CVX),1)"
 
 
+
+
+/**
+* Compute the block of buildings and their indicators
+**/
+
+logger.warn "Compute block of buildings"
+sql.execute "CREATE TABLE DATA_WORK.BLOCK AS SELECT * FROM ST_EXPLODE('SELECT PK_USR, ST_UNION(ST_ACCUM(ST_BUFFER(THE_GEOM,0.01))) as THE_GEOM FROM BUILDINGS_MAPUCE GROUP BY PK_USR')"
+sql.execute "ALTER TABLE DATA_WORK.BLOCK ADD COLUMN PK_BLOCK serial"
+sql.execute "CREATE PRIMARY KEY ON DATA_WORK.BLOCK(PK_BLOCK)"
+sql.execute "CREATE SPATIAL INDEX ON DATA_WORK.BLOCK(THE_GEOM)"
+sql.execute "CREATE INDEX ON DATA_WORK.BLOCK(PK_USR)"
+
+
+logger.warn "Compute the block matrix"
+
+sql.execute "CREATE TABLE DATA_WORK.BUILD_BLOCK_MATRIX (PK_BUILD integer primary key, PK_BLOCK integer) AS SELECT a.PK AS PK_BUILD, (SELECT b.PK_BLOCK FROM DATA_WORK.BLOCK b WHERE a.THE_GEOM && b.THE_GEOM ORDER BY ST_AREA(ST_INTERSECTION(a.THE_GEOM, b.THE_GEOM)) DESC LIMIT 1) AS PK_BLOCK FROM BUILDINGS_MAPUCE a"
+sql.execute "CREATE INDEX ON DATA_WORK.BUILD_BLOCK_MATRIX(PK_BLOCK)"
+
+
+
 logger.warn "Finalize the building indicators table"
 
 sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS"
-sql.execute "CREATE TABLE BUILDING_INDICATORS AS SELECT a.OGC_FID, a.THE_GEOM, a.HAUTEUR_ORIGIN, a.IDZONE , a.PK_USR , a.PK, a.NB_NIV,a.HAUTEUR, a.AREA, a.PERIMETER, b.FLOOR_AREA, b.VOL, c.COMPACITY_R, c.COMPACITY_N, d.COMPACTNESS,e.FORM_FACTOR,f.CONCAVITY,g.MAIN_DIR_DEG,h.B_FLOOR_LONG, h.B_WALL_AREA, h.P_WALL_LONG, h.P_WALL_AREA, h.NB_NEIGHBOR, h.FREE_P_WALL_LONG, h.FREE_EXT_AREA, h.CONTIGUITY,i.P_VOL_RATIO,j.FRACTAL_DIM,k.MIN_DIST, k.MEAN_DIST, k.MAX_DIST,  k.STD_DIST, l.NUM_POINTS, m.L_TOT, a.L_CVX, m.L_3M, m.L_RATIO, m.L_RATIO_CVX FROM BUILDINGS_MAPUCE a LEFT JOIN DATA_WORK.BUILD_AREA_VOL b ON a.PK =b.PK LEFT JOIN DATA_WORK.BUILD_COMPACITY c ON a.PK = c.PK LEFT JOIN DATA_WORK.BUILD_COMPACTNESS d ON a.PK = d.PK LEFT JOIN DATA_WORK.BUILD_FORM_FACTOR e ON a.PK = e.PK LEFT JOIN DATA_WORK.BUILD_CONCAVITY f ON a.PK = f.PK LEFT JOIN DATA_WORK.BUILD_MAIN_DIR g ON a.PK = g.PK LEFT JOIN DATA_WORK.BUILD_CONTIGUITY h ON a.PK = h.PK LEFT JOIN DATA_WORK.BUILD_P_VOL_RATIO i ON a.PK = i.PK LEFT JOIN DATA_WORK.BUILD_FRACTAL j ON a.PK = j.PK LEFT JOIN DATA_WORK.BUILD_DIST k ON a.PK = k.PK LEFT JOIN DATA_WORK.BUILD_NUM_POINT l ON a.PK =l.PK LEFT JOIN DATA_WORK.BUILD_NEXT_ROAD m ON a.PK = m.PK"
+sql.execute "CREATE TABLE BUILDING_INDICATORS AS SELECT a.OGC_FID, a.THE_GEOM, a.HAUTEUR_ORIGIN, a.IDZONE , a.PK_USR , a.PK, a.NB_NIV,a.HAUTEUR, a.AREA, a.PERIMETER, a.INSEE_INDIVIDUS, b.FLOOR_AREA, b.VOL, c.COMPACITY_R, c.COMPACITY_N, d.COMPACTNESS,e.FORM_FACTOR,f.CONCAVITY,g.MAIN_DIR_DEG,h.B_FLOOR_LONG, h.B_WALL_AREA, h.P_WALL_LONG, h.P_WALL_AREA, h.NB_NEIGHBOR, h.FREE_P_WALL_LONG, h.FREE_EXT_AREA, h.CONTIGUITY,i.P_VOL_RATIO,j.FRACTAL_DIM,k.MIN_DIST, k.MEAN_DIST, k.MAX_DIST,  k.STD_DIST, l.NUM_POINTS, m.L_TOT, a.L_CVX, m.L_3M, m.L_RATIO, m.L_RATIO_CVX,n.PK_BLOCK FROM BUILDINGS_MAPUCE a LEFT JOIN DATA_WORK.BUILD_AREA_VOL b ON a.PK =b.PK LEFT JOIN DATA_WORK.BUILD_COMPACITY c ON a.PK = c.PK LEFT JOIN DATA_WORK.BUILD_COMPACTNESS d ON a.PK = d.PK LEFT JOIN DATA_WORK.BUILD_FORM_FACTOR e ON a.PK = e.PK LEFT JOIN DATA_WORK.BUILD_CONCAVITY f ON a.PK = f.PK LEFT JOIN DATA_WORK.BUILD_MAIN_DIR g ON a.PK = g.PK LEFT JOIN DATA_WORK.BUILD_CONTIGUITY h ON a.PK = h.PK LEFT JOIN DATA_WORK.BUILD_P_VOL_RATIO i ON a.PK = i.PK LEFT JOIN DATA_WORK.BUILD_FRACTAL j ON a.PK = j.PK LEFT JOIN DATA_WORK.BUILD_DIST k ON a.PK = k.PK LEFT JOIN DATA_WORK.BUILD_NUM_POINT l ON a.PK =l.PK LEFT JOIN DATA_WORK.BUILD_NEXT_ROAD m ON a.PK = m.PK LEFT JOIN DATA_WORK.BUILD_BLOCK_MATRIX n ON a.PK = n.PK_BUILD"
     
 sql.execute "ALTER TABLE BUILDING_INDICATORS ALTER COLUMN PK SET NOT NULL"
 sql.execute "CREATE PRIMARY KEY ON BUILDING_INDICATORS(PK)"
@@ -155,23 +167,8 @@ sql.execute "UPDATE BUILDING_INDICATORS SET L_TOT = ROUND (PERIMETER ,3) WHERE L
 sql.execute "UPDATE BUILDING_INDICATORS SET L_3M = 0 WHERE L_3M is null"
 sql.execute "UPDATE BUILDING_INDICATORS SET L_RATIO = 0 WHERE L_RATIO is null"
 sql.execute "UPDATE BUILDING_INDICATORS SET L_RATIO_CVX = 0 WHERE L_RATIO_CVX is null"
+sql.execute "UPDATE BUILDING_INDICATORS SET INSEE_INDIVIDUS = 0 WHERE INSEE_INDIVIDUS is null"
 
-/**
-* Compute the block of buildings and their indicators
-**/
-
-logger.warn "Compute block of buildings"
-sql.execute "CREATE TABLE DATA_WORK.BLOCK AS SELECT * FROM ST_EXPLODE('SELECT PK_USR, ST_UNION(ST_ACCUM(ST_BUFFER(THE_GEOM,0.01))) as THE_GEOM FROM BUILDINGS_MAPUCE GROUP BY PK_USR')"
-sql.execute "ALTER TABLE DATA_WORK.BLOCK ADD COLUMN PK_BLOCK serial"
-sql.execute "CREATE PRIMARY KEY ON DATA_WORK.BLOCK(PK_BLOCK)"
-sql.execute "CREATE SPATIAL INDEX ON DATA_WORK.BLOCK(THE_GEOM)"
-sql.execute "CREATE INDEX ON DATA_WORK.BLOCK(PK_USR)"
-
-
-logger.warn "Compute the block matrix"
-
-sql.execute "CREATE TABLE DATA_WORK.BUILD_BLOCK_MATRIX (PK_BUILD integer primary key, PK_BLOCK integer) AS SELECT a.PK AS PK_BUILD, (SELECT b.PK_BLOCK FROM DATA_WORK.BLOCK b WHERE a.THE_GEOM && b.THE_GEOM ORDER BY ST_AREA(ST_INTERSECTION(a.THE_GEOM, b.THE_GEOM)) DESC LIMIT 1) AS PK_BLOCK FROM BUILDINGS_MAPUCE a"
-sql.execute "CREATE INDEX ON DATA_WORK.BUILD_BLOCK_MATRIX(PK_BLOCK)"
 
 logger.warn "Compute the sum of the building area volume by block"
 sql.execute "CREATE TABLE DATA_WORK.BLOCK_AREA_VOL (PK_BLOCK integer primary key, AREA double, FLOOR_AREA double, VOL double) AS SELECT a.PK_BLOCK, SUM(b.AREA) AS AREA, SUM(b.FLOOR_AREA) AS FLOOR_AREA, SUM(b.VOL) AS VOL FROM DATA_WORK.BLOCK a, BUILDING_INDICATORS b, DATA_WORK.BUILD_BLOCK_MATRIX c WHERE a.PK_BLOCK=c.PK_BLOCK AND b.PK=c.PK_BUILD GROUP BY a.PK_BLOCK"
@@ -196,6 +193,9 @@ sql.execute "CREATE TABLE DATA_WORK.BLOCK_MAIN_DIR (PK_BLOCK integer primary key
 logger.warn "Finalize the block indicators table"
 sql.execute "CREATE TABLE BLOCK_INDICATORS (THE_GEOM geometry, PK_BLOCK integer primary key, PK_USR integer, AREA double, FLOOR_AREA double, VOL double, H_MEAN double, H_STD double, COMPACITY double, HOLES_AREA double, HOLES_PERCENT double, MAIN_DIR_DEG double) AS SELECT a.THE_GEOM, a.PK_BLOCK, a.PK_USR, b.AREA, b.FLOOR_AREA, b.VOL,c.H_MEAN, c.H_STD,d.COMPACITY, e.HOLES_AREA, e.HOLES_PERCENT,f.MAIN_DIR_DEG FROM DATA_WORK.BLOCK a LEFT JOIN DATA_WORK.BLOCK_AREA_VOL b ON a.PK_BLOCK = b.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_STD_HEIGHT c ON a.PK_BLOCK = c.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_COMPACITY d ON a.PK_BLOCK = d.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_COURTYARD e ON a.PK_BLOCK = e.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_MAIN_DIR f ON a.PK_BLOCK = f.PK_BLOCK"
 sql.execute "CREATE INDEX ON BLOCK_INDICATORS(PK_USR)"
+
+logger.warn "Update the block id for each buildings"
+
 
 /**
 * Compute the USR indicators
@@ -233,7 +233,7 @@ sql.execute "CREATE TABLE DATA_WORK.USR_BLOCK_TMP  (PK_USR integer primary key, 
 
 
 logger.warn "Finalize the USR indicators table"
-sql.execute "CREATE TABLE USR_INDICATORS  AS SELECT a.PK,a.the_geom,b.FLOOR, b.FLOOR_RATIO,c.COMPAC_MEAN_NW, c.COMPAC_MEAN_W, c.CONTIG_MEAN,c.CONTIG_STD,c.MAIN_DIR_STD,c.H_MEAN,c.H_STD,c.P_VOL_RATIO_MEAN,c.B_AREA, c.B_VOL, c.B_VOL_M,c.BUILD_NUMB, c.MIN_M_DIST, c.MEAN_M_DIST, c.MEAN_STD_DIST,m.B_HOLES_AREA_MEAN,m.B_STD_H_MEAN,m.B_M_NW_COMPACITY, m.B_M_W_COMPACITY, m.B_STD_COMPACITY, p.DIST_TO_CENTER,q.BUILD_DENS, q.HYDRO_DENS, q.VEGET_DENS, q.ROAD_DENS, c.EXT_ENV_AREA FROM USR_MAPUCE a LEFT JOIN DATA_WORK.USR_BUILD_FLOOR_RATIO b ON a.PK = b.PK_USR LEFT JOIN DATA_WORK.USR_BUILD_TMP c ON a.PK = c.PK_USR LEFT JOIN DATA_WORK.USR_BLOCK_TMP  m ON a.PK = m.PK_USR LEFT JOIN DATA_WORK.USR_TO_CENTER p ON a.PK = p.PK_USR LEFT JOIN DATA_WORK.USR_DENS_AREA q ON a.PK = q.PK_USR"
+sql.execute "CREATE TABLE USR_INDICATORS  AS SELECT a.PK,a.the_geom,a.insee_individus,a.insee_menages,a.insee_men_coll,a.insee_men_surf,a.insee_surface_collectif,a.vegetation_surface , a.route_surface ,a.route_longueur , a.trottoir_longueur,b.FLOOR, b.FLOOR_RATIO,c.COMPAC_MEAN_NW, c.COMPAC_MEAN_W, c.CONTIG_MEAN,c.CONTIG_STD,c.MAIN_DIR_STD,c.H_MEAN,c.H_STD,c.P_VOL_RATIO_MEAN,c.B_AREA, c.B_VOL, c.B_VOL_M,c.BUILD_NUMB, c.MIN_M_DIST, c.MEAN_M_DIST, c.MEAN_STD_DIST,m.B_HOLES_AREA_MEAN,m.B_STD_H_MEAN,m.B_M_NW_COMPACITY, m.B_M_W_COMPACITY, m.B_STD_COMPACITY, p.DIST_TO_CENTER,q.BUILD_DENS, q.HYDRO_DENS, q.VEGET_DENS, q.ROAD_DENS, c.EXT_ENV_AREA FROM USR_MAPUCE a LEFT JOIN DATA_WORK.USR_BUILD_FLOOR_RATIO b ON a.PK = b.PK_USR LEFT JOIN DATA_WORK.USR_BUILD_TMP c ON a.PK = c.PK_USR LEFT JOIN DATA_WORK.USR_BLOCK_TMP  m ON a.PK = m.PK_USR LEFT JOIN DATA_WORK.USR_TO_CENTER p ON a.PK = p.PK_USR LEFT JOIN DATA_WORK.USR_DENS_AREA q ON a.PK = q.PK_USR"
     
 sql.execute "ALTER TABLE USR_INDICATORS  ALTER COLUMN PK SET NOT NULL"
 sql.execute "CREATE PRIMARY KEY ON USR_INDICATORS (PK)"
@@ -246,7 +246,11 @@ sql.execute "UPDATE USR_INDICATORS  SET B_AREA = 0 WHERE B_AREA is null"
 sql.execute "UPDATE USR_INDICATORS  SET B_VOL = 0 WHERE B_VOL is null"
 sql.execute "UPDATE USR_INDICATORS  SET BUILD_DENS = 0 WHERE BUILD_DENS is null"
 sql.execute "UPDATE USR_INDICATORS  SET EXT_ENV_AREA = 0 WHERE EXT_ENV_AREA is null"
-
+sql.execute "UPDATE USR_INDICATORS  SET insee_individus=0 WHERE insee_individus is null"
+sql.execute "UPDATE USR_INDICATORS  SET insee_menages=0 where insee_menages is null"
+sql.execute "UPDATE USR_INDICATORS  SET insee_men_coll=0 where insee_men_coll is null"
+sql.execute "UPDATE USR_INDICATORS  SET insee_men_surf=0 where insee_men_surf is null"
+sql.execute "UPDATE USR_INDICATORS  SET insee_surface_collectif=0 where insee_surface_collectif is null"
 logger.warn "Cleaning the database"
 sql.execute "DROP SCHEMA DATA_WORK"
 
@@ -255,36 +259,8 @@ sql.execute "DROP SCHEMA DATA_WORK"
 
 
 
-/**********************/
-/** INPUT Parameters **/
-/**********************/
-
-//Filtrer les tables de type spatial
-
-@DataStoreInput(
-        title = "USR table",
-        resume = "The table to edit",
-        isSpatial = true)
-String usrTable
-
-@DataStoreInput(
-        title = "Roads table",
-        resume = "The table to edit",
-        isSpatial = true)
-String roadsTable
-
-@DataStoreInput(
-        title = "Buildings table",
-        resume = "The table to edit",
-        isSpatial = true)
-String buildingsTable
-
-
 /** String output of the process. */
 @LiteralDataOutput(
         title="Output message",
         resume="The output message")
 String literalOutput
-
-
-
