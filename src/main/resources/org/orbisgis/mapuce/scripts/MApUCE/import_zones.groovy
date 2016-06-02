@@ -1,5 +1,3 @@
-package org.orbisgis.orbistoolbox.view.utils.scripts;
-
 import org.orbisgis.wpsgroovyapi.input.*
 import org.orbisgis.wpsgroovyapi.output.*
 import org.orbisgis.wpsgroovyapi.process.*
@@ -29,6 +27,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
 
 	query+="'"+password+"', '"+schemaFromRemoteDB+"', "
 	query+= "'"+tableFromRemoteDB+"')";
+        sql.execute "DROP TABLE IF EXISTS COMMUNE_TEMP"
 	sql.execute query
 	sql.execute "CREATE TABLE COMMUNES_MAPUCE AS SELECT * FROM COMMUNE_TEMP"
 	sql.execute "DROP TABLE IF EXISTS COMMUNE_TEMP"

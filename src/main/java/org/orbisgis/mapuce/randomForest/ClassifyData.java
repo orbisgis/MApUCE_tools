@@ -95,23 +95,14 @@ public class ClassifyData {
             LOGGER.error(e.getMessage());
         }
         
-        
         Instances inst = InstanceQuery.retrieveInstances(new InstanceQuery(),rs);
         
         //Use to define class attribute
         inst.insertAttributeAt(attClass, inst.numAttributes());
         inst.setRelationName("classification");
-        
-        BufferedWriter writer = new BufferedWriter(new FileWriter(this.getClass().getResource("ResultSet.arff").getPath()));
-        writer.write(inst.toString());
-        writer.flush();
-        writer.close();
-              
-        ConverterUtils.DataSource sourceTestValue = new ConverterUtils.DataSource(this.getClass().getResource("ResultSet.arff").getPath());
-    	Instances value = sourceTestValue.getDataSet();
-    	value.setClassIndex(value.numAttributes()-1);
-        
-        this.dataToClassify = value;
+        inst.setClassIndex(inst.numAttributes()-1);
+  
+        this.dataToClassify = inst;
         return inst;
     }
     
@@ -125,7 +116,7 @@ public class ClassifyData {
         HashMap<Object,String> ret = new HashMap<>();
         
         TableLocation nameTable = new TableLocation(nameTableResult);
-
+        String nameIndexResult = dataToClassify.attribute(colIndex).name();
         if(!dataToClassify.isEmpty()){
          
           for (int i = 0; i < dataToClassify.numInstances(); i++) {
@@ -144,13 +135,13 @@ public class ClassifyData {
             
             ret.put(index,predString);
             if(ret.size() >= BATCH_MAX_SIZE){
-                tableResult(ret,nameTable);
+                tableResult(ret,nameTable,nameIndexResult);
                 ret.clear();
             }
             
           }
           if(ret.size() < BATCH_MAX_SIZE){
-              tableResult(ret,nameTable);
+              tableResult(ret,nameTable,nameIndexResult);
               ret.clear();
           }
           
@@ -164,18 +155,18 @@ public class ClassifyData {
      * @param map value to insert in table result
      * @ret HashMap wich stores the id and class
      */
-    private void tableResult(HashMap<Object,String> map,TableLocation tab) throws SQLException{
+    private void tableResult(HashMap<Object,String> map,TableLocation tab,String nameIndex) throws SQLException{
         
         PreparedStatement st = null;
         Statement sta = connection.createStatement();
 
         String createTableSQL =  "CREATE TABLE IF NOT EXISTS "+tab.toString()+"("
-				+ "INDEX "+nameTypeIndex+ " NOT NULL, "
-				+ "CLASS VARCHAR(50) NOT NULL, "
+				+ nameIndex+" "+nameTypeIndex+ " NOT NULL, "
+				+ "typo VARCHAR(50) NOT NULL, "
 				+ ")";
         sta.execute(createTableSQL);
         
-        String insertTableSQL = "INSERT INTO "+tab.toString() + "(INDEX, CLASS)"
+        String insertTableSQL = "INSERT INTO "+tab.toString() + "("+nameIndex+", typo)"
                                 +"VALUES (?,?)";
         st = connection.prepareStatement(insertTableSQL);
         
@@ -194,6 +185,5 @@ public class ClassifyData {
           
         st.executeBatch();
         st.close();
-    }
-    
+    }    
 }
