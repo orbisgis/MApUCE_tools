@@ -1,7 +1,5 @@
 package org.orbisgis.mapuce.randomForest;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,7 +15,6 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.converters.ConverterUtils;
 import weka.experiment.InstanceQuery;
 
 /**
@@ -63,19 +60,6 @@ public class ClassifyData {
         connection = conn;
     }
     
-    /**
-     * Initialize the Classifier RandomForest with a fixed model build for the MApUCE project
-     * @throws Exception 
-     */
-    public ClassifyData(Connection conn) throws Exception{
-        
-        Object[] obj = weka.core.SerializationHelper.readAll(this.getClass().getResource("MApUCE.model").getPath());
-        model = (RandomForest) obj[0];
-        Instances inst = (Instances)obj[1];
-        attClass = inst.classAttribute();
-        
-        connection = conn;
-    }
     
     /**
      * Transform ResultSet into a usable format for Weka (Instances)
@@ -185,5 +169,9 @@ public class ClassifyData {
           
         st.executeBatch();
         st.close();
-    }    
+    } 
+    
+    public Connection getConnection(){
+        return this.connection;
+    }
 }

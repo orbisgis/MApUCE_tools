@@ -5,12 +5,15 @@ package org.orbisgis.mapuce.randomForest;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import junit.framework.Assert;
+import org.apache.commons.io.FileUtils;
 import org.h2gis.h2spatial.ut.SpatialH2UT;
 import org.h2gis.utilities.TableLocation;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -58,45 +61,45 @@ public class RandomForestTest {
     @Test
     public void testCreateModel() throws SQLException, IOException, Exception {
     
-        String map= "/home/mlgall/Documents/RandomForest/data/data_apprenti_TUFA_filtre.arff";
-        
         String arffFile=this.getClass().getResource("iris.arff").getPath();
         String modelFile=this.getClass().getResource("iris.model").getPath();         
         BuildModel model = new BuildModel(arffFile,modelFile,4);
         
         model.evaluate();
         
-//        //========= Classifier of .model is RandomForest===========
-//        Object clas= model.getClassifier();
-//        assertThat(clas, instanceOf(RandomForest.class));
-//        
-//        //======= Header the same as arff File===========
-//        //Instances model
-//        Instances mod = model.getHeader();
-//        //Instances arff file
-//        ConverterUtils.DataSource sourceTestValue = new ConverterUtils.DataSource(arffFile);
-//    	Instances arff = sourceTestValue.getDataSet();
-//    	arff.setClassIndex(4);
-//        
-//        assertEquals("One have more attribute",arff.numAttributes(),mod.numAttributes());
-//        assertEquals("One have more classes available",arff.numClasses(),mod.numClasses());
-//        
-//        //all the attributes have the same name in .model and Arff File
-//        for(int i=0; i < arff.numAttributes();i++){
-//            String nameArff = arff.attribute(i).name();
-//            String nameMod= mod.attribute(i).name();
-//            assertEquals("Not the same name for this attribute",nameArff,nameMod);
-//            
-//            int typeMod = mod.attribute(i).type();
-//            int typeArff = arff.attribute(i).type();
-//            assertEquals("Not the same type",typeMod,typeArff);
-//        }
+        //========= Classifier of .model is RandomForest===========
+        Object clas= model.getClassifier();
+        assertThat(clas, instanceOf(RandomForest.class));
+        
+        //======= Header the same as arff File===========
+        //Instances model
+        Instances mod = model.getHeader();
+        //Instances arff file
+        ConverterUtils.DataSource sourceTestValue = new ConverterUtils.DataSource(arffFile);
+    	Instances arff = sourceTestValue.getDataSet();
+    	arff.setClassIndex(4);
+        
+        assertEquals("One have more attribute",arff.numAttributes(),mod.numAttributes());
+        assertEquals("One have more classes available",arff.numClasses(),mod.numClasses());
+        
+        //all the attributes have the same name in .model and Arff File
+        for(int i=0; i < arff.numAttributes();i++){
+            String nameArff = arff.attribute(i).name();
+            String nameMod= mod.attribute(i).name();
+            assertEquals("Not the same name for this attribute",nameArff,nameMod);
+            
+            int typeMod = mod.attribute(i).type();
+            int typeArff = arff.attribute(i).type();
+            assertEquals("Not the same type",typeMod,typeArff);
+        }
     }
     
     @Test
     public void testCreateInstancesFromDB() throws SQLException, IOException, Exception {
         
-        ClassifyData test = new ClassifyData(connection);
+        File file = File.createTempFile("mapuce", ".model");
+        FileUtils.copyURLToFile(new URL(""), file);
+        ClassifyData test = new ClassifyData(file.getAbsolutePath(),connection);
         
         //=================== Create the tables ============
         String sql = "DROP TABLE IF EXISTS COMMUNE";
@@ -284,14 +287,11 @@ public class RandomForestTest {
         //representation of the table
         sql = "SELECT * FROM "+loc.toString();
         ResultSet r = stat.executeQuery(sql);
-        String nameColIndex = r.getMetaData().getColumnName(1);
-        String nameColClass = r.getMetaData().getColumnName(2);
-        String result="";
+        int i=0;
         while(r.next()){
-            
-            result+=nameColIndex+": "+r.getObject(1)+" | "+nameColClass+": "+r.getString(2)+"\n";
+            i++;
         }
-        System.out.println(""+result);
+        assertSame("Table have more or less rows of Instances",i,nbRowsInst);
         
         //======= End =========
         sql = "DROP TABLE IF EXISTS "+loc.toString();

@@ -83,7 +83,6 @@ public class BuildModel {
         weka.core.SerializationHelper.writeAll(new FileOutputStream(pathModelFile), write);
 
         pathModel = pathModelFile;
-        System.out.println(pathModelFile);
     }
     
  
