@@ -29,7 +29,6 @@ def processing() {
   * Join between BLOCK_INDICATORS BUILDING_INDICATORS and USR_INDICATORS
   */
   logger.warn "create the final table use to classify"
-  //sql.execute "DROP TABLE IF EXISTS BLOCK_BATI_USR"
   String req = " SELECT a.PK AS I_PK,a.HAUTEUR_ORIGIN AS i_H_Origin,a.INSEE_INDIVIDUS AS i_INHAB,"+
     "a.HAUTEUR AS i_H,a.NB_NIV AS i_LEVELS,a.AREA AS i_AREA,a.FLOOR_AREA AS i_FLOOR,a.VOL AS i_VOL,a.COMPACITY_R AS i_COMP_B,a.COMPACITY_N AS i_COMP_N,"+
     "a.COMPACTNESS AS i_COMP,a.FORM_FACTOR AS i_FORM,a.CONCAVITY AS i_CONC, a.MAIN_DIR_DEG AS i_DIR,a.B_FLOOR_LONG AS i_PERI,a.B_WALL_AREA AS i_WALL_A,"+
@@ -86,14 +85,11 @@ def processing() {
         "WHERE (SELECT COUNT(*) FROM USR_TYPO_WITH_NULL_VALUE b WHERE  a.PK = b.PK) = 2 AND SECOND IS NULL"
  
  logger.warn "Clean temporary tables"  
-  sql.execute "DROP TABLE IF EXISTS BLOCK_BATI"
-  sql.execute "DROP TABLE IF EXISTS BLOCK_BATI_USR"
   sql.execute "DROP TABLE IF EXISTS SUM_AREA_USR"
   sql.execute "DROP TABLE IF EXISTS TOP2_AREA"  
   sql.execute "DROP TABLE IF EXISTS USR_TYPO_WITH_NULL_VALUE"
 
-    
-  
+
   logger.warn "Done"
 }
 /** String output of the process. */
