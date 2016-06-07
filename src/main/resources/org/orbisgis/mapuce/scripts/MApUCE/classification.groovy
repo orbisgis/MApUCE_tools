@@ -5,6 +5,9 @@ import javax.swing.JOptionPane
 import org.orbisgis.mapuce.randomForest.*
 import java.sql.ResultSet
 import java.sql.Statement
+import java.io.File
+import java.net.URL
+import org.apache.commons.io.FileUtils
 
 
 /**
@@ -46,7 +49,9 @@ def processing() {
     "ON a.PK_USR = b.PK_USR AND a.PK_BLOCK = b.PK_BLOCK"
     
 
-  ClassifyData cla = new ClassifyData(model,sql.createConnection())
+  File file = File.createTempFile("mapuce", ".model")
+  FileUtils.copyURLToFile(new URL("https://github.com/Melviyn/MApUCE_tools/raw/dev/model/MApUCE-1.0.model"), file)
+  ClassifyData cla = new ClassifyData(file.getAbsolutePath(),sql.createConnection())
  
   Statement sta = sql.createConnection().createStatement()
   ResultSet rs = sta.executeQuery(req) 
@@ -57,21 +62,40 @@ def processing() {
 
   //Make the classification and create the table TYPO_RESULT  
   logger.warn "Make the classification and create the table TYPO_RESULT"
+  sql.execute "DROP TABLE IF EXISTS TYPO_RESULT" 
   cla.classify("TYPO_RESULT")
 
-  logger.warn "Clean temporary tables"  
-  sql.execute "DROP TABLE IF EXISTS BLOCK_BATI"
-  //sql.execute "DROP TABLE IF EXISTS BLOCK_BATI_USR"
+  logger.warn "Create Building_typo table"  
+  sql.execute "CREATE INDEX ON TYPO_RESULT(I_PK)"  
+  sql.execute "CREATE TABLE BUILDING_TYPO AS SELECT a.THE_GEOM,a.PK,a.PK_USR,b.typo,a.AREA FROM BUILDING_INDICATORS a,TYPO_RESULT b WHERE a.PK = b.I_PK"
+  
+  logger.warn "Create USR_typo table"
+  sql.execute "CREATE TABLE SUM_AREA_USR AS SELECT PK_USR,TYPO,SUM(AREA) AS AREA_USR FROM BUILDING_TYPO GROUP BY PK_USR,TYPO"
+  sql.execute "CREATE INDEX ON SUM_AREA_USR(PK_USR)"
+  sql.execute "CREATE TABLE TOP2_AREA AS select *,(SELECT COUNT(*) FROM SUM_AREA_USR as b WHERE b.PK_USR=a.PK_USR AND b.AREA_USR>=a.AREA_USR ) as rank FROM SUM_AREA_USR AS a"+
+        " WHERE (SELECT COUNT(*) FROM SUM_AREA_USR AS b WHERE b.PK_USR=a.PK_USR AND b.AREA_USR>=a.AREA_USR ) <= 2" 
+  sql.execute "CREATE TABLE  USR_TYPO_WITH_NULL_VALUE AS select DISTINCT a.THE_GEOM,a.PK,c.TYPO,"+
+        "CASE WHEN b.RANK=1 THEN c.TYPO END AS MAJO,CASE WHEN b.RANK=2 THEN c.TYPO END AS SECOND"+
+        " FROM USR_INDICATORS a, SUM_AREA_USR c,TOP2_AREA b"+
+        " WHERE a.PK = c.PK_USR AND c.PK_USR = b.PK_USR AND c.AREA_USR = b.AREA_USR" 
 
+  sql.execute "DROP TABLE IF EXISTS USR_TYPO"
+  sql.execute "CREATE TABLE USR_TYPO AS SELECT a.PK, a.THE_GEOM,a.MAJO,b.SECOND "+
+        "FROM USR_TYPO_WITH_NULL_VALUE a JOIN USR_TYPO_WITH_NULL_VALUE b ON a.PK = b.PK AND a.MAJO IS NOT NULL "+
+        "MINUS SELECT a.PK,a.THE_GEOM,a.MAJO,a.SECOND FROM USR_TYPO_WITH_NULL_VALUE a "+
+        "WHERE (SELECT COUNT(*) FROM USR_TYPO_WITH_NULL_VALUE b WHERE  a.PK = b.PK) = 2 AND SECOND IS NULL"
+ 
+ logger.warn "Clean temporary tables"  
+  sql.execute "DROP TABLE IF EXISTS BLOCK_BATI"
+  sql.execute "DROP TABLE IF EXISTS BLOCK_BATI_USR"
+  sql.execute "DROP TABLE IF EXISTS SUM_AREA_USR"
+  sql.execute "DROP TABLE IF EXISTS TOP2_AREA"  
+  sql.execute "DROP TABLE IF EXISTS USR_TYPO_WITH_NULL_VALUE"
+
+    
+  
   logger.warn "Done"
 }
-
-
-@RawDataInput(
- title="Model",
-        resume="The name of output table")
-String model
-
 /** String output of the process. */
 @LiteralDataOutput(
         title="Output message",
