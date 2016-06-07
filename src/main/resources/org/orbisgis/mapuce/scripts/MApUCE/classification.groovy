@@ -49,7 +49,7 @@ def processing() {
     
 
   File file = File.createTempFile("mapuce", ".model")
-  FileUtils.copyURLToFile(new URL("https://github.com/Melviyn/MApUCE_tools/raw/dev/model/MApUCE-1.0.model"), file)
+  FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-1.0.model"), file)
   ClassifyData cla = new ClassifyData(file.getAbsolutePath(),sql.createConnection())
  
   Statement sta = sql.createConnection().createStatement()
@@ -88,7 +88,7 @@ def processing() {
   sql.execute "DROP TABLE IF EXISTS SUM_AREA_USR"
   sql.execute "DROP TABLE IF EXISTS TOP2_AREA"  
   sql.execute "DROP TABLE IF EXISTS USR_TYPO_WITH_NULL_VALUE"
-
+  file.deleteOnExit()  
 
   logger.warn "Done"
 }
