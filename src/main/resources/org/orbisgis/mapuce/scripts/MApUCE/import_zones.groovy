@@ -19,19 +19,17 @@ import javax.swing.JOptionPane;
         keywords = "Vector,MAPuCE")
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){
-	def schemaFromRemoteDB = "lienss"
-	def tableFromRemoteDB = "(SELECT * FROM lienss.zone_etude)"	
-
-	def query = "CREATE  LINKED TABLE COMMUNE_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
-	query+=" '"+ login+"',"
-
-	query+="'"+password+"', '"+schemaFromRemoteDB+"', "
-	query+= "'"+tableFromRemoteDB+"')";
-        sql.execute "DROP TABLE IF EXISTS COMMUNE_TEMP"
-	sql.execute query
-	sql.execute "CREATE TABLE COMMUNES_MAPUCE AS SELECT * FROM COMMUNE_TEMP"
-	sql.execute "DROP TABLE IF EXISTS COMMUNE_TEMP"
-	literalOutput = "The data commune has been imported"
+    def schemaFromRemoteDB = "lienss"
+    def tableFromRemoteDB = "(SELECT * FROM lienss.zone_etude)"	
+    def query = "CREATE  LINKED TABLE COMMUNE_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
+    query+=" '"+ login+"',"
+    query+="'"+password+"', '"+schemaFromRemoteDB+"', "
+    query+= "'"+tableFromRemoteDB+"')";
+    sql.execute "DROP TABLE IF EXISTS COMMUNE_TEMP"
+    sql.execute query
+    sql.execute "CREATE TABLE COMMUNES_MAPUCE AS SELECT * FROM COMMUNE_TEMP"
+    sql.execute "DROP TABLE IF EXISTS COMMUNE_TEMP"
+    literalOutput = "The data commune has been imported"
 }
 
 }

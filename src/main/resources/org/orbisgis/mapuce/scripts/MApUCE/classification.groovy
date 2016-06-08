@@ -20,7 +20,7 @@ import org.apache.commons.io.FileUtils
  *
  * @author Melvin Le Gall
  */
-@Process(title = "Join USR,BLOCK,BUILDINGS and classification",
+@Process(title = "Classify data for USR and BUILDING",
         resume = "Join USR,BLOCK,BUILDINGS to match with the model of Alexandre necessary for the classification,After the classification run for return a table of result",
         keywords = "Vector,MAPuCE")
 def processing() {
@@ -28,7 +28,7 @@ def processing() {
   /**
   * Join between BLOCK_INDICATORS BUILDING_INDICATORS and USR_INDICATORS
   */
-  logger.warn "create the final table use to classify"
+  logger.info "create the final table use to classify"
   String req = " SELECT a.PK AS I_PK,a.HAUTEUR_ORIGIN AS i_H_Origin,a.INSEE_INDIVIDUS AS i_INHAB,"+
     "a.HAUTEUR AS i_H,a.NB_NIV AS i_LEVELS,a.AREA AS i_AREA,a.FLOOR_AREA AS i_FLOOR,a.VOL AS i_VOL,a.COMPACITY_R AS i_COMP_B,a.COMPACITY_N AS i_COMP_N,"+
     "a.COMPACTNESS AS i_COMP,a.FORM_FACTOR AS i_FORM,a.CONCAVITY AS i_CONC, a.MAIN_DIR_DEG AS i_DIR,a.B_FLOOR_LONG AS i_PERI,a.B_WALL_AREA AS i_WALL_A,"+
@@ -56,23 +56,24 @@ def processing() {
   ResultSet rs = sta.executeQuery(req) 
 
   //Transform ResultSet in Instances  
-  logger.warn "Transform ResultSet in Instances"
+  logger.info "Transform ResultSet in Instances"
   cla.resultSetToInstances(rs,"I_PK")
 
   //Make the classification and create the table TYPO_RESULT  
-  logger.warn "Make the classification and create the table TYPO_RESULT"
+  logger.info "Make the classification and create the table TYPO_RESULT"
   sql.execute "DROP TABLE IF EXISTS TYPO_RESULT" 
   cla.classify("TYPO_RESULT")
 
-  logger.warn "Create Building_typo table"  
+  logger.info "Create Building_typo table"  
   sql.execute "CREATE INDEX ON TYPO_RESULT(I_PK)"  
+  sql.execute "DROP TABLE IF EXISTS BUILDING_TYPO"
   sql.execute "CREATE TABLE BUILDING_TYPO AS SELECT a.THE_GEOM,a.PK,a.PK_USR,b.typo,a.AREA FROM BUILDING_INDICATORS a,TYPO_RESULT b WHERE a.PK = b.I_PK"
   
-  logger.warn "Create USR_typo table"
+  logger.info "Create USR_typo table"
+  sql.execute "CREATE INDEX ON BUILDING_TYPO(PK)"
   sql.execute "CREATE TABLE SUM_AREA_USR AS SELECT PK_USR,TYPO,SUM(AREA) AS AREA_USR FROM BUILDING_TYPO GROUP BY PK_USR,TYPO"
-  sql.execute "CREATE INDEX ON SUM_AREA_USR(PK_USR)"
   sql.execute "CREATE TABLE TOP2_AREA AS select *,(SELECT COUNT(*) FROM SUM_AREA_USR as b WHERE b.PK_USR=a.PK_USR AND b.AREA_USR>=a.AREA_USR ) as rank FROM SUM_AREA_USR AS a"+
-        " WHERE (SELECT COUNT(*) FROM SUM_AREA_USR AS b WHERE b.PK_USR=a.PK_USR AND b.AREA_USR>=a.AREA_USR ) <= 2" 
+        " WHERE (SELECT COUNT(*) FROM SUM_AREA_USR AS b WHERE b.PK_USR=a.PK_USR AND b.AREA_USR>=a.AREA_USR ) <= 2"        
   sql.execute "CREATE TABLE  USR_TYPO_WITH_NULL_VALUE AS select DISTINCT a.THE_GEOM,a.PK,c.TYPO,"+
         "CASE WHEN b.RANK=1 THEN c.TYPO END AS MAJO,CASE WHEN b.RANK=2 THEN c.TYPO END AS SECOND"+
         " FROM USR_INDICATORS a, SUM_AREA_USR c,TOP2_AREA b"+
@@ -84,13 +85,13 @@ def processing() {
         "MINUS SELECT a.PK,a.THE_GEOM,a.MAJO,a.SECOND FROM USR_TYPO_WITH_NULL_VALUE a "+
         "WHERE (SELECT COUNT(*) FROM USR_TYPO_WITH_NULL_VALUE b WHERE  a.PK = b.PK) = 2 AND SECOND IS NULL"
  
- logger.warn "Clean temporary tables"  
+  logger.info "Clean temporary tables"  
   sql.execute "DROP TABLE IF EXISTS SUM_AREA_USR"
   sql.execute "DROP TABLE IF EXISTS TOP2_AREA"  
   sql.execute "DROP TABLE IF EXISTS USR_TYPO_WITH_NULL_VALUE"
   file.deleteOnExit()  
 
-  logger.warn "Done"
+  literalOutput = "Work done,tables USR_TYPO and BUILDING_TYPO created correctly" 
 }
 /** String output of the process. */
 @LiteralDataOutput(

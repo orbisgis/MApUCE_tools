@@ -98,7 +98,7 @@ public class RandomForestTest {
         ClassifyData test = new ClassifyData(modelFile,connection);
         
         //=================== Create the tables ============
-        String sql = "DROP TABLE IF EXISTS COMMUNE";
+        String sql = "DROP TABLE IF EXISTS IRIS";
         stat.execute(sql);
         
         sql = "CREATE TABLE IRIS (id INT, "
@@ -168,12 +168,12 @@ public class RandomForestTest {
         test.classify("tableResultTest");
         TableLocation loc = new TableLocation("tableResultTest");
         
-        //representation of the table
         sql = "SELECT * FROM "+loc.toString();
         ResultSet r = stat.executeQuery(sql);
         int i=0;
         while(r.next()){
             i++;
+            assertNotNull("some typo have null value",r.getObject("typo"));
         }
         assertSame("Table have more or less rows of Instances",i,nbRowsInst);
         
