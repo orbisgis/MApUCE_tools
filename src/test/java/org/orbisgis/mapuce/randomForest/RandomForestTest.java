@@ -84,50 +84,50 @@ public class RandomForestTest {
             String nameArff = arff.attribute(i).name();
             String nameMod= mod.attribute(i).name();
             assertEquals("Not the same name for this attribute",nameArff,nameMod);
+            
+            int typeMod = mod.attribute(i).type();
+            int typeArff = arff.attribute(i).type();
+            assertEquals("Not the same type",typeMod,typeArff);
         }
     }
     
     @Test
     public void testCreateInstancesFromDB() throws SQLException, IOException, Exception {
         
-        ClassifyData test = new ClassifyData(this.getClass().getResource("iris.model").getPath(),connection);
+        String modelFile = this.getClass().getResource("iris.model").getPath();
+        ClassifyData test = new ClassifyData(modelFile,connection);
         
         //=================== Create the tables ============
-        String sql = "DROP TABLE IF EXISTS IRIS ";
+        String sql = "DROP TABLE IF EXISTS IRIS";
         stat.execute(sql);
         
-        sql = "CREATE TABLE IRIS " +
-                "(id INT NOT NULL,"
-                + "sepallength    FLOAT    NOT NULL," +
-                " sepalwidth     FLOAT    NOT NULL," +
-                " petallength    FLOAT    NOT NULL," +
-                " petalwidth     FLOAT    NOT NULL)";
+        sql = "CREATE TABLE IRIS (id INT, "
+                + "sepallength DOUBLE,"+
+                "sepalwidth DOUBLE,"+
+                "petallength DOUBLE,"+
+                "petalwidth DOUBLE)";
+
+
         stat.execute(sql);
         //==================== End create ============
         
         //==================== Insert some rows ================
-        sql = "INSERT INTO IRIS (id,sepallength,sepalwidth,petallength,petalwidth) "
-               + "VALUES (1,5.3,3.7,1.5,0.2);";
-        stat.executeUpdate(sql);
-
-        sql = "INSERT INTO IRIS (id,sepallength,sepalwidth,petallength,petalwidth) "
-               + "VALUES (2,5.0,3.3,1.4,0.2);";
-        stat.executeUpdate(sql);
-
-        sql = "INSERT INTO IRIS (id,sepallength,sepalwidth,petallength,petalwidth) "
-               + "VALUES (3,6.3,3.3,4.7,1.6);";
+        sql = "INSERT INTO IRIS(ID,SEPALLENGTH,SEPALWIDTH,PETALLENGTH,PETALWIDTH) VALUES (1,5.3,3.7,1.5,0.2)";
         stat.executeUpdate(sql);
         
-        sql = "INSERT INTO IRIS (id,sepallength,sepalwidth,petallength,petalwidth) "
-               + "VALUES (4,4.9,2.4,3.3,1.0);";
+        sql = "INSERT INTO IRIS(ID,SEPALLENGTH,SEPALWIDTH,PETALLENGTH,PETALWIDTH) VALUES (2,5,3.3,1.4,0.2)";
         stat.executeUpdate(sql);
         
-        sql = "INSERT INTO IRIS (id,sepallength,sepalwidth,petallength,petalwidth) "
-               + "VALUES (5,6.4,2.7,5.3,1.9);";
+        sql = "INSERT INTO IRIS(ID,SEPALLENGTH,SEPALWIDTH,PETALLENGTH,PETALWIDTH) VALUES (3,6.3,3.3,4.7,1.6)";
         stat.executeUpdate(sql);
         
-        sql = "INSERT INTO IRIS (id,sepallength,sepalwidth,petallength,petalwidth) "
-               + "VALUES (6,6.8,3.0,5.5,2.1);";
+        sql = "INSERT INTO IRIS(ID,SEPALLENGTH,SEPALWIDTH,PETALLENGTH,PETALWIDTH) VALUES (4,4.9,2.4,3.3,1.0)";
+        stat.executeUpdate(sql);
+        
+        sql = "INSERT INTO IRIS(ID,SEPALLENGTH,SEPALWIDTH,PETALLENGTH,PETALWIDTH) VALUES (5,6.4,2.7,5.3,1.9)";
+        stat.executeUpdate(sql);
+        
+        sql = "INSERT INTO IRIS(ID,SEPALLENGTH,SEPALWIDTH,PETALLENGTH,PETALWIDTH) VALUES (6,6.8,3.0,5.5,2.1)";
         stat.executeUpdate(sql);
         //==================== End insert =====================
         
@@ -142,7 +142,7 @@ public class RandomForestTest {
         
         //===========Instances contains something==============
         res = stat.executeQuery(sql);
-        Instances inst = test.resultSetToInstances(res,"id");        
+        Instances inst = test.resultSetToInstances(res,"ID");        
         assertNotNull("Instances was null",inst.isEmpty());
         res.close();
 
@@ -168,18 +168,18 @@ public class RandomForestTest {
         test.classify("tableResultTest");
         TableLocation loc = new TableLocation("tableResultTest");
         
-        //representation of the table
         sql = "SELECT * FROM "+loc.toString();
         ResultSet r = stat.executeQuery(sql);
-        String result="";
+        int i=0;
         while(r.next()){
-            result+="ID: "+r.getObject(1)+" Class: "+r.getString(2)+"\n";
+            i++;
+            assertNotNull("some typo have null value",r.getObject("typo"));
         }
-        System.out.println("\n"+result);
+        assertSame("Table have more or less rows of Instances",i,nbRowsInst);
         
         //======= End =========
         sql = "DROP TABLE IF EXISTS "+loc.toString();
         stat.execute(sql);
 
-    }
+  }
 }

@@ -91,6 +91,6 @@
             <artifactId>wps-client</artifactId>
             <version>5.1.0-SNAPSHOT</version>
             <type>jar</type>
-        </dependency>
+        </dependency>        
     </dependencies>
 </project>
