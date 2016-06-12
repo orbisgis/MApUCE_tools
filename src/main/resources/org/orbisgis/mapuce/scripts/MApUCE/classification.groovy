@@ -1,3 +1,4 @@
+
 import org.orbisgis.wpsgroovyapi.input.*
 import org.orbisgis.wpsgroovyapi.output.*
 import org.orbisgis.wpsgroovyapi.process.*
@@ -7,29 +8,39 @@ import java.sql.ResultSet
 import java.sql.Statement
 import java.io.File
 import java.net.URL
+import java.sql.Connection
 import org.apache.commons.io.FileUtils
 
 
 /**
- * This process is used to join the tables (USR, BLOCK and BUILDINGS) to match with the model of Alexandre.
- * When this join is done the process make the classification.
- * The user has to specify (mandatory):
- *  - Path for .model file
+ * This process is used to classify the building and USR features using a RandomForest algorithm.
+ *
  *
  * @return The table whith an ID and the class of each buildings
  *
  * @author Melvin Le Gall
+ * @author Erwan Bocher
  */
-@Process(title = "Classify data for USR and BUILDING",
-        resume = "Join USR,BLOCK,BUILDINGS to match with the model of Alexandre necessary for the classification,After the classification run for return a table of result",
-        keywords = "Vector,MAPuCE")
+@Process(title = "Classify the BUILDING and USR features",
+    resume = "This process is used to classify the building and USR features using a RandomForest algorithm",
+    keywords = "Vector,MAPuCE")
 def processing() {
 
-  /**
-  * Join between BLOCK_INDICATORS BUILDING_INDICATORS and USR_INDICATORS
-  */
-  logger.info "create the final table use to classify"
-  String req = " SELECT a.PK AS I_PK,a.HAUTEUR_ORIGIN AS i_H_Origin,a.INSEE_INDIVIDUS AS i_INHAB,"+
+
+    logger.info "Download the MAPuCE model used to classify the data."
+
+    //Do not download the file is already exist
+    File file = new File(System.getProperty("user.home") + "/mapuce/mapuce-1.0.model");
+    
+    if(!file.exists()){
+        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-1.0.model"), file)   
+    }  
+
+    /**
+     * Join between BLOCK_INDICATORS BUILDING_INDICATORS and USR_INDICATORS
+     */
+    logger.info "Merge all morphological indicators available on BUILDING, BLOCK and USR levels at the BUILDING scale."
+    String req = " SELECT a.PK AS I_PK,a.HAUTEUR_ORIGIN AS i_H_Origin,a.INSEE_INDIVIDUS AS i_INHAB,"+
     "a.HAUTEUR AS i_H,a.NB_NIV AS i_LEVELS,a.AREA AS i_AREA,a.FLOOR_AREA AS i_FLOOR,a.VOL AS i_VOL,a.COMPACITY_R AS i_COMP_B,a.COMPACITY_N AS i_COMP_N,"+
     "a.COMPACTNESS AS i_COMP,a.FORM_FACTOR AS i_FORM,a.CONCAVITY AS i_CONC, a.MAIN_DIR_DEG AS i_DIR,a.B_FLOOR_LONG AS i_PERI,a.B_WALL_AREA AS i_WALL_A,"+
     "a.P_WALL_LONG AS i_PWALL_L,a.P_WALL_AREA AS i_PWALL_A,a.NB_NEIGHBOR AS i_Nb_NEI,a.FREE_P_WALL_LONG AS i_FWALL_L,a.FREE_EXT_AREA AS i_FREE_EXT_AREA,"+
@@ -47,55 +58,57 @@ def processing() {
     "JOIN BLOCK_INDICATORS b "+
     "ON a.PK_USR = b.PK_USR AND a.PK_BLOCK = b.PK_BLOCK"
     
-
-  File file = File.createTempFile("mapuce", ".model")
-  FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-1.0.model"), file)
-  ClassifyData cla = new ClassifyData(file.getAbsolutePath(),sql.createConnection())
+    
+    Connection  conn = sql.createConnection();
+    ClassifyData cla = new ClassifyData(file.getAbsolutePath(),conn)
  
-  Statement sta = sql.createConnection().createStatement()
-  ResultSet rs = sta.executeQuery(req) 
-
-  //Transform ResultSet in Instances  
-  logger.info "Transform ResultSet in Instances"
-  cla.resultSetToInstances(rs,"I_PK")
-
-  //Make the classification and create the table TYPO_RESULT  
-  logger.info "Make the classification and create the table TYPO_RESULT"
-  sql.execute "DROP TABLE IF EXISTS TYPO_RESULT" 
-  cla.classify("TYPO_RESULT")
-
-  logger.info "Create Building_typo table"  
-  sql.execute "CREATE INDEX ON TYPO_RESULT(I_PK)"  
-  sql.execute "DROP TABLE IF EXISTS BUILDING_TYPO"
-  sql.execute "CREATE TABLE BUILDING_TYPO AS SELECT a.THE_GEOM,a.PK,a.PK_USR,b.typo,a.AREA FROM BUILDING_INDICATORS a,TYPO_RESULT b WHERE a.PK = b.I_PK"
   
-  logger.info "Create USR_typo table"
-  sql.execute "CREATE INDEX ON BUILDING_TYPO(PK)"
-  sql.execute "CREATE TABLE SUM_AREA_USR AS SELECT PK_USR,TYPO,SUM(AREA) AS AREA_USR FROM BUILDING_TYPO GROUP BY PK_USR,TYPO"
-  sql.execute "CREATE TABLE TOP2_AREA AS select *,(SELECT COUNT(*) FROM SUM_AREA_USR as b WHERE b.PK_USR=a.PK_USR AND b.AREA_USR>=a.AREA_USR ) as rank FROM SUM_AREA_USR AS a"+
+    Statement sta = conn.createStatement()
+    ResultSet rs = sta.executeQuery(req) 
+
+    //Transform ResultSet in Instances  
+    logger.info "Prepare the data to apply classification"
+    cla.resultSetToInstances(rs,"I_PK")
+
+    //Make the classification and create the table TYPO_RESULT  
+    logger.info "Build the classification and create the result table called TYPO_RESULT"
+    sql.execute "DROP TABLE IF EXISTS TYPO_RESULT" 
+    cla.classify("TYPO_RESULT")
+
+    logger.info "Create Building_typo table"  
+    sql.execute "CREATE INDEX ON TYPO_RESULT(I_PK)"  
+    sql.execute "DROP TABLE IF EXISTS BUILDING_TYPO"
+    sql.execute "CREATE TABLE BUILDING_TYPO AS SELECT a.THE_GEOM,a.PK,a.PK_USR,b.typo,a.AREA FROM BUILDING_INDICATORS a,TYPO_RESULT b WHERE a.PK = b.I_PK"
+  
+    logger.info "Create USR_typo table"
+    sql.execute "CREATE INDEX ON BUILDING_TYPO(PK)"
+    sql.execute "CREATE TABLE SUM_AREA_USR AS SELECT PK_USR,TYPO,SUM(AREA) AS AREA_USR FROM BUILDING_TYPO GROUP BY PK_USR,TYPO"
+    sql.execute "CREATE TABLE TOP2_AREA AS select *,(SELECT COUNT(*) FROM SUM_AREA_USR as b WHERE b.PK_USR=a.PK_USR AND b.AREA_USR>=a.AREA_USR ) as rank FROM SUM_AREA_USR AS a"+
         " WHERE (SELECT COUNT(*) FROM SUM_AREA_USR AS b WHERE b.PK_USR=a.PK_USR AND b.AREA_USR>=a.AREA_USR ) <= 2"        
-  sql.execute "CREATE TABLE  USR_TYPO_WITH_NULL_VALUE AS select DISTINCT a.THE_GEOM,a.PK,c.TYPO,"+
+    sql.execute "CREATE TABLE  USR_TYPO_WITH_NULL_VALUE AS select DISTINCT a.THE_GEOM,a.PK,c.TYPO,"+
         "CASE WHEN b.RANK=1 THEN c.TYPO END AS MAJO,CASE WHEN b.RANK=2 THEN c.TYPO END AS SECOND"+
         " FROM USR_INDICATORS a, SUM_AREA_USR c,TOP2_AREA b"+
         " WHERE a.PK = c.PK_USR AND c.PK_USR = b.PK_USR AND c.AREA_USR = b.AREA_USR" 
 
-  sql.execute "DROP TABLE IF EXISTS USR_TYPO"
-  sql.execute "CREATE TABLE USR_TYPO AS SELECT a.PK, a.THE_GEOM,a.MAJO,b.SECOND "+
+    sql.execute "DROP TABLE IF EXISTS USR_TYPO"
+    sql.execute "CREATE TABLE USR_TYPO AS SELECT a.PK, a.THE_GEOM,a.MAJO,b.SECOND "+
         "FROM USR_TYPO_WITH_NULL_VALUE a JOIN USR_TYPO_WITH_NULL_VALUE b ON a.PK = b.PK AND a.MAJO IS NOT NULL "+
         "MINUS SELECT a.PK,a.THE_GEOM,a.MAJO,a.SECOND FROM USR_TYPO_WITH_NULL_VALUE a "+
         "WHERE (SELECT COUNT(*) FROM USR_TYPO_WITH_NULL_VALUE b WHERE  a.PK = b.PK) = 2 AND SECOND IS NULL"
  
-  logger.info "Clean temporary tables"  
-  sql.execute "DROP TABLE IF EXISTS SUM_AREA_USR"
-  sql.execute "DROP TABLE IF EXISTS TOP2_AREA"  
-  sql.execute "DROP TABLE IF EXISTS USR_TYPO_WITH_NULL_VALUE"
-  file.deleteOnExit()  
+    logger.info "Clean temporary tables"  
+    sql.execute "DROP TABLE IF EXISTS SUM_AREA_USR"
+    sql.execute "DROP TABLE IF EXISTS TOP2_AREA"  
+    sql.execute "DROP TABLE IF EXISTS USR_TYPO_WITH_NULL_VALUE"
 
-  literalOutput = "Work done,tables USR_TYPO and BUILDING_TYPO created correctly" 
+
+    literalOutput = "The classification has been done. The tables USR_TYPO and BUILDING_TYPO have been created correctly" 
 }
+
+
 /** String output of the process. */
 @LiteralDataOutput(
-        title="Output message",
-        resume="The output message")
+    title="Output message",
+    resume="The output message")
 String literalOutput
 

@@ -1,10 +1,6 @@
 package org.orbisgis.mapuce.randomForest;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -17,7 +13,6 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.*;
-import weka.classifiers.Classifier;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;

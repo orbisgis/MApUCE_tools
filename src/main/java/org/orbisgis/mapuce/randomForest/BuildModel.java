@@ -111,7 +111,6 @@ public class BuildModel {
      * @throws Exception 
      */
     public RandomForest getClassifier() throws Exception{
-
         Object[] obj = weka.core.SerializationHelper.readAll(pathModel);
         return (RandomForest) obj[0];
     }
@@ -131,13 +130,11 @@ public class BuildModel {
      * Method use to evaluate the accuracy of the alogrithm
      * @throws Exception 
      */
-    public void evaluate() throws Exception{
-        
+    public void evaluate() throws Exception{        
         Evaluation eval = new Evaluation(learning);
         eval.evaluateModel(rf,learning);
         LoggerFactory.getLogger(BuildModel.class)
-                .info(eval.toSummaryString("\nResults\n======\n", false));
-       
+                .info(eval.toSummaryString("\nResults\n======\n", false));       
     }
     
 }
