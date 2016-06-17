@@ -19,7 +19,7 @@ import weka.core.converters.ConverterUtils;
 
 /**
  *
- * @author ebocher
+ * @author Erwan Bochers
  * @author Melvin Le Gall
  */
 public class RandomForestTest {

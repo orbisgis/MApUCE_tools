@@ -26,7 +26,6 @@ import org.apache.commons.io.FileUtils
     keywords = "Vector,MAPuCE")
 def processing() {
 
-
     logger.info "Download the MAPuCE model used to classify the data."
 
     //Do not download the file is already exist
@@ -66,21 +65,20 @@ def processing() {
     Statement sta = conn.createStatement()
     ResultSet rs = sta.executeQuery(req) 
 
-    //Transform ResultSet in Instances  
+    //Transform ResultSet into Instances  
     logger.info "Prepare the data to apply classification"
     cla.resultSetToInstances(rs,"I_PK")
 
     //Make the classification and create the table TYPO_RESULT  
-    logger.info "Build the classification and create the result table called TYPO_RESULT"
+    logger.info "Classify each buildings."
     sql.execute "DROP TABLE IF EXISTS TYPO_RESULT" 
     cla.classify("TYPO_RESULT")
 
-    logger.info "Create Building_typo table"  
     sql.execute "CREATE INDEX ON TYPO_RESULT(I_PK)"  
     sql.execute "DROP TABLE IF EXISTS BUILDING_TYPO"
     sql.execute "CREATE TABLE BUILDING_TYPO AS SELECT a.THE_GEOM,a.PK,a.PK_USR,b.typo,a.AREA FROM BUILDING_INDICATORS a,TYPO_RESULT b WHERE a.PK = b.I_PK"
   
-    logger.info "Create USR_typo table"
+    logger.info "Compute the classification for each USR"
     sql.execute "CREATE INDEX ON BUILDING_TYPO(PK)"
     sql.execute "CREATE TABLE SUM_AREA_USR AS SELECT PK_USR,TYPO,SUM(AREA) AS AREA_USR FROM BUILDING_TYPO GROUP BY PK_USR,TYPO"
     sql.execute "CREATE TABLE TOP2_AREA AS select *,(SELECT COUNT(*) FROM SUM_AREA_USR as b WHERE b.PK_USR=a.PK_USR AND b.AREA_USR>=a.AREA_USR ) as rank FROM SUM_AREA_USR AS a"+

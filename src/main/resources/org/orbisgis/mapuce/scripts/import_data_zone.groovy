@@ -14,8 +14,7 @@ import javax.swing.JOptionPane;
  * @author Erwan Bocher
  */
 @Process(title = "Import the USR, buildings and roads",
-        resume = "Import the data for a specified zone.\n Note : The list of available communes must be already imported.\n
-If not please execute the script to import all commune areas...",
+        resume = "Import the data for a specified zone. Note : The list of available communes must be already imported. If not please execute the script to import all commune areas...",
         keywords = "Vector,MAPuCE")
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){

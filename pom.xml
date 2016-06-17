@@ -6,6 +6,17 @@
     <name>MApUCE_tools</name>
     <version>1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
+     <organization>
+        <name>CNRS</name>
+        <url>http://www.orbisgis.org</url>
+    </organization>
+    <url>http://github.com/orbisgis</url>
+    <licenses>
+        <license>
+            <name>GNU General Public License (GPLV3+)</name>
+            <url>http://www.gnu.org/licenses/gpl-3.0.html</url>
+        </license>
+    </licenses>
     <build>
         <plugins>
             <plugin>
