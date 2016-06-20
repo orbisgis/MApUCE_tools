@@ -5,16 +5,16 @@ import javax.swing.JOptionPane;
 
 
 /**
- * This process is used to import and prepare the tables (USR, ROADS and BUILDINGS) for specified zone (Commune).
+ * This process is used to import and prepare the tables (USR, ROADS and BUILDINGS) for a specified commune.
  * The user has to specify (mandatory):
  *  - A login and a password to the remote database
- *  - An ID (CODE_INSSEE) for the area
+ *  - The INSEE identifier for the commune
  * @return a the tables USR, ROAD and BUILDING.
  *
  * @author Erwan Bocher
  */
-@Process(title = "Import data (USR, Buildings, Roads)",
-        resume = "Import the data for a specified zone.\n Note : The list of available communes must be already imported...",
+@Process(title = "Import the USR, buildings and roads",
+        resume = "Import the data for a specified zone. Note : The list of available communes must be already imported. If not please execute the script to import all commune areas...",
         keywords = "Vector,MAPuCE")
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){
@@ -68,7 +68,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
     sql.execute "drop table if exists COMMUNE_MAPUCE"
     query = "CREATE TABLE COMMUNE_MAPUCE AS SELECT * FROM COMMUNES_MAPUCE WHERE CODE_INSEE='"+codeInsee[0]+"'"
     sql.execute query
-    literalOutput = "The data have been imported and post-processed."
+    literalOutput = "The data have been imported and prepared."
 }
 
 }
@@ -88,7 +88,7 @@ String password
 
 /** The list of Commune identifier */
 @FieldValueInput(title="Commune identifier",
-resume="Select the code insee of a commune used as unique identifier",
+resume="Select the code insee of a commune to import the data.",
 dataField = "\$communes_mapuce\$code_insee\$",
 multiSelection = false)
 String[] codeInsee

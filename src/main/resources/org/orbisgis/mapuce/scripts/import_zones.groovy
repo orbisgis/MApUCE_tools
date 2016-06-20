@@ -1,7 +1,6 @@
 import org.orbisgis.wpsgroovyapi.input.*
 import org.orbisgis.wpsgroovyapi.output.*
 import org.orbisgis.wpsgroovyapi.process.*
-import javax.swing.JOptionPane;
 
 
 /**
@@ -14,8 +13,8 @@ import javax.swing.JOptionPane;
  *
  * @author Erwan Bocher
  */
-@Process(title = "Import study areas (Communes)",
-        resume = "Import the study areas.\n A study area is a commune where the blocks are computed.",
+@Process(title = "Import commune areas",
+        resume = "Import the commune areas. A study area is a commune where the blocks are computed.",
         keywords = "Vector,MAPuCE")
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){
@@ -29,7 +28,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
     sql.execute query
     sql.execute "CREATE TABLE COMMUNES_MAPUCE AS SELECT * FROM COMMUNE_TEMP"
     sql.execute "DROP TABLE IF EXISTS COMMUNE_TEMP"
-    literalOutput = "The data commune has been imported"
+    literalOutput = "The commune areas have been imported in the local database."
 }
 
 }

@@ -14,7 +14,7 @@ import org.h2gis.utilities.*;
  *
  * @author Erwan Bocher
  */
-@Process(title = "Morphological indicators",
+@Process(title = "Compute morphological indicators",
         resume = "Compute a set of morphological indicators.",
         keywords = "Vector,MAPuCE")
 def processing() {
@@ -253,11 +253,9 @@ def processing() {
     sql.execute "UPDATE USR_INDICATORS  SET insee_surface_collectif=0 where insee_surface_collectif is null"
     logger.warn "Cleaning the database"
     sql.execute "DROP SCHEMA DATA_WORK"
-    literalOutput = "Morphological indicators calculated"
+    literalOutput = "All morphological indicators have calculated and stored in 3 tables USR_INDICATORS, BLOCK_INDICATORS and BUILDING_INDICATORS."
 
 }
-
-
 
 
 /** String output of the process. */

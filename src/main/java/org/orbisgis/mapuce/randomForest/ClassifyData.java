@@ -48,6 +48,7 @@ public class ClassifyData {
     /**
      * Initialize the Classifier RandomForest with a .model file
      * @param pathModel where the .model file is store
+     * @param conn The connection to the database
      * @throws Exception 
      */
     public ClassifyData(String pathModel, Connection conn) throws Exception{
@@ -165,13 +166,16 @@ public class ClassifyData {
             st.setObject(1,db);
             st.setString(2, map.get(db));
             st.addBatch();
-        }
-          
+        }          
         st.executeBatch();
         st.close();
     } 
     
+    /**
+     * Return the connection set to this class
+     * @return 
+     */
     public Connection getConnection(){
-        return this.connection;
+        return connection;
     }
 }
