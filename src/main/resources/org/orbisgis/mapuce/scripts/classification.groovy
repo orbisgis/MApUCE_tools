@@ -99,7 +99,6 @@ def processing() {
     sql.execute "DROP TABLE IF EXISTS TOP2_AREA"  
     sql.execute "DROP TABLE IF EXISTS USR_TYPO_WITH_NULL_VALUE"
 
-
     literalOutput = "The classification has been done. The tables USR_TYPO and BUILDING_TYPO have been created correctly" 
 }
 
