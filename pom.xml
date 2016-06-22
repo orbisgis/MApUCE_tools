@@ -6,6 +6,11 @@
     <name>MApUCE_tools</name>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
+    <parent>
+        <groupId>org.orbisgis</groupId>
+        <artifactId>orbisgis-nexus</artifactId>
+        <version>1</version>
+    </parent>
      <organization>
         <name>CNRS</name>
         <url>http://www.orbisgis.org</url>
