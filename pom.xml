@@ -50,7 +50,7 @@
                     <instructions>
                         <Private-Package>org.orbisgis.mapuce.*</Private-Package>
                         <Bundle-Category>OrbisGIS,WPS,script,WpsScriptPlugin</Bundle-Category>
-                        <Bundle-Icon>pluginIcon.png;size=32</Bundle-Icon>
+                        <Bundle-Icon>org/orbisgis/mapuce/mapucePluginIcon.png;size=32</Bundle-Icon>
                     </instructions>
                 </configuration>
             </plugin>

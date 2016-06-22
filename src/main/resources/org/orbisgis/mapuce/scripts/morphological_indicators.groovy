@@ -14,7 +14,7 @@ import org.h2gis.utilities.*;
  *
  * @author Erwan Bocher
  */
-@Process(title = "Compute morphological indicators",
+@Process(title = "3-Compute morphological indicators",
         resume = "Compute a set of morphological indicators.",
         keywords = "Vector,MAPuCE")
 def processing() {

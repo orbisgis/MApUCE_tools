@@ -21,12 +21,12 @@ import org.apache.commons.io.FileUtils
  * @author Melvin Le Gall
  * @author Erwan Bocher
  */
-@Process(title = "Classify the BUILDING and USR features",
+@Process(title = "4-Classify the BUILDING and USR features",
     resume = "This process is used to classify the building and USR features using a RandomForest algorithm",
     keywords = "Vector,MAPuCE")
 def processing() {
 
-    logger.info "Download the MAPuCE model used to classify the data."
+    logger.warn "Download the MAPuCE model used to classify the data."
 
     //Do not download the file is already exist
     File file = new File(System.getProperty("user.home") + "/mapuce/mapuce-1.0.model");
@@ -38,7 +38,7 @@ def processing() {
     /**
      * Join between BLOCK_INDICATORS BUILDING_INDICATORS and USR_INDICATORS
      */
-    logger.info "Merge all morphological indicators available on BUILDING, BLOCK and USR levels at the BUILDING scale."
+    logger.warn "Merge all morphological indicators available on BUILDING, BLOCK and USR levels at the BUILDING scale."
     String req = " SELECT a.PK AS I_PK,a.HAUTEUR_ORIGIN AS i_H_Origin,a.INSEE_INDIVIDUS AS i_INHAB,"+
     "a.HAUTEUR AS i_H,a.NB_NIV AS i_LEVELS,a.AREA AS i_AREA,a.FLOOR_AREA AS i_FLOOR,a.VOL AS i_VOL,a.COMPACITY_R AS i_COMP_B,a.COMPACITY_N AS i_COMP_N,"+
     "a.COMPACTNESS AS i_COMP,a.FORM_FACTOR AS i_FORM,a.CONCAVITY AS i_CONC, a.MAIN_DIR_DEG AS i_DIR,a.B_FLOOR_LONG AS i_PERI,a.B_WALL_AREA AS i_WALL_A,"+
@@ -66,11 +66,11 @@ def processing() {
     ResultSet rs = sta.executeQuery(req) 
 
     //Transform ResultSet into Instances  
-    logger.info "Prepare the data to apply classification"
+    logger.warn "Prepare the data to apply classification"
     cla.resultSetToInstances(rs,"I_PK")
 
     //Make the classification and create the table TYPO_RESULT  
-    logger.info "Classify each buildings."
+    logger.warn "Classify each buildings."
     sql.execute "DROP TABLE IF EXISTS TYPO_RESULT" 
     cla.classify("TYPO_RESULT")
 
@@ -78,7 +78,7 @@ def processing() {
     sql.execute "DROP TABLE IF EXISTS BUILDING_TYPO"
     sql.execute "CREATE TABLE BUILDING_TYPO AS SELECT a.THE_GEOM,a.PK,a.PK_USR,b.typo,a.AREA FROM BUILDING_INDICATORS a,TYPO_RESULT b WHERE a.PK = b.I_PK"
   
-    logger.info "Compute the classification for each USR"
+    logger.warn "Compute the classification for each USR"
     sql.execute "CREATE INDEX ON BUILDING_TYPO(PK)"
     sql.execute "CREATE TABLE SUM_AREA_USR AS SELECT PK_USR,TYPO,SUM(AREA) AS AREA_USR FROM BUILDING_TYPO GROUP BY PK_USR,TYPO"
     sql.execute "CREATE TABLE TOP2_AREA AS select *,(SELECT COUNT(*) FROM SUM_AREA_USR as b WHERE b.PK_USR=a.PK_USR AND b.AREA_USR>=a.AREA_USR ) as rank FROM SUM_AREA_USR AS a"+
@@ -94,7 +94,7 @@ def processing() {
         "MINUS SELECT a.PK,a.THE_GEOM,a.MAJO,a.SECOND FROM USR_TYPO_WITH_NULL_VALUE a "+
         "WHERE (SELECT COUNT(*) FROM USR_TYPO_WITH_NULL_VALUE b WHERE  a.PK = b.PK) = 2 AND SECOND IS NULL"
  
-    logger.info "Clean temporary tables"  
+    logger.warn "Clean temporary tables"
     sql.execute "DROP TABLE IF EXISTS SUM_AREA_USR"
     sql.execute "DROP TABLE IF EXISTS TOP2_AREA"  
     sql.execute "DROP TABLE IF EXISTS USR_TYPO_WITH_NULL_VALUE"

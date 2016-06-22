@@ -8,9 +8,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+
+import net.opengis.ows._2.CodeType;
 import org.apache.commons.io.IOUtils;
 import org.orbisgis.wpsclient.WpsClient;
-import org.orbisgis.wpsservice.LocalWpsService;
+import org.orbisgis.wpsservice.LocalWpsServer;
 import org.orbisgis.wpsservice.controller.process.ProcessIdentifier;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.component.annotations.Activate;
@@ -25,7 +27,7 @@ import org.slf4j.LoggerFactory;
  * In the WpsService, the script are organized in a tree, which has the WpsService as root.
  *
  * Scripts can be add to the tree under a specific node path with custom icon with the following method :
- *      localWpsService.addLocalScript('processFile', 'icon', 'boolean', 'nodePath');
+ *      localWpsServer.addLocalScript('processFile', 'icon', 'boolean', 'nodePath');
  * with the folowing parameter :
  *      processFile : The File object corresponding to the script. Be careful, the plugin resource files can't be
  *              accessed from the outside of the plugin. So you have to copy it (in a temporary file as example) before
@@ -63,7 +65,7 @@ public class WpsScriptsPackage {
      * The WPS service of OrbisGIS.
      * The WPS service contains all the declared processes avaliable for the client (in OrbisGIS the toolbox).
      */
-    private LocalWpsService localWpsService;
+    private LocalWpsServer localWpsServer;
 
     /**
      * The WPS client of OrbisGIS.
@@ -73,23 +75,23 @@ public class WpsScriptsPackage {
     /**
      * List of identifier of the processes loaded by this plusgin.
      */
-    private List<Object> listIdProcess;
+    private List<CodeType> listIdProcess;
 
     /**
      * OSGI method used to give to the plugin the WpsService. (Be careful before any modification)
-     * @param localWpsService
+     * @param localWpsServer
      */
     @Reference
-    public void setLocalWpsService(LocalWpsService localWpsService) {
-        this.localWpsService = localWpsService;
+    public void setLocalWpsServer(LocalWpsServer localWpsServer) {
+        this.localWpsServer = localWpsServer;
     }
 
     /**
      * OSGI method used to remove from the plugin the WpsService. (Be careful before any modification)
      * @param localWpsService
      */
-    public void unsetLocalWpsService(LocalWpsService localWpsService) {
-        this.localWpsService = null;
+    public void unsetLocalWpsServer(LocalWpsServer localWpsService) {
+        this.localWpsServer = null;
     }
 
     /**
@@ -134,13 +136,16 @@ public class WpsScriptsPackage {
     public void activate(){        
         listIdProcess = new ArrayList<>();
         //Check the WpsService
-        if(localWpsService != null){
+        if(localWpsServer != null){
             //Default method to load the scripts
-            defaultLoadScript("MApUCE", new String[]{"icon.png"});
+            customLoadScript("scripts/classification.groovy");
+            customLoadScript("scripts/morphological_indicators.groovy");
+            customLoadScript("scripts/import_data_zone.groovy");
+            customLoadScript("scripts/import_zones.groovy");
             //Check the WpsClient
             if(wpsClient != null){
                 //Refresh the client
-                wpsClient.refreshTree();
+                wpsClient.refreshAvailableScripts();
             }
         }
         else{
@@ -159,10 +164,10 @@ public class WpsScriptsPackage {
      */
     @Deactivate
     public void deactivate(){        
-        if(localWpsService != null) {
+        if(localWpsServer != null) {
             removeAllScripts();
             if(wpsClient != null) {
-                wpsClient.refreshTree();
+                wpsClient.refreshAvailableScripts();
             }
         }
         else{
@@ -174,97 +179,55 @@ public class WpsScriptsPackage {
     }
 
     /**
-     * This method load the script contained in the 'scripts' folder of the resources an put the under the given a
-     * node with the given name. (Be careful before any modification)
-     *
-     * @param nodePath Name of the node containing the loaded scripts.
+     * This method loads the scripts one by one under different node path with different icons.
+     * (Be careful before any modification)
      */
-    private void defaultLoadScript(String nodePath, String[] iconArrayName){
-        //Retrieve the 'scripts' folder path.
-        String folderPath = this.getClass().getResource("scripts").getFile();
-        //Load the icon and get back the corresponding array with file path (in the same order)
-        String[] array = loadIcons(iconArrayName);
-        //Recursively add the scripts.
-        recursiveScriptLoad(nodePath, folderPath, array);
-
-    }
-
-    private void recursiveScriptLoad(String nodePath, String folderPath, String[] iconArrayName){
-        //Get the URL of all the files contained in the 'script' folder.
-        Enumeration<URL> enumUrl = FrameworkUtil.getBundle(this.getClass()).findEntries(folderPath, "*", false);
-        //For each url, if it is a file, load it, if it is a directory, check its content.
-        while(enumUrl.hasMoreElements()){
-            try {
-                //Get the URL
-                URL scriptUrl = enumUrl.nextElement();
-                //If the url if a groovy file,
-                if(scriptUrl.getFile().endsWith(".groovy")) {
-                    //Create a temporary File object
-                    final File tempFile = File.createTempFile("wpsprocess", ".groovy");
-                    tempFile.deleteOnExit();
-                    //Copy the content of the resource file in the temporary file.
-                    try (FileOutputStream out = new FileOutputStream(tempFile)) {
-                        IOUtils.copy(scriptUrl.openStream(), out);
-                    }
-                    //Add the temporary file to the WpsService an get back the ProcessIdentifier object
-                    ProcessIdentifier pi = localWpsService.addLocalScript(tempFile, iconArrayName, true, nodePath);
-                    //Save the process id to be able to remove the process later.
-                    listIdProcess.add(pi.getProcess().getIdentifier());
-                }
-                //If the url is a folder,
-                else if(!scriptUrl.getFile().contains(".")){
-                    String folderName = new File(scriptUrl.getFile()).getName();
-                    //Recursively add the scripts.
-                    recursiveScriptLoad(nodePath+"/"+folderName, folderPath+File.separator+folderName, iconArrayName);
-                }
-            } catch (IOException e) {
-                LoggerFactory.getLogger(WpsScriptsPackage.class).error(e.getMessage());
+    private void customLoadScript(String scriptPath){
+        try {
+            URL scriptUrl = this.getClass().getResource(scriptPath);
+            final File tempFile = File.createTempFile("wpsprocess", ".groovy");
+            tempFile.deleteOnExit();
+            try (FileOutputStream out = new FileOutputStream(tempFile)) {
+                IOUtils.copy(scriptUrl.openStream(), out);
             }
+            List<ProcessIdentifier> piList = localWpsServer.addLocalSource(tempFile,
+                    new String[]{loadIcon("mapuce.png")},
+                    false,
+                    "MAPuCE");
+            for(ProcessIdentifier pi : piList){
+                listIdProcess.add(pi.getProcessDescriptionType().getIdentifier());
+            }
+        } catch (IOException e) {
+            LoggerFactory.getLogger(WpsScriptsPackage.class).error(e.getMessage());
         }
     }
-
-   
 
     /**
      * This method removes all the scripts contained in the 'listIdProcess' list. (Be careful before any modification)
      */
     private void removeAllScripts(){
-        for(Object idProcess : listIdProcess){
-            localWpsService.removeProcess(URI.create(idProcess.toString()));
+        for(CodeType idProcess : listIdProcess){
+            localWpsServer.removeProcess(idProcess);
         }
     }
 
     /**
-     * This method copy the icons into the temporary system folder to make them accessible by the WpsClient
+     * This method copy the an icon into the temporary system folder to make it accessible by the WpsClient
      */
-    private String[] loadIcons(String[] iconArrayName){
-        String iconPath = this.getClass().getResource("icons").getFile();
-        String[] names = new String[iconArrayName.length];
-        Enumeration<URL> enumUrl = FrameworkUtil.getBundle(this.getClass()).findEntries(iconPath, "*", false);
-        while(enumUrl.hasMoreElements()){
-            try {
-                //Get the URL
-                URL scriptUrl = enumUrl.nextElement();
-                File f = new File(scriptUrl.getFile());
-                //If the url if a png file,
-                if(scriptUrl.getFile().endsWith(".png")) {
-                    //Create a temporary File object
-                    final File tempFile = File.createTempFile("wpsprocessicon", ".png");
-                    tempFile.deleteOnExit();
-                    //Copy the content of the resource file in the temporary file.
-                    try (FileOutputStream out = new FileOutputStream(tempFile)) {
-                        IOUtils.copy(scriptUrl.openStream(), out);
-                    }
-                    for(int i=0; i<iconArrayName.length; i++){
-                        if(iconArrayName[i].equals(f.getName())){
-                            names[i] = tempFile.getAbsolutePath();
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                LoggerFactory.getLogger(WpsScriptsPackage.class).error(e.getMessage());
+    private String loadIcon(String iconName){
+        URL iconUrl = this.getClass().getResource("icons"+File.separator+iconName);
+        try {
+            //Create a temporary File object
+            final File tempFile = File.createTempFile("wpsprocessicon", ".png");
+            tempFile.deleteOnExit();
+            //Copy the content of the resource file in the temporary file.
+            try (FileOutputStream out = new FileOutputStream(tempFile)) {
+                IOUtils.copy(iconUrl.openStream(), out);
             }
+            return tempFile.getAbsolutePath();
+        } catch (IOException e) {
+            LoggerFactory.getLogger(WpsScriptsPackage.class).error(e.getMessage());
         }
-        return names;
-    }  
+        return null;
+    }
 }
