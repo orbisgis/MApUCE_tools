@@ -13,7 +13,7 @@ import javax.swing.JOptionPane;
  *
  * @author Erwan Bocher
  */
-@Process(title = "Import the USR, buildings and roads",
+@Process(title = "2-Import the USR, buildings and roads",
         resume = "Import the data for a specified zone. Note : The list of available communes must be already imported. If not please execute the script to import all commune areas...",
         keywords = "Vector,MAPuCE")
 def processing() {
@@ -89,7 +89,7 @@ String password
 /** The list of Commune identifier */
 @FieldValueInput(title="Commune identifier",
 resume="Select the code insee of a commune to import the data.",
-dataField = "\$communes_mapuce\$code_insee\$",
+dataFieldTitle = "\$communes_mapuce\$code_insee\$",
 multiSelection = false)
 String[] codeInsee
 

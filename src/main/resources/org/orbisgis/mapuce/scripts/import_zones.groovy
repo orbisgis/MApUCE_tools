@@ -13,7 +13,7 @@ import org.orbisgis.wpsgroovyapi.process.*
  *
  * @author Erwan Bocher
  */
-@Process(title = "Import commune areas",
+@Process(title = "1-Import commune areas",
         resume = "Import the commune areas. A study area is a commune where the blocks are computed.",
         keywords = "Vector,MAPuCE")
 def processing() {
