@@ -41,7 +41,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
 String login 
 
 /** Password to the MApUCE database. */
-@LiteralDataInput(
+@PasswordInput(
         title="Password to the database",
         resume="Password to the database")
 String password 
