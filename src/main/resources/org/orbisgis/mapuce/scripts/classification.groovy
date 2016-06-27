@@ -23,7 +23,7 @@ import org.apache.commons.io.FileUtils
  */
 @Process(title = "4-Classify the BUILDING and USR features",
     resume = "This process is used to classify the building and USR features using a RandomForest algorithm",
-    keywords = "Vector,MAPuCE")
+    keywords = ["Vector","MAPuCE"])
 def processing() {
 
     logger.warn "Download the MAPuCE model used to classify the data."

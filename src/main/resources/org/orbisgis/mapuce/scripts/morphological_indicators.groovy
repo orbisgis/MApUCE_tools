@@ -16,7 +16,7 @@ import org.h2gis.utilities.*;
  */
 @Process(title = "3-Compute morphological indicators",
         resume = "Compute a set of morphological indicators.",
-        keywords = "Vector,MAPuCE")
+        keywords = ["Vector","MAPuCE"])
 def processing() {
 
     sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS, USR_INDICATORS, BLOCK_INDICATORS"

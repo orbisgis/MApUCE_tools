@@ -15,7 +15,7 @@ import org.orbisgis.wpsgroovyapi.process.*
  */
 @Process(title = "1-Import commune areas",
         resume = "Import the commune areas. A study area is a commune where the blocks are computed.",
-        keywords = "Vector,MAPuCE")
+        keywords = ["Vector","MAPuCE"])
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){
     def schemaFromRemoteDB = "lienss"
