@@ -11,6 +11,7 @@ import java.util.List;
 
 import net.opengis.ows._2.CodeType;
 import org.apache.commons.io.IOUtils;
+import org.orbisgis.frameworkapi.CoreWorkspace;
 import org.orbisgis.wpsclient.WpsClient;
 import org.orbisgis.wpsservice.LocalWpsServer;
 import org.orbisgis.wpsservice.controller.process.ProcessIdentifier;
@@ -19,6 +20,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -61,6 +63,13 @@ import org.slf4j.LoggerFactory;
 @Component
 public class WpsScriptsPackage {
 
+    protected static final Logger LOGGER = LoggerFactory.getLogger(WpsScriptsPackage.class);
+
+    /**
+     * OrbisGIS core workspace.
+     */
+    protected CoreWorkspace coreWorkspace;
+
     /**
      * The WPS service of OrbisGIS.
      * The WPS service contains all the declared processes avaliable for the client (in OrbisGIS the toolbox).
@@ -76,6 +85,23 @@ public class WpsScriptsPackage {
      * List of identifier of the processes loaded by this plusgin.
      */
     private List<CodeType> listIdProcess;
+
+    /**
+     * OSGI method used to give to the plugin the CoreWorkspace. (Be careful before any modification)
+     * @param coreWorkspace
+     */
+    @Reference
+    public void setCoreWorkspace(CoreWorkspace coreWorkspace) {
+        this.coreWorkspace = coreWorkspace;
+    }
+
+    /**
+     * OSGI method used to remove from the plugin the CoreWorkspace. (Be careful before any modification)
+     * @param coreWorkspace
+     */
+    public void unsetCoreWorkspace(CoreWorkspace coreWorkspace) {
+        this.coreWorkspace = null;
+    }
 
     /**
      * OSGI method used to give to the plugin the WpsService. (Be careful before any modification)
@@ -183,22 +209,39 @@ public class WpsScriptsPackage {
      * (Be careful before any modification)
      */
     private void customLoadScript(String scriptPath){
-        try {
-            URL scriptUrl = this.getClass().getResource(scriptPath);
-            final File tempFile = File.createTempFile("wpsprocess", ".groovy");
-            tempFile.deleteOnExit();
-            try (FileOutputStream out = new FileOutputStream(tempFile)) {
-                IOUtils.copy(scriptUrl.openStream(), out);
+        URL scriptUrl = this.getClass().getResource(scriptPath);
+        String tempFolderPath = coreWorkspace.getApplicationFolder();
+        File tempFolder = new File(tempFolderPath, "wpsscripts");
+        if(!tempFolder.exists()) {
+            if(!tempFolder.mkdirs()){
+                LOGGER.error("Unable to create the OrbisGIS temporary folder.");
+                return;
             }
-            List<ProcessIdentifier> piList = localWpsServer.addLocalSource(tempFile,
-                    new String[]{loadIcon("mapuce.png")},
-                    false,
-                    "MAPuCE");
-            for(ProcessIdentifier pi : piList){
-                listIdProcess.add(pi.getProcessDescriptionType().getIdentifier());
+        }
+        final File tempFile = new File(tempFolder.getAbsolutePath(), new File(scriptUrl.getFile()).getName());
+        if(!tempFile.exists()) {
+            try{
+                if(tempFile.createNewFile()){
+                    LOGGER.error("Unable to create the script file.");
+                    return;
+                }
+            } catch (IOException e) {
+                LoggerFactory.getLogger(WpsScriptsPackage.class).error(e.getMessage());
             }
-        } catch (IOException e) {
-            LoggerFactory.getLogger(WpsScriptsPackage.class).error(e.getMessage());
+        }
+        try (FileOutputStream out = new FileOutputStream(tempFile)) {
+            IOUtils.copy(scriptUrl.openStream(), out);
+        }
+        catch (Exception e){
+            LOGGER.error("Unable to copy the content of the script to the temporary file.");
+            return;
+        }
+        List<ProcessIdentifier> piList = localWpsServer.addLocalSource(tempFile,
+                new String[]{loadIcon("mapuce.png")},
+                false,
+                "MAPuCE");
+        for(ProcessIdentifier pi : piList){
+            listIdProcess.add(pi.getProcessDescriptionType().getIdentifier());
         }
     }
 
@@ -215,19 +258,35 @@ public class WpsScriptsPackage {
      * This method copy the an icon into the temporary system folder to make it accessible by the WpsClient
      */
     private String loadIcon(String iconName){
-        URL iconUrl = this.getClass().getResource("icons"+File.separator+iconName);
-        try {
-            //Create a temporary File object
-            final File tempFile = File.createTempFile("wpsprocessicon", ".png");
-            tempFile.deleteOnExit();
-            //Copy the content of the resource file in the temporary file.
-            try (FileOutputStream out = new FileOutputStream(tempFile)) {
-                IOUtils.copy(iconUrl.openStream(), out);
+        URL iconUrl = this.getClass().getResource("icons/"+iconName);
+        String tempFolderPath = coreWorkspace.getApplicationFolder();
+        File tempFolder = new File(tempFolderPath, "wpsscripts");
+        if(!tempFolder.exists()) {
+            if(!tempFolder.mkdirs()){
+                LOGGER.error("Unable to create the OrbisGIS temporary folder.");
+                return null;
             }
-            return tempFile.getAbsolutePath();
-        } catch (IOException e) {
-            LoggerFactory.getLogger(WpsScriptsPackage.class).error(e.getMessage());
         }
-        return null;
+        //Create a temporary File object
+        final File tempFile = new File(tempFolder.getAbsolutePath(), iconName);
+        if(!tempFile.exists()) {
+            try{
+                if(tempFile.createNewFile()){
+                    LOGGER.error("Unable to create the icon file.");
+                    return null;
+                }
+            } catch (IOException e) {
+                LoggerFactory.getLogger(WpsScriptsPackage.class).error(e.getMessage());
+            }
+        }
+        //Copy the content of the resource file in the temporary file.
+        try (FileOutputStream out = new FileOutputStream(tempFile)) {
+            IOUtils.copy(iconUrl.openStream(), out);
+        }
+        catch (Exception e){
+            LOGGER.error("Unable to copy the content of the icon to the temporary file.");
+            return null;
+        }
+        return tempFile.getAbsolutePath();
     }
 }
