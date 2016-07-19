@@ -35,14 +35,14 @@ if(!login.isEmpty()&& !password.isEmpty()){
 
             logger.warn "Importing the buildings from the remote database"
     sql.execute "DROP TABLE IF EXISTS BUILDINGS_TEMP"
-            tableFromRemoteDB = "(SELECT a.*, b.CODE_INSEE  FROM lienss.BATI_TOPO a, lienss.ZONE_ETUDE b WHERE a.IDZONE = b.OGC_FID and b.CODE_INSEE=''"+codeInsee[0]+"'')"
+            tableFromRemoteDB = "(SELECT a.OGC_FID,a.IDZONE, a.THE_GEOM, a.HAUTEUR, a.IDILOT as PK_USR, a.PK, a.NB_NIV, a.HAUTEUR_CORRIGEE, a.INSEE_INDIVIDUS, a.THEME,a.PAI_BDTOPO,a.PAI_NATURE, b.CODE_INSEE  FROM lienss.BATI_TOPO a, lienss.ZONE_ETUDE b WHERE a.IDZONE = b.OGC_FID and b.CODE_INSEE=''"+codeInsee[0]+"'')"
     query = "CREATE LINKED TABLE BUILDINGS_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
             query+=" '"+ login+"',"
             query+="'"+password+"', '"+schemaFromRemoteDB+"', "
             query+= "'"+tableFromRemoteDB+"')";
             sql.execute query
     sql.execute "drop table if exists BUILDINGS_MAPUCE"
-    sql.execute "CREATE TABLE BUILDINGS_MAPUCE (OGC_FID integer, THE_GEOM geometry, HAUTEUR_ORIGIN double, IDZONE integer, PK_USR integer, PK integer PRIMARY KEY, NB_NIV integer, HAUTEUR double, AREA double, PERIMETER double, L_CVX double, INSEE_INDIVIDUS double) AS SELECT OGC_FID, ST_NORMALIZE (THE_GEOM) as THE_GEOM, (HAUTEUR :: double) as HAUTEUR_ORIGIN, IDZONE, IDILOT as PK_USR, PK :: integer, NB_NIV, (HAUTEUR_CORRIGEE :: double) as HAUTEUR, ST_AREA(THE_GEOM) as AREA, ST_PERIMETER(THE_GEOM) as PERIMETER , ROUND(ST_PERIMETER(ST_CONVEXHULL(THE_GEOM)),3), INSEE_INDIVIDUS FROM BUILDINGS_TEMP WHERE ST_NUMGEOMETRIES(THE_GEOM)=1"
+    sql.execute "CREATE TABLE BUILDINGS_MAPUCE (OGC_FID integer, THE_GEOM geometry, HAUTEUR_ORIGIN double, IDZONE integer, PK_USR integer, PK integer PRIMARY KEY, NB_NIV integer, HAUTEUR double, AREA double, PERIMETER double, L_CVX double, INSEE_INDIVIDUS double, THEME varchar, PAI_BDTOPO varchar, PAI_NATURE varchar ) AS SELECT OGC_FID, ST_NORMALIZE (THE_GEOM) as THE_GEOM, (HAUTEUR :: double) as HAUTEUR_ORIGIN, IDZONE, PK_USR, PK :: integer, NB_NIV, (HAUTEUR_CORRIGEE :: double) as HAUTEUR, ST_AREA(THE_GEOM) as AREA, ST_PERIMETER(THE_GEOM) as PERIMETER , ROUND(ST_PERIMETER(ST_CONVEXHULL(THE_GEOM)),3), INSEE_INDIVIDUS, THEME , PAI_BDTOPO, PAI_NATURE FROM BUILDINGS_TEMP WHERE ST_NUMGEOMETRIES(THE_GEOM)=1"
 
     sql.execute "UPDATE BUILDINGS_MAPUCE SET HAUTEUR=3 WHERE HAUTEUR is null OR HAUTEUR=0"
     sql.execute "UPDATE BUILDINGS_MAPUCE SET NB_NIV=1 WHERE NB_NIV=0"
@@ -64,11 +64,11 @@ if(!login.isEmpty()&& !password.isEmpty()){
     sql.execute "CREATE SPATIAL INDEX ON ROADS_MAPUCE(THE_GEOM)"
     sql.execute "DROP TABLE IF EXISTS ROADS_TEMP"
 
-    logger.warn "Keep the selected commune"
+    logger.warn "Keep the selected commune in the database"
     sql.execute "drop table if exists COMMUNE_MAPUCE"
     query = "CREATE TABLE COMMUNE_MAPUCE AS SELECT * FROM COMMUNES_MAPUCE WHERE CODE_INSEE='"+codeInsee[0]+"'"
     sql.execute query
-    literalOutput = "The data have been imported and prepared."
+    literalOutput = "The data have been successfully imported."
 }
 
 }
