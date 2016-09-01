@@ -15,7 +15,7 @@ import org.h2gis.utilities.*;
  * @author Erwan Bocher
  */
 @Process(title = "3-Compute morphological indicators",
-        resume = "Compute a set of morphological indicators.",
+        resume = "Compute a set of morphological indicators based on the french national vector database called BD Topo.<br> The indicators are computed at 3 levels of spatial unit : building, block, USR and stored in 3 tables.<br> <ul> <li>A building is the main geometry (output table name  : BUILDING_INDICATORS).</li> <li> A block represents the union of a set of touching geometry buildings (output table name  : BLOCK_INDICATORS).</li> <li> USR (Unité Spatiale de Référence – Reference Spatial Unit) is the smallest area that is surrounded by streets (output table name  : USR_INDICATORS).</li></ul><br>Note : Please use the extract metadata script in the toolbox to get some basic information on the indicators stored in the 3 output tables.",
         keywords = ["Vector","MAPuCE"])
 def processing() {
 
@@ -253,6 +253,18 @@ def processing() {
     sql.execute "UPDATE USR_INDICATORS  SET insee_surface_collectif=0 where insee_surface_collectif is null"
     logger.warn "Cleaning the database"
     sql.execute "DROP SCHEMA DATA_WORK"
+    sql.execute "COMMENT ON COLUMN BLOCK_INDICATORS.the_geom IS ' External border of the union of a set of touching geometry buildings';"
+    sql.execute "COMMENT ON COLUMN BLOCK_INDICATORS.pk_block IS 'Unique identifier for a block geometry';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.pk_usr IS 'Unique identifier of the usr';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.area IS 'Area of the block';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.floor_area IS 'Sum of building the floor areas in the block';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.vol IS 'Sum of the building volumes in a block';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.h_mean IS 'Buildings’s mean height in each block';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.h_std IS 'Buildings’s Standard Deviation height in each block';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.compacity IS 'The block’s compacity is defined as the sum of the building’s external surfaces divided by the sum of building’s volume power two-third';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.holes_area IS ' Sum of holes’s area (courtyard) in a block';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.holes_percent IS 'Compute the ratio (percent) of courtyard area in a block of buildings';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.main_dir_deg IS 'The main direction correspond to the direction (in degree) given by the longest side of the geometry’s minimum rectangle. The north is equal to 0°. Values are clockwise, so East = 90°.the value is between 0 and 180°(e.g 355° becomes 175°).';"
     literalOutput = "All morphological indicators have calculated and stored in 3 tables USR_INDICATORS, BLOCK_INDICATORS and BUILDING_INDICATORS."
 
 }
