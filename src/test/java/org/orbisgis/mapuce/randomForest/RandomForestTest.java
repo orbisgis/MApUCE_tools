@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import junit.framework.Assert;
-import org.h2gis.h2spatial.ut.SpatialH2UT;
+import org.h2gis.functions.factory.H2GISDBFactory;
 import org.h2gis.utilities.TableLocation;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import org.junit.Test;
@@ -32,7 +32,7 @@ public class RandomForestTest {
     @BeforeClass
     public static void tearUp() throws Exception {
         // Keep a connection alive to not close the DataBase on each unit test
-        connection = SpatialH2UT.createSpatialDataBase(DB_NAME);
+        connection = H2GISDBFactory.createSpatialDataBase(DB_NAME);
     }
 
     @AfterClass
