@@ -14,7 +14,7 @@ import javax.swing.JOptionPane;
  * @author Erwan Bocher
  */
 @Process(title = "2-Import the USR, buildings and roads",
-        resume = "Import the data for a specified zone. Note : The list of available communes must be already imported. If not please execute the script to import all commune areas...",
+        resume = "Import the data (USR, buildings and roads) needed to compute morphological indicators for a specified commune.<br> The imported data are stored into a remote database. Please contact info@orbigis.org to obtain an account. <br> Note : The list of available communes must be already imported. If not please execute the script to import all commune areas...",
         keywords = ["Vector","MAPuCE"])
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){
@@ -29,20 +29,20 @@ if(!login.isEmpty()&& !password.isEmpty()){
             query+= "'"+tableFromRemoteDB+"')";
             sql.execute query
             sql.execute "drop table if exists USR_MAPUCE"
-            sql.execute "CREATE TABLE USR_MAPUCE(PK serial NOT NULL PRIMARY KEY, THE_GEOM geometry, IDZONE integer NOT NULL, VEGETATION_SURFACE double, ROUTE_SURFACE double, HYDRO_SURFACE double, USR_AREA double, insee_individus double,insee_menages double ,insee_men_coll double ,insee_men_surf double ,insee_surface_collectif double,route_longueur double, trottoir_longueur double) AS SELECT PK, THE_GEOM, IDZONE, VEGETATION_SURFACE, ROUTE_SURFACE, HYDRO_SURFACE, ST_AREA(THE_GEOM) as USR_AREA , insee_individus,insee_menages,insee_men_coll,insee_men_surf ,insee_surface_collectif ,route_longueur , trottoir_longueur  FROM USR_TEMP"
+            sql.execute "CREATE TABLE USR_MAPUCE(PK serial NOT NULL PRIMARY KEY, THE_GEOM geometry, ID_ZONE integer NOT NULL, VEGETATION_SURFACE double, ROUTE_SURFACE double, HYDRO_SURFACE double, USR_AREA double, insee_individus double,insee_menages double ,insee_men_coll double ,insee_men_surf double ,insee_surface_collectif double,route_longueur double, trottoir_longueur double) AS SELECT PK, THE_GEOM, IDZONE as ID_ZONE, VEGETATION_SURFACE, ROUTE_SURFACE, HYDRO_SURFACE, ST_AREA(THE_GEOM) as USR_AREA , insee_individus,insee_menages,insee_men_coll,insee_men_surf ,insee_surface_collectif ,route_longueur , trottoir_longueur  FROM USR_TEMP"
             sql.execute "CREATE SPATIAL INDEX ON USR_MAPUCE(THE_GEOM);"
             sql.execute "DROP TABLE USR_TEMP"
 
             logger.warn "Importing the buildings from the remote database"
     sql.execute "DROP TABLE IF EXISTS BUILDINGS_TEMP"
-            tableFromRemoteDB = "(SELECT a.OGC_FID,a.IDZONE, a.THE_GEOM, a.HAUTEUR, a.IDILOT as PK_USR, a.PK, a.NB_NIV, a.HAUTEUR_CORRIGEE, a.INSEE_INDIVIDUS, a.THEME,a.PAI_BDTOPO,a.PAI_NATURE, b.CODE_INSEE  FROM lienss.BATI_TOPO a, lienss.ZONE_ETUDE b WHERE a.IDZONE = b.OGC_FID and b.CODE_INSEE=''"+codeInsee[0]+"'')"
+            tableFromRemoteDB = "(SELECT a.IDZONE, a.THE_GEOM, a.HAUTEUR, a.IDILOT as PK_USR, a.PK, a.NB_NIV, a.HAUTEUR_CORRIGEE, a.INSEE_INDIVIDUS, a.THEME,a.PAI_BDTOPO,a.PAI_NATURE, b.CODE_INSEE  FROM lienss.BATI_TOPO a, lienss.ZONE_ETUDE b WHERE a.IDZONE = b.OGC_FID and b.CODE_INSEE=''"+codeInsee[0]+"'')"
     query = "CREATE LINKED TABLE BUILDINGS_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
             query+=" '"+ login+"',"
             query+="'"+password+"', '"+schemaFromRemoteDB+"', "
             query+= "'"+tableFromRemoteDB+"')";
             sql.execute query
     sql.execute "drop table if exists BUILDINGS_MAPUCE"
-    sql.execute "CREATE TABLE BUILDINGS_MAPUCE (OGC_FID integer, THE_GEOM geometry, HAUTEUR_ORIGIN double, IDZONE integer, PK_USR integer, PK integer PRIMARY KEY, NB_NIV integer, HAUTEUR double, AREA double, PERIMETER double, L_CVX double, INSEE_INDIVIDUS double, THEME varchar, PAI_BDTOPO varchar, PAI_NATURE varchar ) AS SELECT OGC_FID, ST_NORMALIZE (THE_GEOM) as THE_GEOM, (HAUTEUR :: double) as HAUTEUR_ORIGIN, IDZONE, PK_USR, PK :: integer, NB_NIV, (HAUTEUR_CORRIGEE :: double) as HAUTEUR, ST_AREA(THE_GEOM) as AREA, ST_PERIMETER(THE_GEOM) as PERIMETER , ROUND(ST_PERIMETER(ST_CONVEXHULL(THE_GEOM)),3), INSEE_INDIVIDUS, THEME , PAI_BDTOPO, PAI_NATURE FROM BUILDINGS_TEMP WHERE ST_NUMGEOMETRIES(THE_GEOM)=1"
+    sql.execute "CREATE TABLE BUILDINGS_MAPUCE (THE_GEOM geometry, HAUTEUR_ORIGIN double, ID_ZONE integer, PK_USR integer, PK integer PRIMARY KEY, NB_NIV integer, HAUTEUR double, AREA double, PERIMETER double, L_CVX double, INSEE_INDIVIDUS double, THEME varchar, PAI_BDTOPO varchar, PAI_NATURE varchar ) AS SELECT  ST_NORMALIZE (THE_GEOM) as THE_GEOM, (HAUTEUR :: double) as HAUTEUR_ORIGIN, IDZONE as ID_ZONE, PK_USR, PK :: integer, NB_NIV, (HAUTEUR_CORRIGEE :: double) as HAUTEUR, ST_AREA(THE_GEOM) as AREA, ST_PERIMETER(THE_GEOM) as PERIMETER , ROUND(ST_PERIMETER(ST_CONVEXHULL(THE_GEOM)),3), INSEE_INDIVIDUS, THEME , PAI_BDTOPO, PAI_NATURE FROM BUILDINGS_TEMP WHERE ST_NUMGEOMETRIES(THE_GEOM)=1"
 
     sql.execute "UPDATE BUILDINGS_MAPUCE SET HAUTEUR=3 WHERE HAUTEUR is null OR HAUTEUR=0"
     sql.execute "UPDATE BUILDINGS_MAPUCE SET NB_NIV=1 WHERE NB_NIV=0"

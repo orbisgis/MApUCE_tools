@@ -14,7 +14,7 @@ import org.orbisgis.wpsgroovyapi.process.*
  * @author Erwan Bocher
  */
 @Process(title = "1-Import commune areas",
-        resume = "Import the commune areas. A study area is a commune where the blocks are computed.",
+        resume = "Import the commune areas table. <br> This table lists all communes for which the USR, buildings and roads data have been prepared.<br> The commune areas table is stored into a remote database. Please contact info@orbigis.org to obtain an account.",
         keywords = ["Vector","MAPuCE"])
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){

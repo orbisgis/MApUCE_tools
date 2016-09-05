@@ -10,12 +10,12 @@ import org.h2gis.utilities.*;
  * MApUCE project. These indicators are compute for a french NUTS.
  * 
  * @return 3 files that contains the indicators at USR, BLOCK and 
- * building scales.
+ * BUILDING scales.
  *
  * @author Erwan Bocher
  */
 @Process(title = "3-Compute morphological indicators",
-        resume = "Compute a set of morphological indicators.",
+        resume = "Compute a set of morphological indicators based on the french national vector database called BD Topo.<br> The indicators are computed at 3 levels of spatial unit : building, block, USR and stored in 3 tables.<br> <ul> <li>A building is the main geometry (output table name  : BUILDING_INDICATORS).</li> <li> A block represents the union of a set of touching geometry buildings (output table name  : BLOCK_INDICATORS).</li> <li> USR (Unité Spatiale de Référence – Reference Spatial Unit) is the smallest area that is surrounded by streets (output table name  : USR_INDICATORS).</li></ul><br>Note : Please use the extract metadata script in the toolbox to get some basic information on the indicators stored in the 3 output tables.",
         keywords = ["Vector","MAPuCE"])
 def processing() {
 
@@ -147,7 +147,7 @@ def processing() {
     logger.warn "Finalize the building indicators table"
 
     sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS"
-    sql.execute "CREATE TABLE BUILDING_INDICATORS AS SELECT a.OGC_FID, a.THE_GEOM, a.HAUTEUR_ORIGIN, a.IDZONE , a.PK_USR , a.PK, a.NB_NIV,a.HAUTEUR, a.AREA, a.PERIMETER, a.INSEE_INDIVIDUS, b.FLOOR_AREA, b.VOL, c.COMPACITY_R, c.COMPACITY_N, d.COMPACTNESS,e.FORM_FACTOR,f.CONCAVITY,g.MAIN_DIR_DEG,h.B_FLOOR_LONG, h.B_WALL_AREA, h.P_WALL_LONG, h.P_WALL_AREA, h.NB_NEIGHBOR, h.FREE_P_WALL_LONG, h.FREE_EXT_AREA, h.CONTIGUITY,i.P_VOL_RATIO,j.FRACTAL_DIM,k.MIN_DIST, k.MEAN_DIST, k.MAX_DIST,  k.STD_DIST, l.NUM_POINTS, m.L_TOT, a.L_CVX, m.L_3M, m.L_RATIO, m.L_RATIO_CVX,n.PK_BLOCK FROM BUILDINGS_MAPUCE a LEFT JOIN DATA_WORK.BUILD_AREA_VOL b ON a.PK =b.PK LEFT JOIN DATA_WORK.BUILD_COMPACITY c ON a.PK = c.PK LEFT JOIN DATA_WORK.BUILD_COMPACTNESS d ON a.PK = d.PK LEFT JOIN DATA_WORK.BUILD_FORM_FACTOR e ON a.PK = e.PK LEFT JOIN DATA_WORK.BUILD_CONCAVITY f ON a.PK = f.PK LEFT JOIN DATA_WORK.BUILD_MAIN_DIR g ON a.PK = g.PK LEFT JOIN DATA_WORK.BUILD_CONTIGUITY h ON a.PK = h.PK LEFT JOIN DATA_WORK.BUILD_P_VOL_RATIO i ON a.PK = i.PK LEFT JOIN DATA_WORK.BUILD_FRACTAL j ON a.PK = j.PK LEFT JOIN DATA_WORK.BUILD_DIST k ON a.PK = k.PK LEFT JOIN DATA_WORK.BUILD_NUM_POINT l ON a.PK =l.PK LEFT JOIN DATA_WORK.BUILD_NEXT_ROAD m ON a.PK = m.PK LEFT JOIN DATA_WORK.BUILD_BLOCK_MATRIX n ON a.PK = n.PK_BUILD"
+    sql.execute "CREATE TABLE BUILDING_INDICATORS AS SELECT a.THE_GEOM, a.HAUTEUR_ORIGIN, a.ID_ZONE , a.PK_USR , a.PK, a.NB_NIV,a.HAUTEUR, a.AREA, a.PERIMETER, a.INSEE_INDIVIDUS, b.FLOOR_AREA, b.VOL, c.COMPACITY_R, c.COMPACITY_N, d.COMPACTNESS,e.FORM_FACTOR,f.CONCAVITY,g.MAIN_DIR_DEG,h.B_FLOOR_LONG, h.B_WALL_AREA, h.P_WALL_LONG, h.P_WALL_AREA, h.NB_NEIGHBOR, h.FREE_P_WALL_LONG, h.FREE_EXT_AREA, h.CONTIGUITY,i.P_VOL_RATIO,j.FRACTAL_DIM,k.MIN_DIST, k.MEAN_DIST, k.MAX_DIST,  k.STD_DIST, l.NUM_POINTS, m.L_TOT, a.L_CVX, m.L_3M, m.L_RATIO, m.L_RATIO_CVX,n.PK_BLOCK FROM BUILDINGS_MAPUCE a LEFT JOIN DATA_WORK.BUILD_AREA_VOL b ON a.PK =b.PK LEFT JOIN DATA_WORK.BUILD_COMPACITY c ON a.PK = c.PK LEFT JOIN DATA_WORK.BUILD_COMPACTNESS d ON a.PK = d.PK LEFT JOIN DATA_WORK.BUILD_FORM_FACTOR e ON a.PK = e.PK LEFT JOIN DATA_WORK.BUILD_CONCAVITY f ON a.PK = f.PK LEFT JOIN DATA_WORK.BUILD_MAIN_DIR g ON a.PK = g.PK LEFT JOIN DATA_WORK.BUILD_CONTIGUITY h ON a.PK = h.PK LEFT JOIN DATA_WORK.BUILD_P_VOL_RATIO i ON a.PK = i.PK LEFT JOIN DATA_WORK.BUILD_FRACTAL j ON a.PK = j.PK LEFT JOIN DATA_WORK.BUILD_DIST k ON a.PK = k.PK LEFT JOIN DATA_WORK.BUILD_NUM_POINT l ON a.PK =l.PK LEFT JOIN DATA_WORK.BUILD_NEXT_ROAD m ON a.PK = m.PK LEFT JOIN DATA_WORK.BUILD_BLOCK_MATRIX n ON a.PK = n.PK_BUILD"
 
     sql.execute "ALTER TABLE BUILDING_INDICATORS ALTER COLUMN PK SET NOT NULL"
     sql.execute "CREATE PRIMARY KEY ON BUILDING_INDICATORS(PK)"
@@ -233,7 +233,7 @@ def processing() {
 
 
     logger.warn "Finalize the USR indicators table"
-    sql.execute "CREATE TABLE USR_INDICATORS  AS SELECT a.PK,a.the_geom,a.insee_individus,a.insee_menages,a.insee_men_coll,a.insee_men_surf,a.insee_surface_collectif,a.vegetation_surface , a.route_surface ,a.route_longueur , a.trottoir_longueur,b.FLOOR, b.FLOOR_RATIO,c.COMPAC_MEAN_NW, c.COMPAC_MEAN_W, c.CONTIG_MEAN,c.CONTIG_STD,c.MAIN_DIR_STD,c.H_MEAN,c.H_STD,c.P_VOL_RATIO_MEAN,c.B_AREA, c.B_VOL, c.B_VOL_M,c.BUILD_NUMB, c.MIN_M_DIST, c.MEAN_M_DIST, c.MEAN_STD_DIST,m.B_HOLES_AREA_MEAN,m.B_STD_H_MEAN,m.B_M_NW_COMPACITY, m.B_M_W_COMPACITY, m.B_STD_COMPACITY, p.DIST_TO_CENTER,q.BUILD_DENS, q.HYDRO_DENS, q.VEGET_DENS, q.ROAD_DENS, c.EXT_ENV_AREA FROM USR_MAPUCE a LEFT JOIN DATA_WORK.USR_BUILD_FLOOR_RATIO b ON a.PK = b.PK_USR LEFT JOIN DATA_WORK.USR_BUILD_TMP c ON a.PK = c.PK_USR LEFT JOIN DATA_WORK.USR_BLOCK_TMP  m ON a.PK = m.PK_USR LEFT JOIN DATA_WORK.USR_TO_CENTER p ON a.PK = p.PK_USR LEFT JOIN DATA_WORK.USR_DENS_AREA q ON a.PK = q.PK_USR"
+    sql.execute "CREATE TABLE USR_INDICATORS  AS SELECT a.PK,a.the_geom,a.id_zone,a.insee_individus,a.insee_menages,a.insee_men_coll,a.insee_men_surf,a.insee_surface_collectif,a.vegetation_surface , a.route_surface ,a.route_longueur , a.trottoir_longueur,b.FLOOR, b.FLOOR_RATIO,c.COMPAC_MEAN_NW, c.COMPAC_MEAN_W, c.CONTIG_MEAN,c.CONTIG_STD,c.MAIN_DIR_STD,c.H_MEAN,c.H_STD,c.P_VOL_RATIO_MEAN,c.B_AREA, c.B_VOL, c.B_VOL_M,c.BUILD_NUMB, c.MIN_M_DIST, c.MEAN_M_DIST, c.MEAN_STD_DIST,m.B_HOLES_AREA_MEAN,m.B_STD_H_MEAN,m.B_M_NW_COMPACITY, m.B_M_W_COMPACITY, m.B_STD_COMPACITY, p.DIST_TO_CENTER,q.BUILD_DENS, q.HYDRO_DENS, q.VEGET_DENS, q.ROAD_DENS, c.EXT_ENV_AREA FROM USR_MAPUCE a LEFT JOIN DATA_WORK.USR_BUILD_FLOOR_RATIO b ON a.PK = b.PK_USR LEFT JOIN DATA_WORK.USR_BUILD_TMP c ON a.PK = c.PK_USR LEFT JOIN DATA_WORK.USR_BLOCK_TMP  m ON a.PK = m.PK_USR LEFT JOIN DATA_WORK.USR_TO_CENTER p ON a.PK = p.PK_USR LEFT JOIN DATA_WORK.USR_DENS_AREA q ON a.PK = q.PK_USR"
 
     sql.execute "ALTER TABLE USR_INDICATORS  ALTER COLUMN PK SET NOT NULL"
     sql.execute "CREATE PRIMARY KEY ON USR_INDICATORS (PK)"
@@ -253,6 +253,107 @@ def processing() {
     sql.execute "UPDATE USR_INDICATORS  SET insee_surface_collectif=0 where insee_surface_collectif is null"
     logger.warn "Cleaning the database"
     sql.execute "DROP SCHEMA DATA_WORK"
+    
+    /**
+    * Indicators definition
+    **/
+    sql.execute "COMMENT ON COLUMN BLOCK_INDICATORS.the_geom IS ' External border of the union of a set of touching geometry buildings';"
+    sql.execute "COMMENT ON COLUMN BLOCK_INDICATORS.pk_block IS 'Unique identifier for a block geometry';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.pk_usr IS 'Unique identifier of the usr';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.area IS 'Area of the block';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.floor_area IS 'Sum of building the floor areas in the block';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.vol IS 'Sum of the building volumes in a block';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.h_mean IS 'Buildings’s mean height in each block';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.h_std IS 'Buildings’s Standard Deviation height in each block';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.compacity IS 'The block’s compacity is defined as the sum of the building’s external surfaces divided by the sum of building’s volume power two-third';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.holes_area IS ' Sum of holes’s area (courtyard) in a block';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.holes_percent IS 'Compute the ratio (percent) of courtyard area in a block of buildings';"
+    sql.execute  "COMMENT ON COLUMN BLOCK_INDICATORS.main_dir_deg IS 'The main direction corresponds to the direction (in degree) given by the longest side of the geometry’s minimum rectangle. The north is equal to 0°. Values are clockwise, so East = 90°.the value is between 0 and 180°(e.g 355° becomes 175°).';"
+    
+    
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.the_geom IS 'Geometry of the building. This geometry is normalized to avoid topological errors';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.pk IS 'Unique identifier for the buildings';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.PK_BLOCK IS 'Block identifier';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.perimeter IS 'Building perimeter';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.INSEE_INDIVIDUS IS 'Number of inhabitants derived from intersection of INSEE 200m gridded cells, taking into account the pai_nature (must be null), and the developped area (= area(building) * nb_niv)';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.hauteur IS ' Heigth of the building';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.hauteur_origin IS ' Approximate heigth of the building when the value hauteur is null';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.nb_niv IS 'Number of levels for a building based on the field hauteur';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.id_zone IS 'Unique identifier of a commune';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.pk_usr IS 'Unique identifier of the USR';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.area IS 'Area of the building';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.floor_area IS 'Sum of the building’s area for each level';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.vol IS 'Product of the area and the height';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.compacity_r IS 'Sum of external surfaces divided by the building’s volume power two-third';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.compacity_n IS 'Sum of free external surfaces divided by the building’s volume power two-third.';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.compactness IS 'The compactness ratio is defined as the ratio between the polygon’s length and the perimeter of a circle with the same area (Gravelius’s definition).';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.form_factor is 'Ratio between the polygon’s area and the square of the building’s perimeter.';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.concavity IS 'Ratio between the geometry’s area and its convex hull’s area';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.main_dir_deg IS 'The main direction corresponds to the direction (in degree) given by the longest side of the geometry’s minimum rectangle.The north is equal to 0°. Values are clockwise, so East = 90°. This value is ”modulo pi” expressed → the value is between 0 and 180° (e.g 355° becomes 175°).';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.b_floor_long IS 'Building perimeter';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.b_wall_area IS 'Total area of building’s walls (area of facade, including holes)';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.p_wall_long IS 'Total length of party walls';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.p_wall_area IS 'Total area of common walls (based on common hight of buildings)';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.nb_neighbor IS 'Number of party walls';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.free_p_wall_long IS 'Total length of free facades (= perimeter - total length of party walls)';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.free_ext_area IS 'Total area of free external facades';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.contiguity IS 'Ratio of total area of party walls divided by building’s facade area';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.p_vol_ratio IS 'Passiv volume ratio';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.fractal_dim IS 'The fractal dimension of the geometry is defined as 2log(Perimeter)/log(area) ';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.min_dist IS 'Minimum distance between one building and all the others that are in the USR';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.mean_dist IS 'Mean distance between one building and all the others that are in the USR';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.max_dist IS 'Maximum distance between one building and all the others that are in the USR';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.std_dist IS 'Standard deviation distance between one building and all the others that are in the USR';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.num_points IS 'Number of distinct points of the exterior ring of the building';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.l_tot IS 'Building’s perimeter of the exterior ring';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.l_cvx IS 'Perimeter of the convex hull of the building';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.l_3m IS 'Length of walls that are less than 3 meters from a road.';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.l_ratio IS 'Ratio between L_TOT and L_3M';"
+    sql.execute "COMMENT ON COLUMN BUILDING_INDICATORS.l_ratio_cvx IS 'Ratio between L_3M and L_CVX';"
+    
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.the_geom IS 'Geometry of the USR.';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.pk IS 'Unique identifier for the USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.INSEE_INDIVIDUS IS 'Number of inhabitants computed by sum of INSEE grid cells intersecting buildings of the USR, proportionaly to their floor area (nb_niv * area(building)) and only if the pai_nature of the building is null (which means residential a priori).)';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.INSEE_MENAGES IS 'Number of households having a permanent living computed by sum of INSEE grid cells intersecting buildings of the USR, proportionaly to their floor area (nb_niv * area(building)), and only if the pai_nature of the building is null (which means residential a priori).';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.INSEE_MEN_COLL IS 'Number of households living in collective housing computed by sum of INSEE grid cells intersecting buildings of the USR, proportionaly to their floor area (nb_niv * area(building)), and only if the pai_nature of the building is null (which means residential a priori).';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.INSEE_MEN_SURF IS 'Cumulated area of housings for households having a permanent living computed in square meter, by summing share of INSEE grid cells intersecting buildings of the islets, proportionaly to their developed area (nb_niv * area(building)), and only if the pai_nature of the building is null (which means residential a priori).';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.INSEE_SURFACE_COLLECTIF IS 'Estimation of collective housing from INSEE indicators: (=insee_men_coll/insee_menages*insee_men_surf)';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.VEGETATION_SURFACE IS 'Area of vegetation intersecting the USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.ROUTE_SURFACE IS 'Area of roads intersecting the USR. Computing is using the lenght of road segments intersecting the USR, and length of a clip of each segment with islet frontiers is multiplicated by a buffer having the road width divided by 2. Nota: roads with fictif to true have automatically a width of 0, and 65% of secondary roads with importance=5 and fictif=false have a null width. ';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.ROUTE_LONGUEUR IS 'Length of roads intersecting the USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.TROTTOIR_LONGUEUR IS 'Perimeter of the included USR made of union of contiguous parcels.';"
+    
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.floor IS 'Sum of each building’s floor area';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.floor_ratio IS 'Ratio between the total floor area and the USR area';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.compac_mean_nw IS 'Non weighted buildings’s mean compacity in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.compac_mean_w IS 'Weighted buildings’s mean compacity in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.contig_mean IS 'Buildings’s mean contiguity in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.contig_std IS 'Buildings’s standard deviation contiguity in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.main_dir_std IS 'Buildings’s standard deviation main direction in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.h_mean IS 'Buildings’s mean height in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.h_std IS 'Buildings’s standard deviation height in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.p_vol_ratio_mean IS 'Buildings’s mean passiv volume ratio in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.b_area IS 'Total building’s area in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.b_vol IS 'Total building’s volume in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.b_vol_m IS 'Buildings’s mean volume in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.build_numb IS 'Buildings’s number in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.min_m_dist IS 'Mean value of the minimum distance between buildings in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.mean_m_dist IS 'Mean value of the mean distance between buildings in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.mean_std_dist IS 'Standard deviation of the mean distance between buildings in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.b_holes_area_mean IS 'Blocks’s mean courtyard ratio in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.b_std_h_mean IS 'Blocks’s mean standard deviation height in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.b_m_nw_compacity IS 'Block’s non weigthed mean compacity in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.b_m_w_compacity IS 'Block’s weigthed mean compacity in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.b_std_compacity IS 'Blocks’s standard deviation compacity in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.dist_to_center IS 'Distance between an USR (centroid) and its commune (centroid)';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.build_dens IS 'Buildings’s area density value';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.hydro_dens IS 'Hydrographic’s area density value';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.veget_dens IS 'Vegetation’s area density value';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.road_dens IS 'Road’s area density value';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.ext_env_area IS 'Total building’s external surface in an USR';"
+    sql.execute "COMMENT ON COLUMN USR_INDICATORS.id_zone IS 'Unique identifier of a commune';"
+    
+    
     literalOutput = "All morphological indicators have calculated and stored in 3 tables USR_INDICATORS, BLOCK_INDICATORS and BUILDING_INDICATORS."
 
 }
