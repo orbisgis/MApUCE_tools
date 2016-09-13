@@ -19,16 +19,17 @@ import org.orbisgis.wpsgroovyapi.process.*
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){
     def schemaFromRemoteDB = "lienss"
-    def tableFromRemoteDB = "(SELECT * FROM lienss.zone_etude)"	
-    def query = "CREATE  LINKED TABLE COMMUNE_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
+    def tableFromRemoteDB = "(SELECT CODE_INSEE, unite_urbaine FROM lienss.zone_etude)"	
+    sql.execute "DROP TABLE IF EXISTS COMMUNES_TEMP,COMMUNES_MAPUCE "
+    def query = "CREATE  LINKED TABLE COMMUNES_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
     query+=" '"+ login+"',"
     query+="'"+password+"', '"+schemaFromRemoteDB+"', "
     query+= "'"+tableFromRemoteDB+"')";
-    sql.execute "DROP TABLE IF EXISTS COMMUNE_TEMP"
+    
     sql.execute query
-    sql.execute "CREATE TABLE COMMUNES_MAPUCE AS SELECT * FROM COMMUNE_TEMP"
-    sql.execute "DROP TABLE IF EXISTS COMMUNE_TEMP"
-    literalOutput = "The commune areas have been imported in the local database."
+    sql.execute "CREATE TABLE COMMUNES_MAPUCE AS SELECT * FROM COMMUNES_TEMP"
+    sql.execute "DROP TABLE IF EXISTS COMMUNES_TEMP"
+    literalOutput = "The commune areas have been imported."
 }
 
 }
