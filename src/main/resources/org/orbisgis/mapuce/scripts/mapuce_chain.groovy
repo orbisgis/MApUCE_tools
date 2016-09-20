@@ -3,7 +3,6 @@ import org.orbisgis.wpsgroovyapi.output.*
 import org.orbisgis.wpsgroovyapi.process.*
 import javax.swing.JOptionPane;
 
-
 /**
  * This process is used to run the MAPuCE geoprocessing chain.
  * 
@@ -15,15 +14,22 @@ import javax.swing.JOptionPane;
         keywords = ["Vector","MAPuCE"])
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){
+        
         codesInsee = prepareCodes(fieldCodes,  codesInsee);
         prepareFinalTables();
-        logger.warn "Importing data from the selected spatial units."        
+        logger.warn "Number of selected areas : ${codesInsee.length}" 
+        int i=1;
         for (code in codesInsee) {
-            logger.warn "Start processing for area : ${code}"            
-            importData(code);
+            logger.warn "Start processing for area : ${code} -> Number ${i} on ${codesInsee.length}"  
+            if(importData(code)){
             computeIndicators(code);
             mergeIndicatorsIntoFinalTables();           
-            logger.warn "End processing for area : ${code}"
+            logger.warn "End processing for area : ${code}"               
+            }
+            else{
+                logger.warn "Cannot import the data for the area : ${code}."   
+            }
+            i++;
         }
    
     literalOutput = "The chain has been executed..."
@@ -50,17 +56,19 @@ def prepareCodes(String[] fieldCodes, String[] codesInsee ){
  * Prepare the 3 tables to store all results
  * */
 def prepareFinalTables(){
-    sql.execute "drop table if exists final_usr_indicators, final_block_indicators,final_building_indicators;"
-    sql.execute "CREATE TABLE final_building_indicators (PK INTEGER,PK_USR INTEGER, ID_ZONE INTEGER,  THE_GEOM POLYGON, HAUTEUR_ORIGIN  double precision,  NB_NIV  double precision, HAUTEUR  double precision, AREA  double precision, PERIMETER  double precision, INSEE_INDIVIDUS  double precision, FLOOR_AREA  double precision, VOL  double precision, COMPACITY_R  double precision, COMPACITY_N   double precision, COMPACTNESS  double precision, FORM_FACTOR  double precision, CONCAVITY  double precision, MAIN_DIR_DEG  double precision, B_FLOOR_LONG  double precision, B_WALL_AREA  double precision, P_WALL_LONG  double precision, P_WALL_AREA  double precision, NB_NEIGHBOR  double precision, FREE_P_WALL_LONG double precision, FREE_EXT_AREA double precision, CONTIGUITY double precision, P_VOL_RATIO double precision, FRACTAL_DIM double precision, MIN_DIST double precision, MEAN_DIST double precision, MAX_DIST double precision, STD_DIST double precision, NUM_POINTS integer, L_TOT double precision, L_CVX double precision, L_3M double precision, L_RATIO double precision, L_RATIO_CVX double precision, PK_BLOCK INTEGER);"
-    sql.execute "CREATE TABLE final_block_indicators (PK_BLOCK INTEGER, PK_USR INTEGER,THE_GEOM POLYGON,  AREA double precision, FLOOR_AREA double precision, VOL double precision, H_MEAN double precision, H_STD double precision, COMPACITY double precision, HOLES_AREA double precision, HOLES_PERCENT double precision, MAIN_DIR_DEG double precision );"
-    sql.execute "CREATE TABLE final_usr_indicators (PK serial NOT NULL PRIMARY KEY, ID_ZONE integer NOT NULL,THE_GEOM MULTIPOLYGON,  insee_individus double precision,insee_menages double precision ,insee_men_coll double precision ,insee_men_surf double precision ,insee_surface_collectif double precision,VEGETATION_SURFACE double precision, ROUTE_SURFACE double precision,route_longueur double precision, trottoir_longueur double precision,   floor double precision,   floor_ratio double precision,   compac_mean_nw double precision,   compac_mean_w double precision,   contig_mean double precision,   contig_std double precision,   main_dir_std double precision,   h_mean double precision,   h_std double precision,   p_vol_ratio_mean double precision,   b_area double precision,   b_vol double precision,   b_vol_m double precision,   build_numb integer,   min_m_dist double precision,   mean_m_dist double precision,   mean_std_dist double precision,   b_holes_area_mean double precision,   b_std_h_mean double precision,   b_m_nw_compacity double precision,   b_m_w_compacity double precision,   b_std_compacity double precision,   dist_to_center double precision,   build_dens double precision,   hydro_dens double precision,   veget_dens double precision,   road_dens double precision,   ext_env_area double precision )"
+    sql.execute "drop table if exists final_usr_indicators, final_block_indicators,final_building_indicators;"     
+    sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS, USR_INDICATORS, BLOCK_INDICATORS"
+    sql.execute "DROP SCHEMA IF EXISTS DATA_WORK"
+    sql.execute "CREATE TABLE final_building_indicators (PK_BUILDING INTEGER,PK_USR INTEGER, ID_ZONE INTEGER,  THE_GEOM POLYGON, HAUTEUR_ORIGIN  double precision,  NB_NIV  double precision, HAUTEUR  double precision, AREA  double precision, PERIMETER  double precision, INSEE_INDIVIDUS  double precision, FLOOR_AREA  double precision, VOL  double precision, COMPACITY_R  double precision, COMPACITY_N   double precision, COMPACTNESS  double precision, FORM_FACTOR  double precision, CONCAVITY  double precision, MAIN_DIR_DEG  double precision, B_FLOOR_LONG  double precision, B_WALL_AREA  double precision, P_WALL_LONG  double precision, P_WALL_AREA  double precision, NB_NEIGHBOR  double precision, FREE_P_WALL_LONG double precision, FREE_EXT_AREA double precision, CONTIGUITY double precision, P_VOL_RATIO double precision, FRACTAL_DIM double precision, MIN_DIST double precision, MEAN_DIST double precision, MAX_DIST double precision, STD_DIST double precision, NUM_POINTS integer, L_TOT double precision, L_CVX double precision, L_3M double precision, L_RATIO double precision, L_RATIO_CVX double precision, PK_BLOCK_ZONE INTEGER);"
+    sql.execute "CREATE TABLE final_block_indicators (PK_BLOCK_ZONE INTEGER, PK_USR INTEGER,THE_GEOM POLYGON,  AREA double precision, FLOOR_AREA double precision, VOL double precision, H_MEAN double precision, H_STD double precision, COMPACITY double precision, HOLES_AREA double precision, HOLES_PERCENT double precision, MAIN_DIR_DEG double precision );"
+    sql.execute "CREATE TABLE final_usr_indicators (PK_USR serial NOT NULL PRIMARY KEY, ID_ZONE integer NOT NULL,THE_GEOM MULTIPOLYGON,  insee_individus double precision,insee_menages double precision ,insee_men_coll double precision ,insee_men_surf double precision ,insee_surface_collectif double precision,VEGETATION_SURFACE double precision, ROUTE_SURFACE double precision,route_longueur double precision, trottoir_longueur double precision,   floor double precision,   floor_ratio double precision,   compac_mean_nw double precision,   compac_mean_w double precision,   contig_mean double precision,   contig_std double precision,   main_dir_std double precision,   h_mean double precision,   h_std double precision,   p_vol_ratio_mean double precision,   b_area double precision,   b_vol double precision,   b_vol_m double precision,   build_numb integer,   min_m_dist double precision,   mean_m_dist double precision,   mean_std_dist double precision,   b_holes_area_mean double precision,   b_std_h_mean double precision,   b_m_nw_compacity double precision,   b_m_w_compacity double precision,   b_std_compacity double precision,   dist_to_center double precision,   build_dens double precision,   hydro_dens double precision,   veget_dens double precision,   road_dens double precision,   ext_env_area double precision )"
     
     /**
     * Indicators definition
     **/
     sql.execute "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.the_geom IS ' External border of the union of a set of touching geometry buildings';"
-    sql.execute "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.pk_block IS 'Unique identifier for a block geometry';"
-    sql.execute  "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.pk_usr IS 'Unique identifier of the usr';"
+    sql.execute "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.PK_BLOCK_ZONE IS 'Unique identifier for a block geometry for the current commune';"
+    sql.execute  "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.PK_USR IS 'Unique identifier of the usr';"
     sql.execute  "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.area IS 'Area of the block';"
     sql.execute  "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.floor_area IS 'Sum of building the floor areas in the block';"
     sql.execute  "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.vol IS 'Sum of the building volumes in a block';"
@@ -73,8 +81,8 @@ def prepareFinalTables(){
     
     
     sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.the_geom IS 'Geometry of the building. This geometry is normalized to avoid topological errors';"
-    sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.pk IS 'Unique identifier for the buildings';"
-    sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.PK_BLOCK IS 'Block identifier';"
+    sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.PK_BUILDING IS 'Unique identifier for a building';"
+    sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.PK_BLOCK_ZONE IS 'Unique identifier for a block geometry for the current commune';"
     sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.perimeter IS 'Building perimeter';"
     sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.INSEE_INDIVIDUS IS 'Number of inhabitants derived from intersection of INSEE 200m gridded cells, taking into account the pai_nature (must be null), and the developped area (= area(building) * nb_niv)';"
     sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.hauteur IS ' Heigth of the building';"
@@ -113,7 +121,6 @@ def prepareFinalTables(){
     sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.l_ratio_cvx IS 'Ratio between L_3M and L_CVX';"
     
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.the_geom IS 'Geometry of the USR.';"
-    sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.pk IS 'Unique identifier for the USR';"
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.INSEE_INDIVIDUS IS 'Number of inhabitants computed by sum of INSEE grid cells intersecting buildings of the USR, proportionaly to their floor area (nb_niv * area(building)) and only if the pai_nature of the building is null (which means residential a priori).)';"
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.INSEE_MENAGES IS 'Number of households having a permanent living computed by sum of INSEE grid cells intersecting buildings of the USR, proportionaly to their floor area (nb_niv * area(building)), and only if the pai_nature of the building is null (which means residential a priori).';"
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.INSEE_MEN_COLL IS 'Number of households living in collective housing computed by sum of INSEE grid cells intersecting buildings of the USR, proportionaly to their floor area (nb_niv * area(building)), and only if the pai_nature of the building is null (which means residential a priori).';"
@@ -122,8 +129,7 @@ def prepareFinalTables(){
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.VEGETATION_SURFACE IS 'Area of vegetation intersecting the USR';"
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.ROUTE_SURFACE IS 'Area of roads intersecting the USR. Computing is using the lenght of road segments intersecting the USR, and length of a clip of each segment with islet frontiers is multiplicated by a buffer having the road width divided by 2. Nota: roads with fictif to true have automatically a width of 0, and 65% of secondary roads with importance=5 and fictif=false have a null width. ';"
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.ROUTE_LONGUEUR IS 'Length of roads intersecting the USR';"
-    sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.TROTTOIR_LONGUEUR IS 'Perimeter of the included USR made of union of contiguous parcels.';"
-    
+    sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.TROTTOIR_LONGUEUR IS 'Perimeter of the included USR made of union of contiguous parcels.';"    
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.floor IS 'Sum of each building’s floor area';"
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.floor_ratio IS 'Ratio between the total floor area and the USR area';"
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.compac_mean_nw IS 'Non weighted buildings’s mean compacity in an USR';"
@@ -153,22 +159,24 @@ def prepareFinalTables(){
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.road_dens IS 'Road’s area density value';"
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.ext_env_area IS 'Total building’s external surface in an USR';"
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.id_zone IS 'Unique identifier of a commune';"
+    sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.PK_USR IS 'Unique identifier of the USR';"
     
 }
 
 /**
- * Method to merge indicators into the final tables
+ * Method to merge indicators into the final tables and remove intermediate tables
  * */
 def mergeIndicatorsIntoFinalTables(){
     sql.execute "INSERT INTO FINAL_BUILDING_INDICATORS (SELECT * FROM BUILDING_INDICATORS);"
     sql.execute "INSERT INTO FINAL_BLOCK_INDICATORS (SELECT * FROM BLOCK_INDICATORS);"
     sql.execute "INSERT INTO FINAL_USR_INDICATORS (SELECT * FROM USR_INDICATORS);"
+    sql.execute "DROP TABLE IF EXISTS USR_INDICATORS, BUILDING_INDICATORS,BLOCK_INDICATORS, COMMUNE_MAPUCE, USR_MAPUCE, ROADS_MAPUCE,BUILDINGS_MAPUCE ;"
 }
 
 /**
  * This method is used to import all data from the remote database 
  */
- def importData(String code){    
+ def importData(String code){   
    logger.warn "Importing the USR"
    sql.execute "DROP TABLE IF EXISTS USR_TEMP"
             def schemaFromRemoteDB = "lienss"	
@@ -185,7 +193,7 @@ def mergeIndicatorsIntoFinalTables(){
 
             logger.warn "Importing the buildings"
     sql.execute "DROP TABLE IF EXISTS BUILDINGS_TEMP"
-            tableFromRemoteDB = "(SELECT a.IDZONE, a.THE_GEOM, a.HAUTEUR, a.IDILOT as PK_USR, a.PK, a.NB_NIV, a.HAUTEUR_CORRIGEE, a.INSEE_INDIVIDUS, a.THEME,a.PAI_BDTOPO,a.PAI_NATURE, b.CODE_INSEE  FROM lienss.BATI_TOPO a, lienss.ZONE_ETUDE b WHERE a.IDZONE = b.OGC_FID and b.CODE_INSEE=''"+code+"'')"
+            tableFromRemoteDB = "(SELECT a.IDZONE, a.THE_GEOM, a.HAUTEUR, a.IDILOT as PK_USR, a.PK, a.NB_NIV, a.HAUTEUR_CORRIGEE, a.INSEE_INDIVIDUS, a.THEME,a.PAI_BDTOPO,a.PAI_NATURE, b.CODE_INSEE  FROM lienss.BATI_TOPO a, lienss.ZONE_ETUDE b WHERE a.IDZONE = b.OGC_FID and b.CODE_INSEE=''"+code+"'' and a.IDILOT IS NOT NULL)"
     query = "CREATE LINKED TABLE BUILDINGS_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
             query+=" '"+ login+"',"
             query+="'"+password+"', '"+schemaFromRemoteDB+"', "
@@ -199,7 +207,12 @@ def mergeIndicatorsIntoFinalTables(){
     sql.execute "CREATE SPATIAL INDEX ON BUILDINGS_MAPUCE(THE_GEOM)"
     sql.execute "CREATE INDEX ON BUILDINGS_MAPUCE(PK_USR)"
     sql.execute "DROP TABLE  BUILDINGS_TEMP"
-
+    
+    //A check due to some errors in the input data. eg. Buildings with null usr id.
+    //Do not import the roads if there are no buildings
+    
+    def cnt = sql.rows('SELECT  count(*) as cnt  FROM BUILDINGS_MAPUCE ;').cnt[0]    
+    if(cnt>0){
     logger.warn "Importing the roads"
     sql.execute "DROP TABLE IF EXISTS ROADS_TEMP"
     schemaFromRemoteDB = "ign_bd_topo_2014"
@@ -214,33 +227,36 @@ def mergeIndicatorsIntoFinalTables(){
     sql.execute "CREATE SPATIAL INDEX ON ROADS_MAPUCE(THE_GEOM)"
     sql.execute "DROP TABLE IF EXISTS ROADS_TEMP"
 
-    logger.warn "Importing the geometry of the spatial unit"
-    
+    logger.warn "Importing the geometry of the spatial unit"    
     sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP, COMMUNE_MAPUCE"
     schemaFromRemoteDB = "lienss"
     tableFromRemoteDB = "(SELECT the_geom, CODE_INSEE, unite_urbaine FROM lienss.zone_etude WHERE CODE_INSEE=''"+code+"'')"
-    query = "CREATE  LINKED TABLE COMMUNE_MAPUCE_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
+    query = "CREATE LINKED TABLE COMMUNE_MAPUCE_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
     query+=" '"+ login+"',"
     query+="'"+password+"', '"+schemaFromRemoteDB+"', "
     query+= "'"+tableFromRemoteDB+"')";    
     sql.execute query
-    sql.execute "CREATE TABLE COMMUNE_MAPUCE AS SELECT * FROM COMMUNE_MAPUCE_TEMP"
-    	
+    sql.execute "CREATE TABLE COMMUNE_MAPUCE AS SELECT * FROM COMMUNE_MAPUCE_TEMP"    	
     sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP"
+    }
+    else{
+        return false;
+    }
+    return true;
     
 }
+
 
 /**
  * This method is used to compute all indicators 
  */
- def computeIndicators(String code){   
-    sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS, USR_INDICATORS, BLOCK_INDICATORS"
-    sql.execute "DROP SCHEMA IF EXISTS DATA_WORK"
+ def computeIndicators(String code){  
     sql.execute "CREATE SCHEMA DATA_WORK"
 
     /**
     * Compute the building indicators
     **/
+
     logger.warn "Compute area volume"
 
     sql.execute "CREATE TABLE DATA_WORK.BUILD_AREA_VOL (PK integer primary key, FLOOR_AREA double precision, VOL double precision) AS SELECT PK, (AREA * NB_NIV) AS FLOOR_AREA , (AREA * HAUTEUR) AS VOL FROM BUILDINGS_MAPUCE"
@@ -464,8 +480,7 @@ def mergeIndicatorsIntoFinalTables(){
     sql.execute "UPDATE USR_INDICATORS  SET insee_menages=0 where insee_menages is null"
     sql.execute "UPDATE USR_INDICATORS  SET insee_men_coll=0 where insee_men_coll is null"
     sql.execute "UPDATE USR_INDICATORS  SET insee_men_surf=0 where insee_men_surf is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_surface_collectif=0 where insee_surface_collectif is null"
-    logger.warn "Cleaning the database"
+    sql.execute "UPDATE USR_INDICATORS  SET insee_surface_collectif=0 where insee_surface_collectif is null"    
     sql.execute "DROP SCHEMA DATA_WORK"
    
  }
@@ -481,7 +496,7 @@ String login
 @PasswordInput(
         title="Password to the database",
         resume="Password to the database")
-String password
+String password 
 
 
 @DataFieldInput(
