@@ -3,10 +3,8 @@ package org.orbisgis.mapuce;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 
 import net.opengis.ows._2.CodeType;
@@ -15,7 +13,6 @@ import org.orbisgis.frameworkapi.CoreWorkspace;
 import org.orbisgis.wpsclient.WpsClient;
 import org.orbisgis.wpsservice.LocalWpsServer;
 import org.orbisgis.wpsservice.controller.process.ProcessIdentifier;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -168,6 +165,7 @@ public class WpsScriptsPackage {
             customLoadScript("scripts/morphological_indicators.groovy");
             customLoadScript("scripts/import_data_zone.groovy");
             customLoadScript("scripts/import_zones.groovy");
+            customLoadScript("scripts/mapuce_chain.groovy");
             //Check the WpsClient
             if(wpsClient != null){
                 //Refresh the client
