@@ -44,7 +44,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
 def prepareCodes(String[] fieldCodes, String[] codesInsee ){
     if (fieldCodes[0].equalsIgnoreCase("unite_urbaine")){
         def codesUU = []
-        sql.eachRow("select code_insee from COMMUNES_MAPUCE where unite_urbaine in(${codesInsee.join(',')});"){row ->
+        sql.eachRow("select distinct(code_insee) as code_insee from COMMUNES_MAPUCE where unite_urbaine in(${codesInsee.join(',')});"){row ->
             codesUU.add(row.code_insee)            
         }
         codesInsee = codesUU as String[]
