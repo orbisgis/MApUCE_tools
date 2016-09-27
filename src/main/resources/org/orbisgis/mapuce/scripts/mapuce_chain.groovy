@@ -229,7 +229,7 @@ def mergeIndicatorsIntoFinalTables(){
     logger.warn "Importing the geometry of the spatial unit"    
     sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP, COMMUNE_MAPUCE"
     schemaFromRemoteDB = "lienss"
-    tableFromRemoteDB = "(SELECT the_geom, DISTINCT ON (CODE_INSEE) CODE_INSEE, unite_urbaine FROM lienss.zone_etude WHERE CODE_INSEE=''"+code+"'')"
+    tableFromRemoteDB = "(SELECT DISTINCT ON (CODE_INSEE) CODE_INSEE, unite_urbaine, the_geom FROM lienss.zone_etude WHERE CODE_INSEE=''"+code+"'')"
     query = "CREATE LINKED TABLE COMMUNE_MAPUCE_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
     query+=" '"+ login+"',"
     query+="'"+password+"', '"+schemaFromRemoteDB+"', "
