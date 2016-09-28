@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.*;
 
 import net.opengis.ows._2.CodeType;
 import org.apache.commons.io.IOUtils;
 import org.orbisgis.frameworkapi.CoreWorkspace;
+import org.orbisgis.r_engine.REngine;
 import org.orbisgis.wpsclient.WpsClient;
 import org.orbisgis.wpsservice.LocalWpsServer;
 import org.orbisgis.wpsservice.controller.process.ProcessIdentifier;
@@ -61,6 +63,8 @@ import org.slf4j.LoggerFactory;
 public class WpsScriptsPackage {
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(WpsScriptsPackage.class);
+
+    private Map<String, Object> propertiesMap = new HashMap<>();
 
     /**
      * OrbisGIS core workspace.
@@ -166,6 +170,11 @@ public class WpsScriptsPackage {
             customLoadScript("scripts/import_data_zone.groovy");
             customLoadScript("scripts/import_zones.groovy");
             customLoadScript("scripts/mapuce_chain.groovy");
+
+            //Transmit the REngine class
+            propertiesMap.put("rEngine", new REngine());
+            localWpsServer.addGroovyProperties(propertiesMap);
+
             //Check the WpsClient
             if(wpsClient != null){
                 //Refresh the client
@@ -190,6 +199,7 @@ public class WpsScriptsPackage {
     public void deactivate(){        
         if(localWpsServer != null) {
             removeAllScripts();
+            localWpsServer.removeGroovyProperties(propertiesMap);
             if(wpsClient != null) {
                 wpsClient.refreshAvailableScripts();
             }
