@@ -31,8 +31,9 @@ if(!login.isEmpty()&& !password.isEmpty()){
             query+= "'"+tableFromRemoteDB+"')";
             sql.execute query
             sql.execute "drop table if exists USR_MAPUCE"
-            sql.execute "CREATE TABLE USR_MAPUCE(PK serial NOT NULL PRIMARY KEY, THE_GEOM geometry, ID_ZONE integer NOT NULL, VEGETATION_SURFACE double precision, ROUTE_SURFACE double precision, HYDRO_SURFACE double precision, USR_AREA double precision, insee_individus double precision,insee_menages double precision,insee_men_coll double precision,insee_men_surf double precision,insee_surface_collectif double precision,route_longueur double precision, trottoir_longueur double precision) AS SELECT PK, THE_GEOM, IDZONE as ID_ZONE, VEGETATION_SURFACE, ROUTE_SURFACE, HYDRO_SURFACE, ST_AREA(THE_GEOM) as USR_AREA , insee_individus,insee_menages,insee_men_coll,insee_men_surf ,insee_surface_collectif ,route_longueur , trottoir_longueur  FROM USR_TEMP"
+            sql.execute "CREATE TABLE USR_MAPUCE(PK integer, THE_GEOM geometry, ID_ZONE integer NOT NULL, VEGETATION_SURFACE double precision, ROUTE_SURFACE double precision, HYDRO_SURFACE double precision, USR_AREA double precision, insee_individus double precision,insee_menages double precision,insee_men_coll double precision,insee_men_surf double precision,insee_surface_collectif double precision,route_longueur double precision, trottoir_longueur double precision) AS SELECT PK, THE_GEOM, IDZONE as ID_ZONE, VEGETATION_SURFACE, ROUTE_SURFACE, HYDRO_SURFACE, ST_AREA(THE_GEOM) as USR_AREA , insee_individus,insee_menages,insee_men_coll,insee_men_surf ,insee_surface_collectif ,route_longueur , trottoir_longueur  FROM USR_TEMP"
             sql.execute "CREATE SPATIAL INDEX ON USR_MAPUCE(THE_GEOM);"
+            sql.execute "CREATE  INDEX ON USR_MAPUCE(PK);"
             sql.execute "DROP TABLE USR_TEMP"
 
             logger.warn "Importing the buildings from the remote database"
@@ -44,7 +45,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
             query+= "'"+tableFromRemoteDB+"')";
             sql.execute query
     sql.execute "drop table if exists BUILDINGS_MAPUCE"
-    sql.execute "CREATE TABLE BUILDINGS_MAPUCE (THE_GEOM geometry, HAUTEUR_ORIGIN double precision, ID_ZONE integer, PK_USR integer, PK integer PRIMARY KEY, NB_NIV integer, HAUTEUR double precision, AREA double precision, PERIMETER double precision, L_CVX double precision, INSEE_INDIVIDUS double precision, THEME varchar, PAI_BDTOPO varchar, PAI_NATURE varchar ) AS SELECT  ST_NORMALIZE (THE_GEOM) as THE_GEOM, (HAUTEUR :: double precision) as HAUTEUR_ORIGIN, IDZONE as ID_ZONE, PK_USR, PK :: integer, NB_NIV, (HAUTEUR_CORRIGEE :: double precision) as HAUTEUR, ST_AREA(THE_GEOM) as AREA, ST_PERIMETER(THE_GEOM) as PERIMETER , ROUND(ST_PERIMETER(ST_CONVEXHULL(THE_GEOM)),3), INSEE_INDIVIDUS, THEME , PAI_BDTOPO, PAI_NATURE FROM BUILDINGS_TEMP WHERE ST_NUMGEOMETRIES(THE_GEOM)=1"
+    sql.execute "CREATE TABLE BUILDINGS_MAPUCE (THE_GEOM geometry, HAUTEUR_ORIGIN double precision, ID_ZONE integer, PK_USR integer, PK integer PRIMARY KEY, NB_NIV integer, HAUTEUR double precision, AREA double precision, PERIMETER double precision, L_CVX double precision, INSEE_INDIVIDUS double precision, THEME varchar, PAI_BDTOPO varchar, PAI_NATURE varchar ) AS SELECT  ST_NORMALIZE (THE_GEOM) as THE_GEOM, (HAUTEUR :: double precision) as HAUTEUR_ORIGIN, IDZONE as ID_ZONE, PK_USR, PK :: integer, NB_NIV, (HAUTEUR_CORRIGEE :: double precision) as HAUTEUR, ST_AREA(THE_GEOM) as AREA, ST_PERIMETER(THE_GEOM) as PERIMETER , ROUND(ST_PERIMETER(ST_CONVEXHULL(THE_GEOM)),3), INSEE_INDIVIDUS, THEME , PAI_BDTOPO, PAI_NATURE FROM BUILDINGS_TEMP WHERE ST_NUMGEOMETRIES(THE_GEOM)=1 and ST_ISEMPTY(the_geom)=false"
 
     sql.execute "UPDATE BUILDINGS_MAPUCE SET HAUTEUR=3 WHERE HAUTEUR is null OR HAUTEUR=0"
     sql.execute "UPDATE BUILDINGS_MAPUCE SET NB_NIV=1 WHERE NB_NIV=0"
@@ -62,7 +63,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
             query+= "'"+tableFromRemoteDB+"')";
             sql.execute query
     sql.execute "drop table if exists ROADS_MAPUCE"
-    sql.execute "CREATE TABLE ROADS_MAPUCE (PK serial PRIMARY KEY, THE_GEOM geometry, LARGEUR double precision, INSEECOM_G varchar(5), INSEECOM_D varchar(5))AS SELECT PK , THE_GEOM, LARGEUR, INSEECOM_G, INSEECOM_D FROM ROADS_TEMP"
+    sql.execute "CREATE TABLE ROADS_MAPUCE (PK integer THE_GEOM geometry, LARGEUR double precision, INSEECOM_G varchar(5), INSEECOM_D varchar(5))AS SELECT PK , THE_GEOM, LARGEUR, INSEECOM_G, INSEECOM_D FROM ROADS_TEMP"
     sql.execute "CREATE SPATIAL INDEX ON ROADS_MAPUCE(THE_GEOM)"
     sql.execute "DROP TABLE IF EXISTS ROADS_TEMP"
     

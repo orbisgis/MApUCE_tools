@@ -29,10 +29,10 @@ def processing() {
     logger.warn "Download the MAPuCE model used to classify the data."
 
     //Do not download the file is already exist
-    File file = new File(System.getProperty("user.home") + "/mapuce/mapuce-1.0.model");
+    File file = new File(System.getProperty("user.home") + "/mapuce/mapuce-rf-1.0.model");
     
     if(!file.exists()){
-        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-1.0.model"), file)   
+        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-rf-1.0.model"), file)   
     }  
 
     /**
@@ -55,49 +55,14 @@ def processing() {
     "FROM BUILDING_INDICATORS AS A "+
     "JOIN USR_INDICATORS AS U ON a.PK_USR = u.PK "+
     "JOIN BLOCK_INDICATORS b "+
-    "ON a.PK_USR = b.PK_USR AND a.PK_BLOCK = b.PK_BLOCK"
+    "ON a.PK_USR = b.PK_USR AND a.PK_BLOCK = b.PK_BLOCK"  
     
     
-    Connection  conn = sql.createConnection();
-    ClassifyData cla = new ClassifyData(file.getAbsolutePath(),conn)
- 
-  
-    Statement sta = conn.createStatement()
-    ResultSet rs = sta.executeQuery(req) 
+    
 
     //Transform ResultSet into Instances  
     logger.warn "Prepare the data to apply classification"
-    cla.resultSetToInstances(rs,"I_PK")
-
-    //Make the classification and create the table TYPO_RESULT  
-    logger.warn "Classify each buildings."
-    sql.execute "DROP TABLE IF EXISTS TYPO_RESULT" 
-    cla.classify("TYPO_RESULT")
-
-    sql.execute "CREATE INDEX ON TYPO_RESULT(I_PK)"  
-    sql.execute "DROP TABLE IF EXISTS BUILDING_TYPO"
-    sql.execute "CREATE TABLE BUILDING_TYPO AS SELECT a.THE_GEOM,a.PK,a.PK_USR,b.typo,a.AREA FROM BUILDING_INDICATORS a,TYPO_RESULT b WHERE a.PK = b.I_PK"
-  
-    logger.warn "Compute the classification for each USR"
-    sql.execute "CREATE INDEX ON BUILDING_TYPO(PK)"
-    sql.execute "CREATE TABLE SUM_AREA_USR AS SELECT PK_USR,TYPO,SUM(AREA) AS AREA_USR FROM BUILDING_TYPO GROUP BY PK_USR,TYPO"
-    sql.execute "CREATE TABLE TOP2_AREA AS select *,(SELECT COUNT(*) FROM SUM_AREA_USR as b WHERE b.PK_USR=a.PK_USR AND b.AREA_USR>=a.AREA_USR ) as rank FROM SUM_AREA_USR AS a"+
-        " WHERE (SELECT COUNT(*) FROM SUM_AREA_USR AS b WHERE b.PK_USR=a.PK_USR AND b.AREA_USR>=a.AREA_USR ) <= 2"        
-    sql.execute "CREATE TABLE  USR_TYPO_WITH_NULL_VALUE AS select DISTINCT a.THE_GEOM,a.PK,c.TYPO,"+
-        "CASE WHEN b.RANK=1 THEN c.TYPO END AS MAJO,CASE WHEN b.RANK=2 THEN c.TYPO END AS SECOND"+
-        " FROM USR_INDICATORS a, SUM_AREA_USR c,TOP2_AREA b"+
-        " WHERE a.PK = c.PK_USR AND c.PK_USR = b.PK_USR AND c.AREA_USR = b.AREA_USR" 
-
-    sql.execute "DROP TABLE IF EXISTS USR_TYPO"
-    sql.execute "CREATE TABLE USR_TYPO AS SELECT a.PK, a.THE_GEOM,a.MAJO,b.SECOND "+
-        "FROM USR_TYPO_WITH_NULL_VALUE a JOIN USR_TYPO_WITH_NULL_VALUE b ON a.PK = b.PK AND a.MAJO IS NOT NULL "+
-        "MINUS SELECT a.PK,a.THE_GEOM,a.MAJO,a.SECOND FROM USR_TYPO_WITH_NULL_VALUE a "+
-        "WHERE (SELECT COUNT(*) FROM USR_TYPO_WITH_NULL_VALUE b WHERE  a.PK = b.PK) = 2 AND SECOND IS NULL"
- 
-    logger.warn "Clean temporary tables"
-    sql.execute "DROP TABLE IF EXISTS SUM_AREA_USR"
-    sql.execute "DROP TABLE IF EXISTS TOP2_AREA"  
-    sql.execute "DROP TABLE IF EXISTS USR_TYPO_WITH_NULL_VALUE"
+    
 
     literalOutput = "The classification has been done. The tables USR_TYPO and BUILDING_TYPO have been created correctly" 
 }
