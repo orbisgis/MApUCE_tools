@@ -102,7 +102,7 @@ String password
 /** The list of Commune identifier */
 @FieldValueInput(title="Commune identifier",
 resume="Select the code insee of a commune to import the data.",
-dataFieldTitle = "\$communes_mapuce\$code_insee\$",
+variableReference = "\$communes_mapuce\$code_insee\$",
 multiSelection = false)
 String[] codeInsee
 
