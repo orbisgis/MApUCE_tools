@@ -501,15 +501,16 @@ String password
 @DataFieldInput(
         title = "Spatial unit",
         resume = "Select a column to obtain a list of area identifiers : code insee or  urban area names.",
-        dataStoreTitle = "\$communes_mapuce\$",
+        variableReference = "\$communes_mapuce\$",
         multiSelection = false)
 String[] fieldCodes
 
 /** The list of Commune identifier */
-@FieldValueInput(title="Spatial unit identifiers",
-resume="Select one or more  identifiers and start the script.",
-dataFieldTitle = "Spatial unit",
-multiSelection = true)
+@FieldValueInput(
+        title="Spatial unit identifiers",
+        resume="Select one or more  identifiers and start the script.",
+        variableReference = "fieldCodes",
+        multiSelection = true)
 String[] codesInsee
 
 
