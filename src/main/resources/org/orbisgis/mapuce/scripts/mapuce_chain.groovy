@@ -1,7 +1,10 @@
+import org.orbisgis.mapuce.WpsScriptsPackage;
 import org.orbisgis.wpsgroovyapi.input.*
 import org.orbisgis.wpsgroovyapi.output.*
 import org.orbisgis.wpsgroovyapi.process.*
 import javax.swing.JOptionPane;
+import javax.script.ScriptEngine;
+
 
 /**
  * This process is used to run the MAPuCE geoprocessing chain.
@@ -16,13 +19,18 @@ def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){        
         codesInsee = prepareCodes(fieldCodes,  codesInsee);
         prepareFinalTables();
+        engine = initChain();
         logger.warn "Number of selected areas : ${codesInsee.length}" 
         int i=1;
         for (code in codesInsee) {
             logger.warn "Start processing for area : ${code} -> Number ${i} on ${codesInsee.length}"  
             if(importData(code)){
+            //Compute indicators
             computeIndicators(code);
-            mergeIndicatorsIntoFinalTables();           
+            mergeIndicatorsIntoFinalTables();
+            //Apply random forest classification
+            applyRandomForest(engine)
+            cleanTables();
             logger.warn "End processing for area : ${code}"               
             }
             else{
@@ -52,15 +60,38 @@ def prepareCodes(String[] fieldCodes, String[] codesInsee ){
 }
 
 /**
+ * Init the Renjin engine to apply the R code
+ * */
+def initChain(){
+    logger.warn "Download the MAPuCE model used to classify the buildings."
+    
+    //Do not download the file is already exist
+    File file = new File(System.getProperty("user.home") + "/mapuce/mapuce-rf-1.0.RData");
+    
+    if(!file.exists()){
+        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-rf-1.0.RData"), file)   
+    }    
+    
+    engine = rEngine.getScriptEngine();
+    engine.put("con", rEngine.getConnectionRObject(sql.getDataSource().getConnection())); 
+    engine.put("model_path", file.getAbsolutePath()) 
+    
+    return engine;
+    
+}
+/**
  * Prepare the 3 tables to store all results
  * */
 def prepareFinalTables(){
-    sql.execute "drop table if exists final_usr_indicators, final_block_indicators,final_building_indicators;"     
+    sql.execute "drop table if exists final_usr_indicators, final_block_indicators,final_building_indicators,FINAL_BUILDING_TYPO, FINAL_USR_TYPO;"     
     sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS, USR_INDICATORS, BLOCK_INDICATORS"
     sql.execute "DROP SCHEMA IF EXISTS DATA_WORK"
     sql.execute "CREATE TABLE final_building_indicators (PK_BUILDING INTEGER,PK_USR INTEGER, ID_ZONE INTEGER,  THE_GEOM POLYGON, HAUTEUR_ORIGIN  double precision,  NB_NIV  double precision, HAUTEUR  double precision, AREA  double precision, PERIMETER  double precision, INSEE_INDIVIDUS  double precision, FLOOR_AREA  double precision, VOL  double precision, COMPACITY_R  double precision, COMPACITY_N   double precision, COMPACTNESS  double precision, FORM_FACTOR  double precision, CONCAVITY  double precision, MAIN_DIR_DEG  double precision, B_FLOOR_LONG  double precision, B_WALL_AREA  double precision, P_WALL_LONG  double precision, P_WALL_AREA  double precision, NB_NEIGHBOR  double precision, FREE_P_WALL_LONG double precision, FREE_EXT_AREA double precision, CONTIGUITY double precision, P_VOL_RATIO double precision, FRACTAL_DIM double precision, MIN_DIST double precision, MEAN_DIST double precision, MAX_DIST double precision, STD_DIST double precision, NUM_POINTS integer, L_TOT double precision, L_CVX double precision, L_3M double precision, L_RATIO double precision, L_RATIO_CVX double precision, PK_BLOCK_ZONE INTEGER);"
     sql.execute "CREATE TABLE final_block_indicators (PK_BLOCK_ZONE INTEGER, PK_USR INTEGER,THE_GEOM POLYGON,  AREA double precision, FLOOR_AREA double precision, VOL double precision, H_MEAN double precision, H_STD double precision, COMPACITY double precision, HOLES_AREA double precision, HOLES_PERCENT double precision, MAIN_DIR_DEG double precision );"
     sql.execute "CREATE TABLE final_usr_indicators (PK_USR INTEGER, ID_ZONE integer NOT NULL,THE_GEOM MULTIPOLYGON,  insee_individus double precision,insee_menages double precision ,insee_men_coll double precision ,insee_men_surf double precision ,insee_surface_collectif double precision,VEGETATION_SURFACE double precision, ROUTE_SURFACE double precision,route_longueur double precision, trottoir_longueur double precision,   floor double precision,   floor_ratio double precision,   compac_mean_nw double precision,   compac_mean_w double precision,   contig_mean double precision,   contig_std double precision,   main_dir_std double precision,   h_mean double precision,   h_std double precision,   p_vol_ratio_mean double precision,   b_area double precision,   b_vol double precision,   b_vol_m double precision,   build_numb integer,   min_m_dist double precision,   mean_m_dist double precision,   mean_std_dist double precision,   b_holes_area_mean double precision,   b_std_h_mean double precision,   b_m_nw_compacity double precision,   b_m_w_compacity double precision,   b_std_compacity double precision,   dist_to_center double precision,   build_dens double precision,   hydro_dens double precision,   veget_dens double precision,   road_dens double precision,   ext_env_area double precision )"
+    
+    sql.execute "create table FINAL_BUILDING_TYPO(the_geom geometry, pk integer, typo varchar)"
+    sql.execute "create table FINAL_USR_TYPO(the_geom geometry, pk_usr integer, typo_maj varchar, typo_second varchar)"
     
     /**
     * Indicators definition
@@ -169,7 +200,11 @@ def mergeIndicatorsIntoFinalTables(){
     sql.execute "INSERT INTO FINAL_BUILDING_INDICATORS (SELECT * FROM BUILDING_INDICATORS);"
     sql.execute "INSERT INTO FINAL_BLOCK_INDICATORS (SELECT * FROM BLOCK_INDICATORS);"
     sql.execute "INSERT INTO FINAL_USR_INDICATORS (SELECT * FROM USR_INDICATORS);"
-    sql.execute "DROP TABLE IF EXISTS USR_INDICATORS, BUILDING_INDICATORS,BLOCK_INDICATORS, COMMUNE_MAPUCE, USR_MAPUCE, ROADS_MAPUCE,BUILDINGS_MAPUCE ;"
+  }
+  
+def cleanTables(){
+      sql.execute "DROP TABLE IF EXISTS USR_INDICATORS, BUILDING_INDICATORS,BLOCK_INDICATORS, COMMUNE_MAPUCE, USR_MAPUCE, ROADS_MAPUCE,BUILDINGS_MAPUCE ;"
+      sql.execute "DROP TABLE IF EXISTS TYPO_BUILDINGS_MAPUCE,TYPO_USR_MAPUCE ;"
 }
 
 /**
@@ -193,14 +228,14 @@ def mergeIndicatorsIntoFinalTables(){
 
             logger.warn "Importing the buildings"
     sql.execute "DROP TABLE IF EXISTS BUILDINGS_TEMP"
-            tableFromRemoteDB = "(SELECT a.IDZONE, a.THE_GEOM, a.HAUTEUR, a.IDILOT as PK_USR, a.PK, a.NB_NIV, a.HAUTEUR_CORRIGEE, a.INSEE_INDIVIDUS, a.THEME,a.PAI_BDTOPO,a.PAI_NATURE, b.CODE_INSEE  FROM lienss.BATI_TOPO a, lienss.ZONE_ETUDE b WHERE a.IDZONE = b.OGC_FID and b.CODE_INSEE=''"+code+"'' and a.IDILOT IS NOT NULL)"
+            tableFromRemoteDB = "(SELECT a.IDZONE, a.THE_GEOM, a.HAUTEUR, a.IDILOT as PK_USR, a.PK, a.NB_NIV, a.HAUTEUR_CORRIGEE, a.INSEE_INDIVIDUS, a.THEME,a.PAI_BDTOPO,a.PAI_NATURE, b.CODE_INSEE  FROM lienss.BATI_TOPO a, lienss.ZONE_ETUDE b WHERE a.IDZONE = b.OGC_FID and b.CODE_INSEE=''"+code+"'' and a.IDILOT IS NOT NULL and  ST_NUMGEOMETRIES(a.the_geom)=1 and ST_ISEMPTY(a.the_geom)=false)"
     query = "CREATE LINKED TABLE BUILDINGS_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
             query+=" '"+ login+"',"
             query+="'"+password+"', '"+schemaFromRemoteDB+"', "
             query+= "'"+tableFromRemoteDB+"')";
             sql.execute query
     sql.execute "drop table if exists BUILDINGS_MAPUCE"
-    sql.execute "CREATE TABLE BUILDINGS_MAPUCE (THE_GEOM geometry, HAUTEUR_ORIGIN double, ID_ZONE integer, PK_USR integer, PK integer PRIMARY KEY, NB_NIV integer, HAUTEUR double, AREA double, PERIMETER double, L_CVX double, INSEE_INDIVIDUS double, THEME varchar, PAI_BDTOPO varchar, PAI_NATURE varchar ) AS SELECT  ST_NORMALIZE (THE_GEOM) as THE_GEOM, (HAUTEUR :: double) as HAUTEUR_ORIGIN, IDZONE as ID_ZONE, PK_USR, PK :: integer, NB_NIV, (HAUTEUR_CORRIGEE :: double) as HAUTEUR, ST_AREA(THE_GEOM) as AREA, ST_PERIMETER(THE_GEOM) as PERIMETER , ROUND(ST_PERIMETER(ST_CONVEXHULL(THE_GEOM)),3), INSEE_INDIVIDUS, THEME , PAI_BDTOPO, PAI_NATURE FROM BUILDINGS_TEMP WHERE ST_NUMGEOMETRIES(THE_GEOM)=1 and ST_ISEMPTY(the_geom)=false"
+    sql.execute "CREATE TABLE BUILDINGS_MAPUCE (THE_GEOM geometry, HAUTEUR_ORIGIN double, ID_ZONE integer, PK_USR integer, PK integer PRIMARY KEY, NB_NIV integer, HAUTEUR double, AREA double, PERIMETER double, L_CVX double, INSEE_INDIVIDUS double, THEME varchar, PAI_BDTOPO varchar, PAI_NATURE varchar ) AS SELECT  ST_NORMALIZE (THE_GEOM) as THE_GEOM, (HAUTEUR :: double) as HAUTEUR_ORIGIN, IDZONE as ID_ZONE, PK_USR, PK :: integer, NB_NIV, (HAUTEUR_CORRIGEE :: double) as HAUTEUR, ST_AREA(THE_GEOM) as AREA, ST_PERIMETER(THE_GEOM) as PERIMETER , ROUND(ST_PERIMETER(ST_CONVEXHULL(THE_GEOM)),3), INSEE_INDIVIDUS, THEME , PAI_BDTOPO, PAI_NATURE FROM BUILDINGS_TEMP "
 
     sql.execute "UPDATE BUILDINGS_MAPUCE SET HAUTEUR=3 WHERE HAUTEUR is null OR HAUTEUR=0"
     sql.execute "UPDATE BUILDINGS_MAPUCE SET NB_NIV=1 WHERE NB_NIV=0"
@@ -484,6 +519,27 @@ def mergeIndicatorsIntoFinalTables(){
     sql.execute "DROP SCHEMA DATA_WORK"
    
  }
+ 
+
+/**
+ * Appply randomForest model to classify each buildings and USR's
+ * */
+def applyRandomForest(ScriptEngine engine){
+        
+    sql.execute "drop table if exists TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE,TYPO_BUILDINGS_MAPUCE, TYPO_USR_MAPUCE";
+    sql.execute "create table TMP_TYPO_BUILDINGS_MAPUCE(pk integer, typo varchar)"
+    sql.execute "create table TMP_TYPO_USR_MAPUCE(pk_usr integer, typo_maj varchar, typo_second varchar)"
+    
+    r = WpsScriptsPackage.class.getResourceAsStream("scripts/randomforest_typo.R")    
+    
+    engine.eval(new InputStreamReader(r));    
+    
+    
+    sql.execute "INSERT INTO FINAL_BUILDING_TYPO (SELECT * FROM TYPO_BUILDINGS_MAPUCE);"
+    sql.execute "INSERT INTO FINAL_USR_TYPO (SELECT * FROM TYPO_USR_MAPUCE);"
+
+    logger.warn "The classification has been done. The tables USR_TYPO and BUILDING_TYPO have been created correctly" 
+}
 
 
 /** Login to the MApUCE database. */
@@ -502,14 +558,14 @@ String password
 @DataFieldInput(
         title = "Spatial unit",
         resume = "Select a column to obtain a list of area identifiers : code insee or  urban area names.",
-        dataStoreTitle = "\$communes_mapuce\$",
+        variableReference = "\$communes_mapuce\$",
         multiSelection = false)
 String[] fieldCodes
 
 /** The list of Commune identifier */
 @FieldValueInput(title="Spatial unit identifiers",
 resume="Select one or more  identifiers and start the script.",
-dataFieldTitle = "Spatial unit",
+variableReference = "fieldCodes",
 multiSelection = true)
 String[] codesInsee
 
