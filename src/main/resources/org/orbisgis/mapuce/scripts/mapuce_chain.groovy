@@ -4,6 +4,7 @@ import org.orbisgis.wpsgroovyapi.output.*
 import org.orbisgis.wpsgroovyapi.process.*
 import javax.swing.JOptionPane;
 import javax.script.ScriptEngine;
+import org.apache.commons.io.FileUtils
 
 
 /**
