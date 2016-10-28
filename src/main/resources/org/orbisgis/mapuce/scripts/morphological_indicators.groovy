@@ -18,7 +18,8 @@ import org.h2gis.utilities.*;
         resume = "Compute a set of morphological indicators based on the french national vector database called BD Topo.<br> The indicators are computed at 3 levels of spatial unit : building, block, USR and stored in 3 tables.<br> <ul> <li>A building is the main geometry (output table name  : BUILDING_INDICATORS).</li> <li> A block represents the union of a set of touching geometry buildings (output table name  : BLOCK_INDICATORS).</li> <li> USR (Unité Spatiale de Référence – Reference Spatial Unit) is the smallest area that is surrounded by streets (output table name  : USR_INDICATORS).</li></ul><br>Note : Please use the extract metadata script in the toolbox to get some basic information on the indicators stored in the 3 output tables.",
         keywords = ["Vector","MAPuCE"])
 def processing() {
-
+    
+    
     sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS, USR_INDICATORS, BLOCK_INDICATORS"
     sql.execute "DROP SCHEMA IF EXISTS DATA_WORK"
     sql.execute "CREATE SCHEMA DATA_WORK"

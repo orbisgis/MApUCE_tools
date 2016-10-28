@@ -36,8 +36,10 @@ def processing() {
     File file = new File(System.getProperty("user.home") + "/mapuce/mapuce-rf-1.0.RData");
     
     if(!file.exists()){
-        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-rf-1.0.RData"), file)   
+        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-rf-2.0.RData"), file)   
     }
+    
+    logger.warn "Download finish. Start classification."
     
     sql.execute "drop table if exists TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE,TYPO_BUILDINGS_MAPUCE, TYPO_USR_MAPUCE";
     sql.execute "create table TMP_TYPO_BUILDINGS_MAPUCE(pk integer, typo varchar)"

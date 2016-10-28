@@ -70,8 +70,10 @@ def initChain(){
     File file = new File(System.getProperty("user.home") + "/mapuce/mapuce-rf-1.0.RData");
     
     if(!file.exists()){
-        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-rf-1.0.RData"), file)   
+        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-rf-2.0.RData"), file)   
     }    
+    
+    logger.warn "Download finish."
     
     engine = rEngine.getScriptEngine();
     engine.put("con", rEngine.getConnectionRObject(sql.getDataSource().getConnection())); 
@@ -287,6 +289,7 @@ def cleanTables(){
  * This method is used to compute all indicators 
  */
  def computeIndicators(String code){  
+     
     sql.execute "CREATE SCHEMA DATA_WORK"
 
     /**
