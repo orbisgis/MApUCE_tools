@@ -39,6 +39,20 @@ if(!login.isEmpty()&& !password.isEmpty()){
             }
             i++;
         }
+    
+    //Create a typo legend table
+    sql.execute "drop table if exists typo_legend"
+    sql.execute "create table typo_legend (typo varchar(5), label varchar)"
+    sql.execute "insert into typo_legend VALUES ('bgh','Bâtiment de grande hauteur')"
+    sql.execute "insert into typo_legend VALUES ('pcio','Pavillon continu sur îlot ouvert')"
+    sql.execute "insert into typo_legend VALUES ('pd' ,'Pavillon discontinu')"
+    sql.execute "insert into typo_legend VALUES ('local' , 'Local annexe')"
+    sql.execute "insert into typo_legend VALUES ('pcif' , 'Pavillon continu sur îlot fermé')"
+    sql.execute "insert into typo_legend VALUES ('icif', 'Immeuble continu sur îlot fermé')"
+    sql.execute "insert into typo_legend VALUES ('psc', 'Pavillon semi-continu')"
+    sql.execute "insert into typo_legend VALUES ('icio','Immeuble continu sur îlot ouvert')"
+    sql.execute "insert into typo_legend VALUES ('ba', 'Bâtiment d''activité')"
+    sql.execute "insert into typo_legend VALUES ('id' , 'Immeuble discontinu')"
    
     literalOutput = "The chain has been executed..."
 }
@@ -70,8 +84,10 @@ def initChain(){
     File file = new File(System.getProperty("user.home") + "/mapuce/mapuce-rf-1.0.RData");
     
     if(!file.exists()){
-        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-rf-1.0.RData"), file)   
+        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-rf-2.0.RData"), file)   
     }    
+    
+    logger.warn "Download finish."
     
     engine = rEngine.getScriptEngine();
     engine.put("con", rEngine.getConnectionRObject(sql.getDataSource().getConnection())); 
@@ -87,12 +103,12 @@ def prepareFinalTables(){
     sql.execute "drop table if exists final_usr_indicators, final_block_indicators,final_building_indicators,FINAL_BUILDING_TYPO, FINAL_USR_TYPO;"     
     sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS, USR_INDICATORS, BLOCK_INDICATORS"
     sql.execute "DROP SCHEMA IF EXISTS DATA_WORK"
-    sql.execute "CREATE TABLE final_building_indicators (PK_BUILDING INTEGER,PK_USR INTEGER, ID_ZONE INTEGER,  THE_GEOM POLYGON, HAUTEUR_ORIGIN  double precision,  NB_NIV  double precision, HAUTEUR  double precision, AREA  double precision, PERIMETER  double precision, INSEE_INDIVIDUS  double precision, FLOOR_AREA  double precision, VOL  double precision, COMPACITY_R  double precision, COMPACITY_N   double precision, COMPACTNESS  double precision, FORM_FACTOR  double precision, CONCAVITY  double precision, MAIN_DIR_DEG  double precision, B_FLOOR_LONG  double precision, B_WALL_AREA  double precision, P_WALL_LONG  double precision, P_WALL_AREA  double precision, NB_NEIGHBOR  double precision, FREE_P_WALL_LONG double precision, FREE_EXT_AREA double precision, CONTIGUITY double precision, P_VOL_RATIO double precision, FRACTAL_DIM double precision, MIN_DIST double precision, MEAN_DIST double precision, MAX_DIST double precision, STD_DIST double precision, NUM_POINTS integer, L_TOT double precision, L_CVX double precision, L_3M double precision, L_RATIO double precision, L_RATIO_CVX double precision, PK_BLOCK_ZONE INTEGER);"
+    sql.execute "CREATE TABLE final_building_indicators (PK_BUILDING INTEGER,PK_USR INTEGER, ID_ZONE INTEGER,  THE_GEOM POLYGON, HAUTEUR_ORIGIN  double precision,  NB_NIV  double precision, HAUTEUR  double precision, AREA  double precision, PERIMETER  double precision, INSEE_INDIVIDUS  double precision, FLOOR_AREA  double precision, VOL  double precision, COMPACITY_R  double precision, COMPACITY_N   double precision, COMPACTNESS  double precision, FORM_FACTOR  double precision, CONCAVITY  double precision, MAIN_DIR_DEG  double precision, B_FLOOR_LONG  double precision, B_WALL_AREA  double precision, P_WALL_LONG  double precision, P_WALL_AREA  double precision, NB_NEIGHBOR  double precision, FREE_P_WALL_LONG double precision, FREE_EXT_AREA double precision, CONTIGUITY double precision, P_VOL_RATIO double precision, FRACTAL_DIM double precision, MIN_DIST double precision, MEAN_DIST double precision, MAX_DIST double precision, STD_DIST double precision, NUM_POINTS integer, L_TOT double precision, L_CVX double precision, L_3M double precision, L_RATIO double precision, L_RATIO_CVX double precision, PK_BLOCK_ZONE INTEGER, THEME varchar, PAI_BDTOPO varchar, PAI_NATURE varchar);"
     sql.execute "CREATE TABLE final_block_indicators (PK_BLOCK_ZONE INTEGER, PK_USR INTEGER,THE_GEOM POLYGON,  AREA double precision, FLOOR_AREA double precision, VOL double precision, H_MEAN double precision, H_STD double precision, COMPACITY double precision, HOLES_AREA double precision, HOLES_PERCENT double precision, MAIN_DIR_DEG double precision );"
     sql.execute "CREATE TABLE final_usr_indicators (PK_USR INTEGER, ID_ZONE integer NOT NULL,THE_GEOM MULTIPOLYGON,  insee_individus double precision,insee_menages double precision ,insee_men_coll double precision ,insee_men_surf double precision ,insee_surface_collectif double precision,VEGETATION_SURFACE double precision, ROUTE_SURFACE double precision,route_longueur double precision, trottoir_longueur double precision,   floor double precision,   floor_ratio double precision,   compac_mean_nw double precision,   compac_mean_w double precision,   contig_mean double precision,   contig_std double precision,   main_dir_std double precision,   h_mean double precision,   h_std double precision,   p_vol_ratio_mean double precision,   b_area double precision,   b_vol double precision,   b_vol_m double precision,   build_numb integer,   min_m_dist double precision,   mean_m_dist double precision,   mean_std_dist double precision,   b_holes_area_mean double precision,   b_std_h_mean double precision,   b_m_nw_compacity double precision,   b_m_w_compacity double precision,   b_std_compacity double precision,   dist_to_center double precision,   build_dens double precision,   hydro_dens double precision,   veget_dens double precision,   road_dens double precision,   ext_env_area double precision )"
     
-    sql.execute "create table FINAL_BUILDING_TYPO(the_geom geometry, pk integer, typo varchar)"
-    sql.execute "create table FINAL_USR_TYPO(the_geom geometry, pk_usr integer, typo_maj varchar, typo_second varchar)"
+    sql.execute "create table FINAL_BUILDING_TYPO(the_geom geometry, pk_building integer,pk_usr integer,id_zone integer, typo varchar)"
+    sql.execute "create table FINAL_USR_TYPO(the_geom geometry, pk_usr integer, id_zone integer,typo_maj varchar, typo_second varchar)"
     
     /**
     * Indicators definition
@@ -287,6 +303,7 @@ def cleanTables(){
  * This method is used to compute all indicators 
  */
  def computeIndicators(String code){  
+     
     sql.execute "CREATE SCHEMA DATA_WORK"
 
     /**
@@ -413,7 +430,7 @@ def cleanTables(){
     logger.warn "Finalize the building indicators table"
 
     sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS"
-    sql.execute "CREATE TABLE BUILDING_INDICATORS AS SELECT  a.PK, a.PK_USR , a.ID_ZONE , a.THE_GEOM, a.HAUTEUR_ORIGIN,  a.NB_NIV,a.HAUTEUR, a.AREA, a.PERIMETER, a.INSEE_INDIVIDUS, b.FLOOR_AREA, b.VOL, c.COMPACITY_R, c.COMPACITY_N, d.COMPACTNESS,e.FORM_FACTOR,f.CONCAVITY,g.MAIN_DIR_DEG,h.B_FLOOR_LONG, h.B_WALL_AREA, h.P_WALL_LONG, h.P_WALL_AREA, h.NB_NEIGHBOR, h.FREE_P_WALL_LONG, h.FREE_EXT_AREA, h.CONTIGUITY,i.P_VOL_RATIO,j.FRACTAL_DIM,k.MIN_DIST, k.MEAN_DIST, k.MAX_DIST,  k.STD_DIST, l.NUM_POINTS, m.L_TOT, a.L_CVX, m.L_3M, m.L_RATIO, m.L_RATIO_CVX,n.PK_BLOCK FROM BUILDINGS_MAPUCE a LEFT JOIN DATA_WORK.BUILD_AREA_VOL b ON a.PK =b.PK LEFT JOIN DATA_WORK.BUILD_COMPACITY c ON a.PK = c.PK LEFT JOIN DATA_WORK.BUILD_COMPACTNESS d ON a.PK = d.PK LEFT JOIN DATA_WORK.BUILD_FORM_FACTOR e ON a.PK = e.PK LEFT JOIN DATA_WORK.BUILD_CONCAVITY f ON a.PK = f.PK LEFT JOIN DATA_WORK.BUILD_MAIN_DIR g ON a.PK = g.PK LEFT JOIN DATA_WORK.BUILD_CONTIGUITY h ON a.PK = h.PK LEFT JOIN DATA_WORK.BUILD_P_VOL_RATIO i ON a.PK = i.PK LEFT JOIN DATA_WORK.BUILD_FRACTAL j ON a.PK = j.PK LEFT JOIN DATA_WORK.BUILD_DIST k ON a.PK = k.PK LEFT JOIN DATA_WORK.BUILD_NUM_POINT l ON a.PK =l.PK LEFT JOIN DATA_WORK.BUILD_NEXT_ROAD m ON a.PK = m.PK LEFT JOIN DATA_WORK.BUILD_BLOCK_MATRIX n ON a.PK = n.PK_BUILD"
+    sql.execute "CREATE TABLE BUILDING_INDICATORS AS SELECT  a.PK, a.PK_USR , a.ID_ZONE , a.THE_GEOM, a.HAUTEUR_ORIGIN,  a.NB_NIV,a.HAUTEUR, a.AREA, a.PERIMETER, a.INSEE_INDIVIDUS, b.FLOOR_AREA, b.VOL, c.COMPACITY_R, c.COMPACITY_N, d.COMPACTNESS,e.FORM_FACTOR,f.CONCAVITY,g.MAIN_DIR_DEG,h.B_FLOOR_LONG, h.B_WALL_AREA, h.P_WALL_LONG, h.P_WALL_AREA, h.NB_NEIGHBOR, h.FREE_P_WALL_LONG, h.FREE_EXT_AREA, h.CONTIGUITY,i.P_VOL_RATIO,j.FRACTAL_DIM,k.MIN_DIST, k.MEAN_DIST, k.MAX_DIST,  k.STD_DIST, l.NUM_POINTS, m.L_TOT, a.L_CVX, m.L_3M, m.L_RATIO, m.L_RATIO_CVX,n.PK_BLOCK,a.THEME,a.PAI_BDTOPO,a.PAI_NATURE FROM BUILDINGS_MAPUCE a LEFT JOIN DATA_WORK.BUILD_AREA_VOL b ON a.PK =b.PK LEFT JOIN DATA_WORK.BUILD_COMPACITY c ON a.PK = c.PK LEFT JOIN DATA_WORK.BUILD_COMPACTNESS d ON a.PK = d.PK LEFT JOIN DATA_WORK.BUILD_FORM_FACTOR e ON a.PK = e.PK LEFT JOIN DATA_WORK.BUILD_CONCAVITY f ON a.PK = f.PK LEFT JOIN DATA_WORK.BUILD_MAIN_DIR g ON a.PK = g.PK LEFT JOIN DATA_WORK.BUILD_CONTIGUITY h ON a.PK = h.PK LEFT JOIN DATA_WORK.BUILD_P_VOL_RATIO i ON a.PK = i.PK LEFT JOIN DATA_WORK.BUILD_FRACTAL j ON a.PK = j.PK LEFT JOIN DATA_WORK.BUILD_DIST k ON a.PK = k.PK LEFT JOIN DATA_WORK.BUILD_NUM_POINT l ON a.PK =l.PK LEFT JOIN DATA_WORK.BUILD_NEXT_ROAD m ON a.PK = m.PK LEFT JOIN DATA_WORK.BUILD_BLOCK_MATRIX n ON a.PK = n.PK_BUILD"
 
     sql.execute "ALTER TABLE BUILDING_INDICATORS ALTER COLUMN PK SET NOT NULL"
     sql.execute "CREATE PRIMARY KEY ON BUILDING_INDICATORS(PK)"
@@ -506,17 +523,43 @@ def cleanTables(){
     sql.execute "CREATE SPATIAL INDEX ON USR_INDICATORS (THE_GEOM)"
 
 
-    sql.execute "UPDATE USR_INDICATORS  SET FLOOR = 0 WHERE FLOOR is null"
-    sql.execute "UPDATE USR_INDICATORS  SET FLOOR_RATIO = 0 WHERE FLOOR_RATIO is null"
-    sql.execute "UPDATE USR_INDICATORS  SET B_AREA = 0 WHERE B_AREA is null"
-    sql.execute "UPDATE USR_INDICATORS  SET B_VOL = 0 WHERE B_VOL is null"
-    sql.execute "UPDATE USR_INDICATORS  SET BUILD_DENS = 0 WHERE BUILD_DENS is null"
-    sql.execute "UPDATE USR_INDICATORS  SET EXT_ENV_AREA = 0 WHERE EXT_ENV_AREA is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_individus=0 WHERE insee_individus is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_menages=0 where insee_menages is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_men_coll=0 where insee_men_coll is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_men_surf=0 where insee_men_surf is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_surface_collectif=0 where insee_surface_collectif is null"    
+    sql.execute "update USR_INDICATORS set INSEE_INDIVIDUS = 0 where INSEE_INDIVIDUS is  null"
+    sql.execute "update USR_INDICATORS set INSEE_MENAGES = 0 where INSEE_MENAGES is  null"
+    sql.execute "update USR_INDICATORS set INSEE_MEN_COLL = 0 where INSEE_MEN_COLL is  null"
+    sql.execute "update USR_INDICATORS set INSEE_MEN_SURF = 0 where INSEE_MEN_SURF is  null"
+    sql.execute "update USR_INDICATORS set INSEE_SURFACE_COLLECTIF = 0 where INSEE_SURFACE_COLLECTIF is  null"
+    sql.execute "update USR_INDICATORS set VEGETATION_SURFACE = 0 where VEGETATION_SURFACE is  null"
+    sql.execute "update USR_INDICATORS set ROUTE_SURFACE = 0 where ROUTE_SURFACE is  null"
+    sql.execute "update USR_INDICATORS set ROUTE_LONGUEUR = 0 where ROUTE_LONGUEUR is  null"
+    sql.execute "update USR_INDICATORS set TROTTOIR_LONGUEUR = 0 where TROTTOIR_LONGUEUR is  null"
+    sql.execute "update USR_INDICATORS set FLOOR = 0 where FLOOR is  null"
+    sql.execute "update USR_INDICATORS set FLOOR_RATIO = 0 where FLOOR_RATIO is  null"
+    sql.execute "update USR_INDICATORS set COMPAC_MEAN_NW = 0 where COMPAC_MEAN_NW is  null"
+    sql.execute "update USR_INDICATORS set COMPAC_MEAN_W = 0 where COMPAC_MEAN_W is  null"
+    sql.execute "update USR_INDICATORS set CONTIG_MEAN = 0 where CONTIG_MEAN is  null"
+    sql.execute "update USR_INDICATORS set CONTIG_STD = 0 where CONTIG_STD is  null"
+    sql.execute "update USR_INDICATORS set MAIN_DIR_STD = 0 where MAIN_DIR_STD is  null"
+    sql.execute "update USR_INDICATORS set H_MEAN = 0 where H_MEAN is  null"
+    sql.execute "update USR_INDICATORS set H_STD = 0 where H_STD is  null"
+    sql.execute "update USR_INDICATORS set P_VOL_RATIO_MEAN = 0 where P_VOL_RATIO_MEAN is  null"
+    sql.execute "update USR_INDICATORS set B_AREA = 0 where B_AREA is  null"
+    sql.execute "update USR_INDICATORS set B_VOL = 0 where B_VOL is  null"
+    sql.execute "update USR_INDICATORS set B_VOL_M = 0 where B_VOL_M is  null"
+    sql.execute "update USR_INDICATORS set BUILD_NUMB = 0 where BUILD_NUMB is  null"
+    sql.execute "update USR_INDICATORS set MIN_M_DIST = 0 where MIN_M_DIST is  null"
+    sql.execute "update USR_INDICATORS set MEAN_M_DIST = 0 where MEAN_M_DIST is  null"
+    sql.execute "update USR_INDICATORS set MEAN_STD_DIST = 0 where MEAN_STD_DIST is  null"
+    sql.execute "update USR_INDICATORS set B_HOLES_AREA_MEAN = 0 where B_HOLES_AREA_MEAN is  null"
+    sql.execute "update USR_INDICATORS set B_STD_H_MEAN = 0 where B_STD_H_MEAN is  null"
+    sql.execute "update USR_INDICATORS set B_M_NW_COMPACITY = 0 where B_M_NW_COMPACITY is  null"
+    sql.execute "update USR_INDICATORS set B_M_W_COMPACITY = 0 where B_M_W_COMPACITY is  null"
+    sql.execute "update USR_INDICATORS set B_STD_COMPACITY = 0 where B_STD_COMPACITY is  null"
+    sql.execute "update USR_INDICATORS set DIST_TO_CENTER = 0 where DIST_TO_CENTER is  null"
+    sql.execute "update USR_INDICATORS set BUILD_DENS = 0 where BUILD_DENS is  null"
+    sql.execute "update USR_INDICATORS set HYDRO_DENS = 0 where HYDRO_DENS is  null"
+    sql.execute "update USR_INDICATORS set VEGET_DENS = 0 where VEGET_DENS is  null"
+    sql.execute "update USR_INDICATORS set ROAD_DENS = 0 where ROAD_DENS is  null"
+    sql.execute "update USR_INDICATORS set EXT_ENV_AREA = 0 where EXT_ENV_AREA is  null"    
     sql.execute "DROP SCHEMA DATA_WORK"
    
  }
@@ -528,7 +571,7 @@ def cleanTables(){
 def applyRandomForest(ScriptEngine engine){
         
     sql.execute "drop table if exists TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE,TYPO_BUILDINGS_MAPUCE, TYPO_USR_MAPUCE";
-    sql.execute "create table TMP_TYPO_BUILDINGS_MAPUCE(pk integer, typo varchar)"
+    sql.execute "create table TMP_TYPO_BUILDINGS_MAPUCE(pk integer,  typo varchar)"
     sql.execute "create table TMP_TYPO_USR_MAPUCE(pk_usr integer, typo_maj varchar, typo_second varchar)"
     
     r = WpsScriptsPackage.class.getResourceAsStream("scripts/randomforest_typo.R")    
@@ -538,6 +581,7 @@ def applyRandomForest(ScriptEngine engine){
     
     sql.execute "INSERT INTO FINAL_BUILDING_TYPO (SELECT * FROM TYPO_BUILDINGS_MAPUCE);"
     sql.execute "INSERT INTO FINAL_USR_TYPO (SELECT * FROM TYPO_USR_MAPUCE);"
+       
 
     logger.warn "The classification has been done. The tables USR_TYPO and BUILDING_TYPO have been created correctly" 
 }

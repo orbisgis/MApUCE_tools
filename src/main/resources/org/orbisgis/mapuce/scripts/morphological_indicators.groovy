@@ -18,7 +18,8 @@ import org.h2gis.utilities.*;
         resume = "Compute a set of morphological indicators based on the french national vector database called BD Topo.<br> The indicators are computed at 3 levels of spatial unit : building, block, USR and stored in 3 tables.<br> <ul> <li>A building is the main geometry (output table name  : BUILDING_INDICATORS).</li> <li> A block represents the union of a set of touching geometry buildings (output table name  : BLOCK_INDICATORS).</li> <li> USR (Unité Spatiale de Référence – Reference Spatial Unit) is the smallest area that is surrounded by streets (output table name  : USR_INDICATORS).</li></ul><br>Note : Please use the extract metadata script in the toolbox to get some basic information on the indicators stored in the 3 output tables.",
         keywords = ["Vector","MAPuCE"])
 def processing() {
-
+    
+    
     sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS, USR_INDICATORS, BLOCK_INDICATORS"
     sql.execute "DROP SCHEMA IF EXISTS DATA_WORK"
     sql.execute "CREATE SCHEMA DATA_WORK"
@@ -147,7 +148,7 @@ def processing() {
     logger.warn "Finalize the building indicators table"
 
     sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS"
-    sql.execute "CREATE TABLE BUILDING_INDICATORS AS SELECT  a.PK, a.PK_USR , a.ID_ZONE , a.THE_GEOM, a.HAUTEUR_ORIGIN,  a.NB_NIV,a.HAUTEUR, a.AREA, a.PERIMETER, a.INSEE_INDIVIDUS, b.FLOOR_AREA, b.VOL, c.COMPACITY_R, c.COMPACITY_N, d.COMPACTNESS,e.FORM_FACTOR,f.CONCAVITY,g.MAIN_DIR_DEG,h.B_FLOOR_LONG, h.B_WALL_AREA, h.P_WALL_LONG, h.P_WALL_AREA, h.NB_NEIGHBOR, h.FREE_P_WALL_LONG, h.FREE_EXT_AREA, h.CONTIGUITY,i.P_VOL_RATIO,j.FRACTAL_DIM,k.MIN_DIST, k.MEAN_DIST, k.MAX_DIST,  k.STD_DIST, l.NUM_POINTS, m.L_TOT, a.L_CVX, m.L_3M, m.L_RATIO, m.L_RATIO_CVX,n.PK_BLOCK FROM BUILDINGS_MAPUCE a LEFT JOIN DATA_WORK.BUILD_AREA_VOL b ON a.PK =b.PK LEFT JOIN DATA_WORK.BUILD_COMPACITY c ON a.PK = c.PK LEFT JOIN DATA_WORK.BUILD_COMPACTNESS d ON a.PK = d.PK LEFT JOIN DATA_WORK.BUILD_FORM_FACTOR e ON a.PK = e.PK LEFT JOIN DATA_WORK.BUILD_CONCAVITY f ON a.PK = f.PK LEFT JOIN DATA_WORK.BUILD_MAIN_DIR g ON a.PK = g.PK LEFT JOIN DATA_WORK.BUILD_CONTIGUITY h ON a.PK = h.PK LEFT JOIN DATA_WORK.BUILD_P_VOL_RATIO i ON a.PK = i.PK LEFT JOIN DATA_WORK.BUILD_FRACTAL j ON a.PK = j.PK LEFT JOIN DATA_WORK.BUILD_DIST k ON a.PK = k.PK LEFT JOIN DATA_WORK.BUILD_NUM_POINT l ON a.PK =l.PK LEFT JOIN DATA_WORK.BUILD_NEXT_ROAD m ON a.PK = m.PK LEFT JOIN DATA_WORK.BUILD_BLOCK_MATRIX n ON a.PK = n.PK_BUILD"
+    sql.execute "CREATE TABLE BUILDING_INDICATORS AS SELECT  a.PK, a.PK_USR , a.ID_ZONE , a.THE_GEOM, a.HAUTEUR_ORIGIN,  a.NB_NIV,a.HAUTEUR, a.AREA, a.PERIMETER, a.INSEE_INDIVIDUS, b.FLOOR_AREA, b.VOL, c.COMPACITY_R, c.COMPACITY_N, d.COMPACTNESS,e.FORM_FACTOR,f.CONCAVITY,g.MAIN_DIR_DEG,h.B_FLOOR_LONG, h.B_WALL_AREA, h.P_WALL_LONG, h.P_WALL_AREA, h.NB_NEIGHBOR, h.FREE_P_WALL_LONG, h.FREE_EXT_AREA, h.CONTIGUITY,i.P_VOL_RATIO,j.FRACTAL_DIM,k.MIN_DIST, k.MEAN_DIST, k.MAX_DIST,  k.STD_DIST, l.NUM_POINTS, m.L_TOT, a.L_CVX, m.L_3M, m.L_RATIO, m.L_RATIO_CVX,n.PK_BLOCK,a.THEME,a.PAI_BDTOPO,a.PAI_NATURE FROM BUILDINGS_MAPUCE a LEFT JOIN DATA_WORK.BUILD_AREA_VOL b ON a.PK =b.PK LEFT JOIN DATA_WORK.BUILD_COMPACITY c ON a.PK = c.PK LEFT JOIN DATA_WORK.BUILD_COMPACTNESS d ON a.PK = d.PK LEFT JOIN DATA_WORK.BUILD_FORM_FACTOR e ON a.PK = e.PK LEFT JOIN DATA_WORK.BUILD_CONCAVITY f ON a.PK = f.PK LEFT JOIN DATA_WORK.BUILD_MAIN_DIR g ON a.PK = g.PK LEFT JOIN DATA_WORK.BUILD_CONTIGUITY h ON a.PK = h.PK LEFT JOIN DATA_WORK.BUILD_P_VOL_RATIO i ON a.PK = i.PK LEFT JOIN DATA_WORK.BUILD_FRACTAL j ON a.PK = j.PK LEFT JOIN DATA_WORK.BUILD_DIST k ON a.PK = k.PK LEFT JOIN DATA_WORK.BUILD_NUM_POINT l ON a.PK =l.PK LEFT JOIN DATA_WORK.BUILD_NEXT_ROAD m ON a.PK = m.PK LEFT JOIN DATA_WORK.BUILD_BLOCK_MATRIX n ON a.PK = n.PK_BUILD"
 
     sql.execute "ALTER TABLE BUILDING_INDICATORS ALTER COLUMN PK SET NOT NULL"
     sql.execute "CREATE PRIMARY KEY ON BUILDING_INDICATORS(PK)"
@@ -240,17 +241,44 @@ def processing() {
     sql.execute "CREATE SPATIAL INDEX ON USR_INDICATORS (THE_GEOM)"
 
 
-    sql.execute "UPDATE USR_INDICATORS  SET FLOOR = 0 WHERE FLOOR is null"
-    sql.execute "UPDATE USR_INDICATORS  SET FLOOR_RATIO = 0 WHERE FLOOR_RATIO is null"
-    sql.execute "UPDATE USR_INDICATORS  SET B_AREA = 0 WHERE B_AREA is null"
-    sql.execute "UPDATE USR_INDICATORS  SET B_VOL = 0 WHERE B_VOL is null"
-    sql.execute "UPDATE USR_INDICATORS  SET BUILD_DENS = 0 WHERE BUILD_DENS is null"
-    sql.execute "UPDATE USR_INDICATORS  SET EXT_ENV_AREA = 0 WHERE EXT_ENV_AREA is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_individus=0 WHERE insee_individus is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_menages=0 where insee_menages is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_men_coll=0 where insee_men_coll is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_men_surf=0 where insee_men_surf is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_surface_collectif=0 where insee_surface_collectif is null"
+    sql.execute "update FINAL_USR_INDICATORS set INSEE_INDIVIDUS = 0 where INSEE_INDIVIDUS is  null"
+    sql.execute "update FINAL_USR_INDICATORS set INSEE_MENAGES = 0 where INSEE_MENAGES is  null"
+    sql.execute "update FINAL_USR_INDICATORS set INSEE_MEN_COLL = 0 where INSEE_MEN_COLL is  null"
+    sql.execute "update FINAL_USR_INDICATORS set INSEE_MEN_SURF = 0 where INSEE_MEN_SURF is  null"
+    sql.execute "update FINAL_USR_INDICATORS set INSEE_SURFACE_COLLECTIF = 0 where INSEE_SURFACE_COLLECTIF is  null"
+    sql.execute "update FINAL_USR_INDICATORS set VEGETATION_SURFACE = 0 where VEGETATION_SURFACE is  null"
+    sql.execute "update FINAL_USR_INDICATORS set ROUTE_SURFACE = 0 where ROUTE_SURFACE is  null"
+    sql.execute "update FINAL_USR_INDICATORS set ROUTE_LONGUEUR = 0 where ROUTE_LONGUEUR is  null"
+    sql.execute "update FINAL_USR_INDICATORS set TROTTOIR_LONGUEUR = 0 where TROTTOIR_LONGUEUR is  null"
+    sql.execute "update FINAL_USR_INDICATORS set FLOOR = 0 where FLOOR is  null"
+    sql.execute "update FINAL_USR_INDICATORS set FLOOR_RATIO = 0 where FLOOR_RATIO is  null"
+    sql.execute "update FINAL_USR_INDICATORS set COMPAC_MEAN_NW = 0 where COMPAC_MEAN_NW is  null"
+    sql.execute "update FINAL_USR_INDICATORS set COMPAC_MEAN_W = 0 where COMPAC_MEAN_W is  null"
+    sql.execute "update FINAL_USR_INDICATORS set CONTIG_MEAN = 0 where CONTIG_MEAN is  null"
+    sql.execute "update FINAL_USR_INDICATORS set CONTIG_STD = 0 where CONTIG_STD is  null"
+    sql.execute "update FINAL_USR_INDICATORS set MAIN_DIR_STD = 0 where MAIN_DIR_STD is  null"
+    sql.execute "update FINAL_USR_INDICATORS set H_MEAN = 0 where H_MEAN is  null"
+    sql.execute "update FINAL_USR_INDICATORS set H_STD = 0 where H_STD is  null"
+    sql.execute "update FINAL_USR_INDICATORS set P_VOL_RATIO_MEAN = 0 where P_VOL_RATIO_MEAN is  null"
+    sql.execute "update FINAL_USR_INDICATORS set B_AREA = 0 where B_AREA is  null"
+    sql.execute "update FINAL_USR_INDICATORS set B_VOL = 0 where B_VOL is  null"
+    sql.execute "update FINAL_USR_INDICATORS set B_VOL_M = 0 where B_VOL_M is  null"
+    sql.execute "update FINAL_USR_INDICATORS set BUILD_NUMB = 0 where BUILD_NUMB is  null"
+    sql.execute "update FINAL_USR_INDICATORS set MIN_M_DIST = 0 where MIN_M_DIST is  null"
+    sql.execute "update FINAL_USR_INDICATORS set MEAN_M_DIST = 0 where MEAN_M_DIST is  null"
+    sql.execute "update FINAL_USR_INDICATORS set MEAN_STD_DIST = 0 where MEAN_STD_DIST is  null"
+    sql.execute "update FINAL_USR_INDICATORS set B_HOLES_AREA_MEAN = 0 where B_HOLES_AREA_MEAN is  null"
+    sql.execute "update FINAL_USR_INDICATORS set B_STD_H_MEAN = 0 where B_STD_H_MEAN is  null"
+    sql.execute "update FINAL_USR_INDICATORS set B_M_NW_COMPACITY = 0 where B_M_NW_COMPACITY is  null"
+    sql.execute "update FINAL_USR_INDICATORS set B_M_W_COMPACITY = 0 where B_M_W_COMPACITY is  null"
+    sql.execute "update FINAL_USR_INDICATORS set B_STD_COMPACITY = 0 where B_STD_COMPACITY is  null"
+    sql.execute "update FINAL_USR_INDICATORS set DIST_TO_CENTER = 0 where DIST_TO_CENTER is  null"
+    sql.execute "update FINAL_USR_INDICATORS set BUILD_DENS = 0 where BUILD_DENS is  null"
+    sql.execute "update FINAL_USR_INDICATORS set HYDRO_DENS = 0 where HYDRO_DENS is  null"
+    sql.execute "update FINAL_USR_INDICATORS set VEGET_DENS = 0 where VEGET_DENS is  null"
+    sql.execute "update FINAL_USR_INDICATORS set ROAD_DENS = 0 where ROAD_DENS is  null"
+    sql.execute "update FINAL_USR_INDICATORS set EXT_ENV_AREA = 0 where EXT_ENV_AREA is  null"
+    
     logger.warn "Cleaning the database"
     sql.execute "DROP SCHEMA DATA_WORK"
     
