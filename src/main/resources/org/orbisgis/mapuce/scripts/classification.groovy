@@ -55,6 +55,21 @@ def processing() {
     
     engine.eval(new InputStreamReader(r));
     
+    sql.execute "drop table if exists typo_legend"
+    sql.execute "create table typo_legend (typo varchar(5), label varchar)"
+    sql.execute "insert into typo_legend VALUES ('bgh','Bâtiment de grande hauteur')"
+    sql.execute "insert into typo_legend VALUES ('pcio','Pavillon continu sur îlot ouvert')"
+    sql.execute "insert into typo_legend VALUES ('pd' ,'Pavillon discontinu')"
+    sql.execute "insert into typo_legend VALUES ('local' , 'Local annexe')"
+    sql.execute "insert into typo_legend VALUES ('pcif' , 'Pavillon continu sur îlot fermé')"
+    sql.execute "insert into typo_legend VALUES ('icif', 'Immeuble continu sur îlot fermé')"
+    sql.execute "insert into typo_legend VALUES ('psc', 'Pavillon semi-continu')"
+    sql.execute "insert into typo_legend VALUES ('icio','Immeuble continu sur îlot ouvert')"
+    sql.execute "insert into typo_legend VALUES ('ba', 'Bâtiment d''activité')"
+    sql.execute "insert into typo_legend VALUES ('id' , 'Immeuble discontinu')"
+    
+    
+    
     
 
     literalOutput = "The classification has been done. The tables USR_TYPO and BUILDING_TYPO have been created correctly" 

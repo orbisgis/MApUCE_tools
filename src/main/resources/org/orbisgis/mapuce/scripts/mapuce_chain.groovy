@@ -39,6 +39,20 @@ if(!login.isEmpty()&& !password.isEmpty()){
             }
             i++;
         }
+    
+    //Create a typo legend table
+    sql.execute "drop table if exists typo_legend"
+    sql.execute "create table typo_legend (typo varchar(5), label varchar)"
+    sql.execute "insert into typo_legend VALUES ('bgh','Bâtiment de grande hauteur')"
+    sql.execute "insert into typo_legend VALUES ('pcio','Pavillon continu sur îlot ouvert')"
+    sql.execute "insert into typo_legend VALUES ('pd' ,'Pavillon discontinu')"
+    sql.execute "insert into typo_legend VALUES ('local' , 'Local annexe')"
+    sql.execute "insert into typo_legend VALUES ('pcif' , 'Pavillon continu sur îlot fermé')"
+    sql.execute "insert into typo_legend VALUES ('icif', 'Immeuble continu sur îlot fermé')"
+    sql.execute "insert into typo_legend VALUES ('psc', 'Pavillon semi-continu')"
+    sql.execute "insert into typo_legend VALUES ('icio','Immeuble continu sur îlot ouvert')"
+    sql.execute "insert into typo_legend VALUES ('ba', 'Bâtiment d''activité')"
+    sql.execute "insert into typo_legend VALUES ('id' , 'Immeuble discontinu')"
    
     literalOutput = "The chain has been executed..."
 }
@@ -509,17 +523,43 @@ def cleanTables(){
     sql.execute "CREATE SPATIAL INDEX ON USR_INDICATORS (THE_GEOM)"
 
 
-    sql.execute "UPDATE USR_INDICATORS  SET FLOOR = 0 WHERE FLOOR is null"
-    sql.execute "UPDATE USR_INDICATORS  SET FLOOR_RATIO = 0 WHERE FLOOR_RATIO is null"
-    sql.execute "UPDATE USR_INDICATORS  SET B_AREA = 0 WHERE B_AREA is null"
-    sql.execute "UPDATE USR_INDICATORS  SET B_VOL = 0 WHERE B_VOL is null"
-    sql.execute "UPDATE USR_INDICATORS  SET BUILD_DENS = 0 WHERE BUILD_DENS is null"
-    sql.execute "UPDATE USR_INDICATORS  SET EXT_ENV_AREA = 0 WHERE EXT_ENV_AREA is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_individus=0 WHERE insee_individus is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_menages=0 where insee_menages is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_men_coll=0 where insee_men_coll is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_men_surf=0 where insee_men_surf is null"
-    sql.execute "UPDATE USR_INDICATORS  SET insee_surface_collectif=0 where insee_surface_collectif is null"    
+    sql.execute "update USR_INDICATORS set INSEE_INDIVIDUS = 0 where INSEE_INDIVIDUS is  null"
+    sql.execute "update USR_INDICATORS set INSEE_MENAGES = 0 where INSEE_MENAGES is  null"
+    sql.execute "update USR_INDICATORS set INSEE_MEN_COLL = 0 where INSEE_MEN_COLL is  null"
+    sql.execute "update USR_INDICATORS set INSEE_MEN_SURF = 0 where INSEE_MEN_SURF is  null"
+    sql.execute "update USR_INDICATORS set INSEE_SURFACE_COLLECTIF = 0 where INSEE_SURFACE_COLLECTIF is  null"
+    sql.execute "update USR_INDICATORS set VEGETATION_SURFACE = 0 where VEGETATION_SURFACE is  null"
+    sql.execute "update USR_INDICATORS set ROUTE_SURFACE = 0 where ROUTE_SURFACE is  null"
+    sql.execute "update USR_INDICATORS set ROUTE_LONGUEUR = 0 where ROUTE_LONGUEUR is  null"
+    sql.execute "update USR_INDICATORS set TROTTOIR_LONGUEUR = 0 where TROTTOIR_LONGUEUR is  null"
+    sql.execute "update USR_INDICATORS set FLOOR = 0 where FLOOR is  null"
+    sql.execute "update USR_INDICATORS set FLOOR_RATIO = 0 where FLOOR_RATIO is  null"
+    sql.execute "update USR_INDICATORS set COMPAC_MEAN_NW = 0 where COMPAC_MEAN_NW is  null"
+    sql.execute "update USR_INDICATORS set COMPAC_MEAN_W = 0 where COMPAC_MEAN_W is  null"
+    sql.execute "update USR_INDICATORS set CONTIG_MEAN = 0 where CONTIG_MEAN is  null"
+    sql.execute "update USR_INDICATORS set CONTIG_STD = 0 where CONTIG_STD is  null"
+    sql.execute "update USR_INDICATORS set MAIN_DIR_STD = 0 where MAIN_DIR_STD is  null"
+    sql.execute "update USR_INDICATORS set H_MEAN = 0 where H_MEAN is  null"
+    sql.execute "update USR_INDICATORS set H_STD = 0 where H_STD is  null"
+    sql.execute "update USR_INDICATORS set P_VOL_RATIO_MEAN = 0 where P_VOL_RATIO_MEAN is  null"
+    sql.execute "update USR_INDICATORS set B_AREA = 0 where B_AREA is  null"
+    sql.execute "update USR_INDICATORS set B_VOL = 0 where B_VOL is  null"
+    sql.execute "update USR_INDICATORS set B_VOL_M = 0 where B_VOL_M is  null"
+    sql.execute "update USR_INDICATORS set BUILD_NUMB = 0 where BUILD_NUMB is  null"
+    sql.execute "update USR_INDICATORS set MIN_M_DIST = 0 where MIN_M_DIST is  null"
+    sql.execute "update USR_INDICATORS set MEAN_M_DIST = 0 where MEAN_M_DIST is  null"
+    sql.execute "update USR_INDICATORS set MEAN_STD_DIST = 0 where MEAN_STD_DIST is  null"
+    sql.execute "update USR_INDICATORS set B_HOLES_AREA_MEAN = 0 where B_HOLES_AREA_MEAN is  null"
+    sql.execute "update USR_INDICATORS set B_STD_H_MEAN = 0 where B_STD_H_MEAN is  null"
+    sql.execute "update USR_INDICATORS set B_M_NW_COMPACITY = 0 where B_M_NW_COMPACITY is  null"
+    sql.execute "update USR_INDICATORS set B_M_W_COMPACITY = 0 where B_M_W_COMPACITY is  null"
+    sql.execute "update USR_INDICATORS set B_STD_COMPACITY = 0 where B_STD_COMPACITY is  null"
+    sql.execute "update USR_INDICATORS set DIST_TO_CENTER = 0 where DIST_TO_CENTER is  null"
+    sql.execute "update USR_INDICATORS set BUILD_DENS = 0 where BUILD_DENS is  null"
+    sql.execute "update USR_INDICATORS set HYDRO_DENS = 0 where HYDRO_DENS is  null"
+    sql.execute "update USR_INDICATORS set VEGET_DENS = 0 where VEGET_DENS is  null"
+    sql.execute "update USR_INDICATORS set ROAD_DENS = 0 where ROAD_DENS is  null"
+    sql.execute "update USR_INDICATORS set EXT_ENV_AREA = 0 where EXT_ENV_AREA is  null"    
     sql.execute "DROP SCHEMA DATA_WORK"
    
  }
@@ -541,6 +581,7 @@ def applyRandomForest(ScriptEngine engine){
     
     sql.execute "INSERT INTO FINAL_BUILDING_TYPO (SELECT * FROM TYPO_BUILDINGS_MAPUCE);"
     sql.execute "INSERT INTO FINAL_USR_TYPO (SELECT * FROM TYPO_USR_MAPUCE);"
+       
 
     logger.warn "The classification has been done. The tables USR_TYPO and BUILDING_TYPO have been created correctly" 
 }
