@@ -12,6 +12,8 @@ dbSendQuery(con,"DROP TABLE IF EXISTS buildings_to_predict; CREATE TABLE buildin
 
 data_predict = dbGetQuery(con, "SELECT * FROM buildings_to_predict");
 
+#Convert column names in lowercase as required by the R model
+data_predict = setNames(data_predict, tolower(names(data_predict)))
 
 ### Remove column identifiers
 var_pred_com=data_predict[,-2]
@@ -25,10 +27,10 @@ tab_typo_bati=cbind.data.frame(data_predict[,1],typologie)
 dbWriteTable(con, "TMP_TYPO_BUILDINGS_MAPUCE", tab_typo_bati, append=TRUE, row.names=FALSE)
 
 ### Compute floor percent
-pct_bati=data_predict$I_FLOOR/data_predict$U_FLOOR*100
+pct_bati=data_predict$i_floor/data_predict$u_floor*100
 
 ### Compute % of typologies by USR
-typo_USR=tapply(pct_bati,list(data_predict$PK_USR,typologie),sum)
+typo_USR=tapply(pct_bati,list(data_predict$pk_usr,typologie),sum)
 typo_USR=ifelse(is.na(typo_USR),0.00,round(typo_USR,2))
 
 
@@ -61,8 +63,3 @@ tab_typo_usr=cbind.data.frame(u_PK,tab_typo_usr)
 
 ### Export typologies by USR
 dbWriteTable(con, "TMP_TYPO_USR_MAPUCE", tab_typo_usr[,c(1,12,13)], append=TRUE, row.names=FALSE)
-
-### Create final tables with geometries
-dbSendQuery(con, "CREATE INDEX ON TMP_TYPO_BUILDINGS_MAPUCE(PK); CREATE TABLE TYPO_BUILDINGS_MAPUCE AS SELECT a.the_geom, b.pk as pk_building, a.pk_usr, a.id_zone, b.typo from BUILDINGS_MAPUCE a, TMP_TYPO_BUILDINGS_MAPUCE b where a.pk=b.pk; ")
-dbSendQuery(con, "CREATE INDEX ON TMP_TYPO_USR_MAPUCE(PK_USR); CREATE TABLE TYPO_USR_MAPUCE AS SELECT a.the_geom, b.pk_usr, a.id_zone, b.typo_maj, b.typo_second  from USR_MAPUCE a, TMP_TYPO_USR_MAPUCE b where a.pk=b.pk_usr;")
-dbSendQuery(con, "DROP TABLE IF EXISTS TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE, buildings_to_predict;")

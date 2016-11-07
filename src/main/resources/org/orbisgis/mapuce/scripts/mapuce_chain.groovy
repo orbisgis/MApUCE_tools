@@ -41,18 +41,17 @@ if(!login.isEmpty()&& !password.isEmpty()){
         }
     
     //Create a typo legend table
-    sql.execute "drop table if exists typo_legend"
-    sql.execute "create table typo_legend (typo varchar(5), label varchar)"
-    sql.execute "insert into typo_legend VALUES ('bgh','Bâtiment de grande hauteur')"
-    sql.execute "insert into typo_legend VALUES ('pcio','Pavillon continu sur îlot ouvert')"
-    sql.execute "insert into typo_legend VALUES ('pd' ,'Pavillon discontinu')"
-    sql.execute "insert into typo_legend VALUES ('local' , 'Local annexe')"
-    sql.execute "insert into typo_legend VALUES ('pcif' , 'Pavillon continu sur îlot fermé')"
-    sql.execute "insert into typo_legend VALUES ('icif', 'Immeuble continu sur îlot fermé')"
-    sql.execute "insert into typo_legend VALUES ('psc', 'Pavillon semi-continu')"
-    sql.execute "insert into typo_legend VALUES ('icio','Immeuble continu sur îlot ouvert')"
-    sql.execute "insert into typo_legend VALUES ('ba', 'Bâtiment d''activité')"
-    sql.execute "insert into typo_legend VALUES ('id' , 'Immeuble discontinu')"
+    sql.execute "create table typo_label (typo varchar(5), label varchar)"
+    sql.execute "insert into typo_label VALUES ('bgh','Bâtiment de grande hauteur')"
+    sql.execute "insert into typo_label VALUES ('pcio','Pavillon continu sur îlot ouvert')"
+    sql.execute "insert into typo_label VALUES ('pd' ,'Pavillon discontinu')"
+    sql.execute "insert into typo_label VALUES ('local' , 'Local annexe')"
+    sql.execute "insert into typo_label VALUES ('pcif' , 'Pavillon continu sur îlot fermé')"
+    sql.execute "insert into typo_label VALUES ('icif', 'Immeuble continu sur îlot fermé')"
+    sql.execute "insert into typo_label VALUES ('psc', 'Pavillon semi-continu')"
+    sql.execute "insert into typo_label VALUES ('icio','Immeuble continu sur îlot ouvert')"
+    sql.execute "insert into typo_label VALUES ('ba', 'Bâtiment d''activité')"
+    sql.execute "insert into typo_label VALUES ('id' , 'Immeuble discontinu')"
    
     literalOutput = "The chain has been executed..."
 }
@@ -100,7 +99,7 @@ def initChain(){
  * Prepare the 3 tables to store all results
  * */
 def prepareFinalTables(){
-    sql.execute "drop table if exists final_usr_indicators, final_block_indicators,final_building_indicators,FINAL_BUILDING_TYPO, FINAL_USR_TYPO;"     
+    sql.execute "drop table if exists final_usr_indicators, final_block_indicators,final_building_indicators,FINAL_BUILDING_TYPO, FINAL_USR_TYPO, typo_label;"     
     sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS, USR_INDICATORS, BLOCK_INDICATORS"
     sql.execute "DROP SCHEMA IF EXISTS DATA_WORK"
     sql.execute "CREATE TABLE final_building_indicators (PK_BUILDING INTEGER,PK_USR INTEGER, ID_ZONE INTEGER,  THE_GEOM POLYGON, HAUTEUR_ORIGIN  double precision,  NB_NIV  double precision, HAUTEUR  double precision, AREA  double precision, PERIMETER  double precision, INSEE_INDIVIDUS  double precision, FLOOR_AREA  double precision, VOL  double precision, COMPACITY_R  double precision, COMPACITY_N   double precision, COMPACTNESS  double precision, FORM_FACTOR  double precision, CONCAVITY  double precision, MAIN_DIR_DEG  double precision, B_FLOOR_LONG  double precision, B_WALL_AREA  double precision, P_WALL_LONG  double precision, P_WALL_AREA  double precision, NB_NEIGHBOR  double precision, FREE_P_WALL_LONG double precision, FREE_EXT_AREA double precision, CONTIGUITY double precision, P_VOL_RATIO double precision, FRACTAL_DIM double precision, MIN_DIST double precision, MEAN_DIST double precision, MAX_DIST double precision, STD_DIST double precision, NUM_POINTS integer, L_TOT double precision, L_CVX double precision, L_3M double precision, L_RATIO double precision, L_RATIO_CVX double precision, PK_BLOCK_ZONE INTEGER, THEME varchar, PAI_BDTOPO varchar, PAI_NATURE varchar);"
@@ -578,6 +577,11 @@ def applyRandomForest(ScriptEngine engine){
     
     engine.eval(new InputStreamReader(r));    
     
+    
+    // Create final tables with geometries
+    sql.execute "CREATE INDEX ON TMP_TYPO_BUILDINGS_MAPUCE(PK); CREATE TABLE TYPO_BUILDINGS_MAPUCE AS SELECT a.the_geom, b.pk as pk_building, a.pk_usr, a.id_zone, b.typo from BUILDINGS_MAPUCE a, TMP_TYPO_BUILDINGS_MAPUCE b where a.pk=b.pk; "
+    sql.execute "CREATE INDEX ON TMP_TYPO_USR_MAPUCE(PK_USR); CREATE TABLE TYPO_USR_MAPUCE AS SELECT a.the_geom, b.pk_usr, a.id_zone, b.typo_maj, b.typo_second  from USR_MAPUCE a, TMP_TYPO_USR_MAPUCE b where a.pk=b.pk_usr;"
+    sql.execute "DROP TABLE IF EXISTS TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE, buildings_to_predict;"
     
     sql.execute "INSERT INTO FINAL_BUILDING_TYPO (SELECT * FROM TYPO_BUILDINGS_MAPUCE);"
     sql.execute "INSERT INTO FINAL_USR_TYPO (SELECT * FROM TYPO_USR_MAPUCE);"

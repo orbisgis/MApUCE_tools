@@ -41,7 +41,7 @@ def processing() {
     
     logger.warn "Download finish. Start classification."
     
-    sql.execute "drop table if exists TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE,TYPO_BUILDINGS_MAPUCE, TYPO_USR_MAPUCE";
+    sql.execute "drop table if exists TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE,TYPO_BUILDINGS_MAPUCE, TYPO_USR_MAPUCE, typo_label";
     sql.execute "create table TMP_TYPO_BUILDINGS_MAPUCE(pk integer, typo varchar)"
     sql.execute "create table TMP_TYPO_USR_MAPUCE(pk_usr integer, typo_maj varchar, typo_second varchar)"
     
@@ -55,18 +55,23 @@ def processing() {
     
     engine.eval(new InputStreamReader(r));
     
-    sql.execute "drop table if exists typo_legend"
-    sql.execute "create table typo_legend (typo varchar(5), label varchar)"
-    sql.execute "insert into typo_legend VALUES ('bgh','Bâtiment de grande hauteur')"
-    sql.execute "insert into typo_legend VALUES ('pcio','Pavillon continu sur îlot ouvert')"
-    sql.execute "insert into typo_legend VALUES ('pd' ,'Pavillon discontinu')"
-    sql.execute "insert into typo_legend VALUES ('local' , 'Local annexe')"
-    sql.execute "insert into typo_legend VALUES ('pcif' , 'Pavillon continu sur îlot fermé')"
-    sql.execute "insert into typo_legend VALUES ('icif', 'Immeuble continu sur îlot fermé')"
-    sql.execute "insert into typo_legend VALUES ('psc', 'Pavillon semi-continu')"
-    sql.execute "insert into typo_legend VALUES ('icio','Immeuble continu sur îlot ouvert')"
-    sql.execute "insert into typo_legend VALUES ('ba', 'Bâtiment d''activité')"
-    sql.execute "insert into typo_legend VALUES ('id' , 'Immeuble discontinu')"
+    // Create final tables with geometries
+    sql.execute "CREATE INDEX ON TMP_TYPO_BUILDINGS_MAPUCE(PK); CREATE TABLE TYPO_BUILDINGS_MAPUCE AS SELECT a.the_geom, b.pk as pk_building, a.pk_usr, a.id_zone, b.typo from BUILDINGS_MAPUCE a, TMP_TYPO_BUILDINGS_MAPUCE b where a.pk=b.pk; "
+    sql.execute "CREATE INDEX ON TMP_TYPO_USR_MAPUCE(PK_USR); CREATE TABLE TYPO_USR_MAPUCE AS SELECT a.the_geom, b.pk_usr, a.id_zone, b.typo_maj, b.typo_second  from USR_MAPUCE a, TMP_TYPO_USR_MAPUCE b where a.pk=b.pk_usr;"
+    sql.execute "DROP TABLE IF EXISTS TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE, buildings_to_predict;"
+    
+    //Create a table to store typo label    
+    sql.execute "create table typo_label (typo varchar(5), label varchar)"
+    sql.execute "insert into typo_label VALUES ('bgh','Bâtiment de grande hauteur')"
+    sql.execute "insert into typo_label VALUES ('pcio','Pavillon continu sur îlot ouvert')"
+    sql.execute "insert into typo_label VALUES ('pd' ,'Pavillon discontinu')"
+    sql.execute "insert into typo_label VALUES ('local' , 'Local annexe')"
+    sql.execute "insert into typo_label VALUES ('pcif' , 'Pavillon continu sur îlot fermé')"
+    sql.execute "insert into typo_label VALUES ('icif', 'Immeuble continu sur îlot fermé')"
+    sql.execute "insert into typo_label VALUES ('psc', 'Pavillon semi-continu')"
+    sql.execute "insert into typo_label VALUES ('icio','Immeuble continu sur îlot ouvert')"
+    sql.execute "insert into typo_label VALUES ('ba', 'Bâtiment d''activité')"
+    sql.execute "insert into typo_label VALUES ('id' , 'Immeuble discontinu')"
     
     
     
