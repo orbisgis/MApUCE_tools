@@ -81,7 +81,7 @@ def initChain(){
     logger.warn "Download the MAPuCE model used to classify the buildings."
     
     //Do not download the file is already exist
-    File file = new File(System.getProperty("user.home") + "/mapuce/mapuce-rf-1.0.RData");
+    File file = new File(System.getProperty("user.home") + "/mapuce/mapuce-rf-2.0.RData");
     
     if(!file.exists()){
         FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-rf-2.0.RData"), file)   
