@@ -77,16 +77,17 @@ def prepareCodes(String[] fieldCodes, String[] codesInsee ){
  * Init the Renjin engine to apply the R code
  * */
 def initChain(){
-    logger.warn "Download the MAPuCE model used to classify the buildings."
+    def modelName = "mapuce-rf-2.1.RData";
+
+    logger.warn "Download the MAPuCE model - $modelName - used to classify the buildings."    
     
+
     //Do not download the file is already exist
-    File file = new File(System.getProperty("user.home") + "/mapuce/mapuce-rf-2.0.RData");
+    File file = new File(System.getProperty("user.home") + "/mapuce/"+ modelName );
     
     if(!file.exists()){
-        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-rf-2.0.RData"), file)   
-    }    
-    
-    logger.warn "Download finish."
+        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/$modelName"), file)   
+    }
     
     engine = rEngine.getScriptEngine();
     engine.put("con", rEngine.getConnectionRObject(sql.getDataSource().getConnection())); 

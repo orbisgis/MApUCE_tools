@@ -29,17 +29,21 @@ import org.apache.commons.io.FileUtils
     resume = "This process is used to classify the building and USR features using a RandomForest algorithm.",
     keywords = ["Vector","MAPuCE"])
 def processing() {
+    
+    def modelName = "mapuce-rf-2.1.RData";
 
-    logger.warn "Download the MAPuCE model used to classify the buildings."
+    logger.warn "Download the MAPuCE model - $modelName - used to classify the buildings."
+    
+    
 
     //Do not download the file is already exist
-    File file = new File(System.getProperty("user.home") + "/mapuce/mapuce-rf-2.0.RData");
+    File file = new File(System.getProperty("user.home") + "/mapuce/"+ modelName );
     
     if(!file.exists()){
-        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/mapuce-rf-2.0.RData"), file)   
+        FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/$modelName"), file)   
     }
     
-    logger.warn "Download finish. Start classification."
+    logger.warn "Download model finished. Start classification."
     
     sql.execute "drop table if exists TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE,TYPO_BUILDINGS_MAPUCE, TYPO_USR_MAPUCE, typo_label";
     sql.execute "create table TMP_TYPO_BUILDINGS_MAPUCE(pk integer, typo varchar)"
