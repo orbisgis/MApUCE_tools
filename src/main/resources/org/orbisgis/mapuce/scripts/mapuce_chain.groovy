@@ -588,7 +588,7 @@ def applyRandomForest(ScriptEngine engine){
     sql.execute "INSERT INTO FINAL_USR_TYPO (SELECT * FROM TYPO_USR_MAPUCE);"
        
 
-    logger.warn "The classification has been done. The tables USR_TYPO and BUILDING_TYPO have been created correctly" 
+    logger.warn "The classification has been done. The tables FINAL_USR_TYPO and FINAL_BUILDING_TYPO have been created correctly" 
 }
 
 
