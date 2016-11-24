@@ -3,6 +3,7 @@ package org.orbisgis.mapuce;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,7 @@ import net.opengis.ows._2.CodeType;
 import org.apache.commons.io.IOUtils;
 import org.orbisgis.frameworkapi.CoreWorkspace;
 import org.orbisgis.r_engine.REngine;
-import org.orbisgis.wpsclient.WpsClient;
+import org.orbisgis.wpsclient.api.InternalWpsClient;
 import org.orbisgis.wpsservice.LocalWpsServer;
 import org.orbisgis.wpsservice.controller.process.ProcessIdentifier;
 import org.osgi.service.component.annotations.Activate;
@@ -80,7 +81,7 @@ public class WpsScriptsPackage {
     /**
      * The WPS client of OrbisGIS.
      */
-    private WpsClient wpsClient;
+    private InternalWpsClient wpsClient;
 
     /**
      * List of identifier of the processes loaded by this plusgin.
@@ -126,7 +127,7 @@ public class WpsScriptsPackage {
      * @param wpsClient
      */
     @Reference
-    public void setWpsClient(WpsClient wpsClient) {
+    public void setInternalWpsClient(InternalWpsClient wpsClient) {
         this.wpsClient = wpsClient;
     }
 
@@ -134,7 +135,7 @@ public class WpsScriptsPackage {
      * OSGI method used to remove from the plugin the WpsClient. (Be careful before any modification)
      * @param wpsClient
      */
-    public void unsetWpsClient(WpsClient wpsClient) {
+    public void unsetInternalWpsClient(InternalWpsClient wpsClient) {
         this.wpsClient = null;
     }
 
@@ -258,7 +259,7 @@ public class WpsScriptsPackage {
      */
     private void removeAllScripts(){
         for(CodeType idProcess : listIdProcess){
-            localWpsServer.removeProcess(idProcess);
+            localWpsServer.removeProcess(URI.create(idProcess.getValue()));
         }
     }
 
