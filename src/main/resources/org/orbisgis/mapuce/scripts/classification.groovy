@@ -30,7 +30,7 @@ import org.apache.commons.io.FileUtils
     keywords = ["Vector","MAPuCE"])
 def processing() {
     
-    def modelName = "mapuce-rf-2.1.RData";
+    def modelName = "mapuce-rf-2.2.RData";
 
     logger.warn "Download the MAPuCE model - $modelName - used to classify the buildings."
     

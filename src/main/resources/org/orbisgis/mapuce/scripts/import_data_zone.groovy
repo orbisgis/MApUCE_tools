@@ -81,7 +81,19 @@ if(!login.isEmpty()&& !password.isEmpty()){
     sql.execute query
     sql.execute "CREATE TABLE COMMUNE_MAPUCE AS SELECT * FROM COMMUNE_MAPUCE_TEMP"
     	
-    sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP"
+    sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP"    
+        
+    logger.warn "Importing the IRIS geometries"
+    sql.execute "DROP TABLE IF EXISTS IRIS_MAPUCE_TEMP, IRIS_MAPUCE"
+    schemaFromRemoteDB = "lra"
+    tableFromRemoteDB = "(SELECT * FROM lra.iris_date_fm_3 where depcom=''"+code+"'')"
+    query = "CREATE LINKED TABLE IRIS_MAPUCE_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
+    query+=" '"+ login+"',"
+    query+="'"+password+"', '"+schemaFromRemoteDB+"', "
+    query+= "'"+tableFromRemoteDB+"')";  
+    sql.execute query
+    sql.execute "CREATE TABLE IRIS_MAPUCE AS SELECT * FROM IRIS_MAPUCE_TEMP"        
+    sql.execute "DROP TABLE IF EXISTS IRIS_MAPUCE_TEMP"
         
     
     literalOutput = "The data have been successfully imported."
