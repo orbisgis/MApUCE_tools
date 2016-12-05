@@ -107,9 +107,10 @@ def prepareFinalTables(){
     sql.execute "CREATE TABLE final_block_indicators (PK_BLOCK_ZONE INTEGER, PK_USR INTEGER,THE_GEOM POLYGON,  AREA double precision, FLOOR_AREA double precision, VOL double precision, H_MEAN double precision, H_STD double precision, COMPACITY double precision, HOLES_AREA double precision, HOLES_PERCENT double precision, MAIN_DIR_DEG double precision );"
     sql.execute "CREATE TABLE final_usr_indicators (PK_USR INTEGER, ID_ZONE integer NOT NULL,THE_GEOM MULTIPOLYGON,  insee_individus double precision,insee_menages double precision ,insee_men_coll double precision ,insee_men_surf double precision ,insee_surface_collectif double precision,VEGETATION_SURFACE double precision, ROUTE_SURFACE double precision,route_longueur double precision, trottoir_longueur double precision,   floor double precision,   floor_ratio double precision,   compac_mean_nw double precision,   compac_mean_w double precision,   contig_mean double precision,   contig_std double precision,   main_dir_std double precision,   h_mean double precision,   h_std double precision,   p_vol_ratio_mean double precision,   b_area double precision,   b_vol double precision,   b_vol_m double precision,   build_numb integer,   min_m_dist double precision,   mean_m_dist double precision,   mean_std_dist double precision,   b_holes_area_mean double precision,   b_std_h_mean double precision,   b_m_nw_compacity double precision,   b_m_w_compacity double precision,   b_std_compacity double precision,   dist_to_center double precision,   build_dens double precision,   hydro_dens double precision,   veget_dens double precision,   road_dens double precision,   ext_env_area double precision, dcomiris varchar )"
     
+   
     sql.execute "create table FINAL_BUILDING_TYPO(the_geom geometry, pk_building integer,pk_usr integer,id_zone integer, typo varchar)"
-    sql.execute "create table FINAL_USR_TYPO(the_geom geometry, pk_usr integer, id_zone integer,typo_maj varchar, typo_second varchar)"
-    
+    sql.execute "create table FINAL_USR_TYPO(the_geom geometry, pk_usr integer, id_zone integer,ba float,bgh float,icif float, icio float, id float, local float, pcif float, pcio float, pd float, psc float ,typo_maj varchar, typo_second varchar)"
+     
     /**
     * Indicators definition
     **/
@@ -595,7 +596,7 @@ def applyRandomForest(ScriptEngine engine){
         
     sql.execute "drop table if exists TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE,TYPO_BUILDINGS_MAPUCE, TYPO_USR_MAPUCE";
     sql.execute "create table TMP_TYPO_BUILDINGS_MAPUCE(pk integer,  typo varchar)"
-    sql.execute "create table TMP_TYPO_USR_MAPUCE(pk_usr integer, typo_maj varchar, typo_second varchar)"
+    sql.execute "create table TMP_TYPO_USR_MAPUCE(pk_usr integer,ba float,bgh float,icif float, icio float, id float, local float, pcif float, pcio float, pd float, psc float , typo_maj varchar, typo_second varchar)"
     
     r = WpsScriptsPackage.class.getResourceAsStream("scripts/randomforest_typo.R")    
     
@@ -604,7 +605,7 @@ def applyRandomForest(ScriptEngine engine){
     
     // Create final tables with geometries
     sql.execute "CREATE INDEX ON TMP_TYPO_BUILDINGS_MAPUCE(PK); CREATE TABLE TYPO_BUILDINGS_MAPUCE AS SELECT a.the_geom, b.pk as pk_building, a.pk_usr, a.id_zone, b.typo from BUILDINGS_MAPUCE a, TMP_TYPO_BUILDINGS_MAPUCE b where a.pk=b.pk; "
-    sql.execute "CREATE INDEX ON TMP_TYPO_USR_MAPUCE(PK_USR); CREATE TABLE TYPO_USR_MAPUCE AS SELECT a.the_geom, b.pk_usr, a.id_zone, b.typo_maj, b.typo_second  from USR_MAPUCE a, TMP_TYPO_USR_MAPUCE b where a.pk=b.pk_usr;"
+    sql.execute "CREATE INDEX ON TMP_TYPO_USR_MAPUCE(PK_USR); CREATE TABLE TYPO_USR_MAPUCE AS SELECT a.the_geom, b.pk_usr, a.id_zone,b.ba,b.bgh,b.icif, b.icio, b.id, b.local, b.pcif, b.pcio, b.pd , b.psc , b.typo_maj, b.typo_second  from USR_MAPUCE a, TMP_TYPO_USR_MAPUCE b where a.pk=b.pk_usr;"
     sql.execute "DROP TABLE IF EXISTS TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE, buildings_to_predict;"
     
     sql.execute "INSERT INTO FINAL_BUILDING_TYPO (SELECT * FROM TYPO_BUILDINGS_MAPUCE);"
