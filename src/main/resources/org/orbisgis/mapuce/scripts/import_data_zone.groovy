@@ -86,7 +86,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
     logger.warn "Importing the IRIS geometries"
     sql.execute "DROP TABLE IF EXISTS IRIS_MAPUCE_TEMP, IRIS_MAPUCE"
     schemaFromRemoteDB = "lra"
-    tableFromRemoteDB = "(SELECT * FROM lra.iris_date_fm_3 where depcom=''"+code+"'')"
+    tableFromRemoteDB = "(SELECT * FROM lra.iris_date_fm_3 where depcom=''"+codeInsee[0]+"'')"
     query = "CREATE LINKED TABLE IRIS_MAPUCE_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
     query+=" '"+ login+"',"
     query+="'"+password+"', '"+schemaFromRemoteDB+"', "

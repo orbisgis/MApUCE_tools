@@ -59,6 +59,8 @@ def processing() {
     
     engine.eval(new InputStreamReader(r));
     
+    logger.warn "End classification."
+    
     // Create final tables with geometries
     sql.execute "CREATE INDEX ON TMP_TYPO_BUILDINGS_MAPUCE(PK); CREATE TABLE TYPO_BUILDINGS_MAPUCE AS SELECT a.the_geom, b.pk as pk_building, a.pk_usr, a.id_zone, b.typo from BUILDINGS_MAPUCE a, TMP_TYPO_BUILDINGS_MAPUCE b where a.pk=b.pk; "
     sql.execute "CREATE INDEX ON TMP_TYPO_USR_MAPUCE(PK_USR); CREATE TABLE TYPO_USR_MAPUCE AS SELECT a.the_geom, b.pk_usr, a.id_zone, b.typo_maj, b.typo_second  from USR_MAPUCE a, TMP_TYPO_USR_MAPUCE b where a.pk=b.pk_usr;"
@@ -76,10 +78,6 @@ def processing() {
     sql.execute "insert into typo_label VALUES ('icio','Immeuble continu sur îlot ouvert')"
     sql.execute "insert into typo_label VALUES ('ba', 'Bâtiment d''activité')"
     sql.execute "insert into typo_label VALUES ('id' , 'Immeuble discontinu')"
-    
-    
-    
-    
 
     literalOutput = "The classification has been done. The tables USR_TYPO and BUILDING_TYPO have been created correctly" 
 }
