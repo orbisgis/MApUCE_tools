@@ -77,7 +77,7 @@ def prepareCodes(String[] fieldCodes, String[] codesInsee ){
  * Init the Renjin engine to apply the R code
  * */
 def initChain(){
-    def modelName = "mapuce-rf-2.1.RData";
+    def modelName = "mapuce-rf-2.2.RData";
 
     logger.warn "Download the MAPuCE model - $modelName - used to classify the buildings."    
     
@@ -105,11 +105,12 @@ def prepareFinalTables(){
     sql.execute "DROP SCHEMA IF EXISTS DATA_WORK"
     sql.execute "CREATE TABLE final_building_indicators (PK_BUILDING INTEGER,PK_USR INTEGER, ID_ZONE INTEGER,  THE_GEOM POLYGON, HAUTEUR_ORIGIN  double precision,  NB_NIV  double precision, HAUTEUR  double precision, AREA  double precision, PERIMETER  double precision, INSEE_INDIVIDUS  double precision, FLOOR_AREA  double precision, VOL  double precision, COMPACITY_R  double precision, COMPACITY_N   double precision, COMPACTNESS  double precision, FORM_FACTOR  double precision, CONCAVITY  double precision, MAIN_DIR_DEG  double precision, B_FLOOR_LONG  double precision, B_WALL_AREA  double precision, P_WALL_LONG  double precision, P_WALL_AREA  double precision, NB_NEIGHBOR  double precision, FREE_P_WALL_LONG double precision, FREE_EXT_AREA double precision, CONTIGUITY double precision, P_VOL_RATIO double precision, FRACTAL_DIM double precision, MIN_DIST double precision, MEAN_DIST double precision, MAX_DIST double precision, STD_DIST double precision, NUM_POINTS integer, L_TOT double precision, L_CVX double precision, L_3M double precision, L_RATIO double precision, L_RATIO_CVX double precision, PK_BLOCK_ZONE INTEGER, THEME varchar, PAI_BDTOPO varchar, PAI_NATURE varchar);"
     sql.execute "CREATE TABLE final_block_indicators (PK_BLOCK_ZONE INTEGER, PK_USR INTEGER,THE_GEOM POLYGON,  AREA double precision, FLOOR_AREA double precision, VOL double precision, H_MEAN double precision, H_STD double precision, COMPACITY double precision, HOLES_AREA double precision, HOLES_PERCENT double precision, MAIN_DIR_DEG double precision );"
-    sql.execute "CREATE TABLE final_usr_indicators (PK_USR INTEGER, ID_ZONE integer NOT NULL,THE_GEOM MULTIPOLYGON,  insee_individus double precision,insee_menages double precision ,insee_men_coll double precision ,insee_men_surf double precision ,insee_surface_collectif double precision,VEGETATION_SURFACE double precision, ROUTE_SURFACE double precision,route_longueur double precision, trottoir_longueur double precision,   floor double precision,   floor_ratio double precision,   compac_mean_nw double precision,   compac_mean_w double precision,   contig_mean double precision,   contig_std double precision,   main_dir_std double precision,   h_mean double precision,   h_std double precision,   p_vol_ratio_mean double precision,   b_area double precision,   b_vol double precision,   b_vol_m double precision,   build_numb integer,   min_m_dist double precision,   mean_m_dist double precision,   mean_std_dist double precision,   b_holes_area_mean double precision,   b_std_h_mean double precision,   b_m_nw_compacity double precision,   b_m_w_compacity double precision,   b_std_compacity double precision,   dist_to_center double precision,   build_dens double precision,   hydro_dens double precision,   veget_dens double precision,   road_dens double precision,   ext_env_area double precision )"
+    sql.execute "CREATE TABLE final_usr_indicators (PK_USR INTEGER, ID_ZONE integer NOT NULL,THE_GEOM MULTIPOLYGON,  insee_individus double precision,insee_menages double precision ,insee_men_coll double precision ,insee_men_surf double precision ,insee_surface_collectif double precision,VEGETATION_SURFACE double precision, ROUTE_SURFACE double precision,route_longueur double precision, trottoir_longueur double precision,   floor double precision,   floor_ratio double precision,   compac_mean_nw double precision,   compac_mean_w double precision,   contig_mean double precision,   contig_std double precision,   main_dir_std double precision,   h_mean double precision,   h_std double precision,   p_vol_ratio_mean double precision,   b_area double precision,   b_vol double precision,   b_vol_m double precision,   build_numb integer,   min_m_dist double precision,   mean_m_dist double precision,   mean_std_dist double precision,   b_holes_area_mean double precision,   b_std_h_mean double precision,   b_m_nw_compacity double precision,   b_m_w_compacity double precision,   b_std_compacity double precision,   dist_to_center double precision,   build_dens double precision,   hydro_dens double precision,   veget_dens double precision,   road_dens double precision,   ext_env_area double precision, dcomiris varchar )"
     
+   
     sql.execute "create table FINAL_BUILDING_TYPO(the_geom geometry, pk_building integer,pk_usr integer,id_zone integer, typo varchar)"
-    sql.execute "create table FINAL_USR_TYPO(the_geom geometry, pk_usr integer, id_zone integer,typo_maj varchar, typo_second varchar)"
-    
+    sql.execute "create table FINAL_USR_TYPO(the_geom geometry, pk_usr integer, id_zone integer,ba float,bgh float,icif float, icio float, id float, local float, pcif float, pcio float, pd float, psc float ,typo_maj varchar, typo_second varchar)"
+     
     /**
     * Indicators definition
     **/
@@ -207,6 +208,7 @@ def prepareFinalTables(){
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.ext_env_area IS 'Total building’s external surface in an USR';"
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.id_zone IS 'Unique identifier of a commune';"
     sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.PK_USR IS 'Unique identifier of the USR';"
+    sql.execute "COMMENT ON COLUMN FINAL_USR_INDICATORS.dcomiris IS 'Unique identifier of the IRIS';"
     
 }
 
@@ -290,6 +292,19 @@ def cleanTables(){
     sql.execute query
     sql.execute "CREATE TABLE COMMUNE_MAPUCE AS SELECT * FROM COMMUNE_MAPUCE_TEMP"    	
     sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP"
+    
+    logger.warn "Importing the IRIS geometries"
+    sql.execute "DROP TABLE IF EXISTS IRIS_MAPUCE_TEMP, IRIS_MAPUCE"
+    schemaFromRemoteDB = "lra"
+    tableFromRemoteDB = "(SELECT * FROM lra.iris_date_fm_3 where depcom=''"+code+"'')"
+    query = "CREATE LINKED TABLE IRIS_MAPUCE_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
+    query+=" '"+ login+"',"
+    query+="'"+password+"', '"+schemaFromRemoteDB+"', "
+    query+= "'"+tableFromRemoteDB+"')";  
+    sql.execute query
+    sql.execute "CREATE TABLE IRIS_MAPUCE AS SELECT * FROM IRIS_MAPUCE_TEMP"        
+    sql.execute "DROP TABLE IF EXISTS IRIS_MAPUCE_TEMP"
+    
     }
     else{
         return false;
@@ -559,7 +574,16 @@ def cleanTables(){
     sql.execute "update USR_INDICATORS set HYDRO_DENS = 0 where HYDRO_DENS is  null"
     sql.execute "update USR_INDICATORS set VEGET_DENS = 0 where VEGET_DENS is  null"
     sql.execute "update USR_INDICATORS set ROAD_DENS = 0 where ROAD_DENS is  null"
-    sql.execute "update USR_INDICATORS set EXT_ENV_AREA = 0 where EXT_ENV_AREA is  null"    
+    sql.execute "update USR_INDICATORS set EXT_ENV_AREA = 0 where EXT_ENV_AREA is  null"   
+    
+     /**
+    * Update the USR with the IRIS data
+    **/
+
+    sql.execute "alter table USR_INDICATORS ADD COLUMN dcomiris varchar;"
+
+    sql.execute "update USR_INDICATORS AS a SET dcomiris =  (SELECT b.dcomiris FROM IRIS_MAPUCE b WHERE a.THE_GEOM && b.THE_GEOM ORDER BY ST_AREA(ST_INTERSECTION(st_buffer(a.THE_GEOM,0.0001), st_buffer(b.THE_GEOM, 0.0001))) DESC LIMIT 1);"
+    
     sql.execute "DROP SCHEMA DATA_WORK"
    
  }
@@ -572,7 +596,7 @@ def applyRandomForest(ScriptEngine engine){
         
     sql.execute "drop table if exists TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE,TYPO_BUILDINGS_MAPUCE, TYPO_USR_MAPUCE";
     sql.execute "create table TMP_TYPO_BUILDINGS_MAPUCE(pk integer,  typo varchar)"
-    sql.execute "create table TMP_TYPO_USR_MAPUCE(pk_usr integer, typo_maj varchar, typo_second varchar)"
+    sql.execute "create table TMP_TYPO_USR_MAPUCE(pk_usr integer,ba float,bgh float,icif float, icio float, id float, local float, pcif float, pcio float, pd float, psc float , typo_maj varchar, typo_second varchar)"
     
     r = WpsScriptsPackage.class.getResourceAsStream("scripts/randomforest_typo.R")    
     
@@ -581,7 +605,7 @@ def applyRandomForest(ScriptEngine engine){
     
     // Create final tables with geometries
     sql.execute "CREATE INDEX ON TMP_TYPO_BUILDINGS_MAPUCE(PK); CREATE TABLE TYPO_BUILDINGS_MAPUCE AS SELECT a.the_geom, b.pk as pk_building, a.pk_usr, a.id_zone, b.typo from BUILDINGS_MAPUCE a, TMP_TYPO_BUILDINGS_MAPUCE b where a.pk=b.pk; "
-    sql.execute "CREATE INDEX ON TMP_TYPO_USR_MAPUCE(PK_USR); CREATE TABLE TYPO_USR_MAPUCE AS SELECT a.the_geom, b.pk_usr, a.id_zone, b.typo_maj, b.typo_second  from USR_MAPUCE a, TMP_TYPO_USR_MAPUCE b where a.pk=b.pk_usr;"
+    sql.execute "CREATE INDEX ON TMP_TYPO_USR_MAPUCE(PK_USR); CREATE TABLE TYPO_USR_MAPUCE AS SELECT a.the_geom, b.pk_usr, a.id_zone,b.ba,b.bgh,b.icif, b.icio, b.id, b.local, b.pcif, b.pcio, b.pd , b.psc , b.typo_maj, b.typo_second  from USR_MAPUCE a, TMP_TYPO_USR_MAPUCE b where a.pk=b.pk_usr;"
     sql.execute "DROP TABLE IF EXISTS TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE, buildings_to_predict;"
     
     sql.execute "INSERT INTO FINAL_BUILDING_TYPO (SELECT * FROM TYPO_BUILDINGS_MAPUCE);"

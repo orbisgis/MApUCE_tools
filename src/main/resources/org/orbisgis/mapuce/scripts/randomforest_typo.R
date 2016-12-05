@@ -57,9 +57,9 @@ typo_majoritaire=apply(typo_USR,1,extract_typo_maj)
 typo_secondaire=apply(typo_USR,1,extract_typo_sec)
 
 ### Merging the two typologies at USR scale
-tab_typo_usr=cbind(typo_USR,typo_majoritaire,typo_secondaire)
+tab_typo_usr=cbind.data.frame(typo_USR,typo_majoritaire,typo_secondaire)
 u_PK=rownames(tab_typo_usr)
 tab_typo_usr=cbind.data.frame(u_PK,tab_typo_usr)
 
 ### Export typologies by USR
-dbWriteTable(con, "TMP_TYPO_USR_MAPUCE", tab_typo_usr[,c(1,12,13)], append=TRUE, row.names=FALSE)
+dbWriteTable(con, "TMP_TYPO_USR_MAPUCE", tab_typo_usr, append=TRUE, row.names=FALSE)
