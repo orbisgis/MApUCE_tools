@@ -27,7 +27,7 @@ tab_typo_bati=cbind.data.frame(data_predict[,1],typologie)
 dbWriteTable(con, "TMP_TYPO_BUILDINGS_MAPUCE", tab_typo_bati, append=TRUE, row.names=FALSE)
 
 ### Compute floor percent
-pct_bati=data_predict$i_floor/data_predict$u_floor*100
+pct_bati=ifelse(data_predict$u_floor!=0, data_predict$i_floor/data_predict$u_floor*100,0)
 
 ### Compute % of typologies by USR
 typo_USR=tapply(pct_bati,list(data_predict$pk_usr,typologie),sum)
