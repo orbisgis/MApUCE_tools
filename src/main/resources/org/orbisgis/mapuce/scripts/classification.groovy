@@ -26,8 +26,8 @@ import org.apache.commons.io.FileUtils
  * @author Erwan Bocher
  */
 @Process(title = "4-Classify the BUILDING and USR features",
-    resume = "This process is used to classify the building and USR features using a RandomForest algorithm.",
-    keywords = ["Vector","MAPuCE"])
+        description = "This process is used to classify the building and USR features using a RandomForest algorithm.",
+        keywords = ["Vector","MAPuCE"])
 def processing() {
     
     def modelName = "mapuce-rf-2.1.RData";
@@ -87,7 +87,7 @@ def processing() {
 
 /** String output of the process. */
 @LiteralDataOutput(
-    title="Output message",
-    resume="The output message")
+        title="Output message",
+        description="The output message")
 String literalOutput
 

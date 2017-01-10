@@ -14,7 +14,7 @@ import org.apache.commons.io.FileUtils
  * @author Erwan Bocher
  */
 @Process(title = "Complete geoprocessing chain",
-        resume = "This script allows to chain all processes for a set of spatial units.<br>A spatial unit is a french commune area defined by a unique identifier called CODE_INSEE.<br>The user can select one of more spatial units based on a list of CODE_INSEE or a selection of unit area names.<br>If the user select a unit area a pre-process is done to return its corresponding list of CODE_INSEE.<br>For each spatial unit, 3 steps are executed : <ul> <li>1. Extract input data (USR, Buildings, Roads) from the Mapuce DataBase</li><li>2. Compute morphological indicators</li><li>3. Merge indicators into 3 tables : final_building_indicators,final_block_indicators,final_usr_indicators </li></ul><br>Note:<br> The imported data are stored into a remote database. Please contact info@orbigis.org to obtain an account. <br> The list of available communes must be already imported to get the list of available unit areas or CODE_INSEE. If not please execute the script to import all commune areas...",
+        description = "This script allows to chain all processes for a set of spatial units.<br>A spatial unit is a french commune area defined by a unique identifier called CODE_INSEE.<br>The user can select one of more spatial units based on a list of CODE_INSEE or a selection of unit area names.<br>If the user select a unit area a pre-process is done to return its corresponding list of CODE_INSEE.<br>For each spatial unit, 3 steps are executed : <ul> <li>1. Extract input data (USR, Buildings, Roads) from the Mapuce DataBase</li><li>2. Compute morphological indicators</li><li>3. Merge indicators into 3 tables : final_building_indicators,final_block_indicators,final_usr_indicators </li></ul><br>Note:<br> The imported data are stored into a remote database. Please contact info@orbigis.org to obtain an account. <br> The list of available communes must be already imported to get the list of available unit areas or CODE_INSEE. If not please execute the script to import all commune areas...",
         keywords = ["Vector","MAPuCE"])
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){        
@@ -595,33 +595,33 @@ def applyRandomForest(ScriptEngine engine){
 /** Login to the MApUCE database. */
 @LiteralDataInput(
         title="Login to the database",
-        resume="Login to the database")
+        description="Login to the database")
 String login 
 
 /** Password to the MApUCE database. */
 @PasswordInput(
         title="Password to the database",
-        resume="Password to the database")
+        description="Password to the database")
 String password 
 
 
-@DataFieldInput(
+@JDBCTableFieldInput(
         title = "Spatial unit",
-        resume = "Select a column to obtain a list of area identifiers : code insee or  urban area names.",
-        variableReference = "\$communes_mapuce\$",
+        description = "Select a column to obtain a list of area identifiers : code insee or  urban area names.",
+        jdbcTableReference = "\$communes_mapuce\$",
         multiSelection = false)
 String[] fieldCodes
 
 /** The list of Commune identifier */
-@FieldValueInput(title="Spatial unit identifiers",
-resume="Select one or more  identifiers and start the script.",
-variableReference = "fieldCodes",
-multiSelection = true)
+@JDBCTableFieldValueInput(title="Spatial unit identifiers",
+        description="Select one or more  identifiers and start the script.",
+        jdbcTableFieldReference = "fieldCodes",
+        multiSelection = true)
 String[] codesInsee
 
 
 /** String output of the process. */
 @LiteralDataOutput(
         title="Output message",
-        resume="The geoprocessing chain has been executed.")
+        description="The geoprocessing chain has been executed.")
 String literalOutput
