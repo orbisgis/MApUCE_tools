@@ -14,7 +14,7 @@ import javax.swing.JOptionPane;
  * @author Erwan Bocher
  */
 @Process(title = "2-Import the USR, buildings and roads",
-        resume = "Import the data (USR, buildings and roads) needed to compute morphological indicators for a specified commune.<br> The imported data are stored into a remote database. Please contact info@orbigis.org to obtain an account. <br> Note : The list of available communes must be already imported. If not please execute the script to import all commune areas...",
+        description = "Import the data (USR, buildings and roads) needed to compute morphological indicators for a specified commune.<br> The imported data are stored into a remote database. Please contact info@orbigis.org to obtain an account. <br> Note : The list of available communes must be already imported. If not please execute the script to import all commune areas...",
         keywords = ["Vector","MAPuCE"])
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){
@@ -105,25 +105,25 @@ if(!login.isEmpty()&& !password.isEmpty()){
 /** Login to the MApUCE database. */
 @LiteralDataInput(
         title="Login to the database",
-        resume="Login to the database")
+        description="Login to the database")
 String login 
 
 /** Password to the MApUCE database. */
 @PasswordInput(
         title="Password to the database",
-        resume="Password to the database")
+        description="Password to the database")
 String password 
 
 /** The list of Commune identifier */
-@FieldValueInput(title="Commune identifier",
-resume="Select the code insee of a commune to import the data.",
-variableReference = "\$communes_mapuce\$code_insee\$",
-multiSelection = false)
+@JDBCTableFieldValueInput(title="Commune identifier",
+        description="Select the code insee of a commune to import the data.",
+        jdbcTableFieldReference = "\$communes_mapuce\$code_insee\$",
+        multiSelection = false)
 String[] codeInsee
 
 
 /** String output of the process. */
 @LiteralDataOutput(
         title="Output message",
-        resume="The output message")
+        description="The output message")
 String literalOutput

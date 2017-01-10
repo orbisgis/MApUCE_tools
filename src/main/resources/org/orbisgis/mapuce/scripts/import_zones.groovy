@@ -14,7 +14,7 @@ import org.orbisgis.wpsgroovyapi.process.*
  * @author Erwan Bocher
  */
 @Process(title = "1-Import commune areas",
-        resume = "Import the commune areas table. <br> This table lists all communes for which the USR, buildings and roads data have been prepared.<br> The commune areas table is stored into a remote database. Please contact info@orbigis.org to obtain an account.",
+        description = "Import the commune areas table. <br> This table lists all communes for which the USR, buildings and roads data have been prepared.<br> The commune areas table is stored into a remote database. Please contact info@orbigis.org to obtain an account.",
         keywords = ["Vector","MAPuCE"])
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){
@@ -38,19 +38,19 @@ if(!login.isEmpty()&& !password.isEmpty()){
 /** Login to the MApUCE database. */
 @LiteralDataInput(
         title="Login to the database",
-        resume="Login to the database")
+        description="Login to the database")
 String login 
 
 /** Password to the MApUCE database. */
 @PasswordInput(
         title="Password to the database",
-        resume="Password to the database")
+        description="Password to the database")
 String password 
 
 
 /** String output of the process. */
 @LiteralDataOutput(
         title="Output message",
-        resume="The output message")
+        description="The output message")
 String literalOutput
 
