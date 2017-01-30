@@ -28,6 +28,8 @@ if(!login.isEmpty()&& !password.isEmpty()){
     
     sql.execute query
     sql.execute "CREATE TABLE COMMUNES_MAPUCE AS SELECT * FROM COMMUNES_TEMP"
+    sql.execute "CREATE INDEX ON COMMUNES_MAPUCE (CODE_INSEE)"
+    sql.execute "CREATE INDEX ON COMMUNES_MAPUCE (id_zone)"
     sql.execute "DROP TABLE IF EXISTS COMMUNES_TEMP"
     literalOutput = "The commune areas have been imported."
 }
