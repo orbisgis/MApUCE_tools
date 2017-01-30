@@ -19,7 +19,7 @@ import org.orbisgis.wpsgroovyapi.process.*
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){
     def schemaFromRemoteDB = "lienss"
-    def tableFromRemoteDB = "(SELECT CODE_INSEE, unite_urbaine FROM lienss.zone_etude)"	
+    def tableFromRemoteDB = "(SELECT CODE_INSEE, unite_urbaine, ogc_fid as id_zone FROM lienss.zone_etude)"	
     sql.execute "DROP TABLE IF EXISTS COMMUNES_TEMP,COMMUNES_MAPUCE "
     def query = "CREATE  LINKED TABLE COMMUNES_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
     query+=" '"+ login+"',"
