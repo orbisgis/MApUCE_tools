@@ -294,7 +294,7 @@ def cleanTables(){
     query+="'"+password+"', '"+schemaFromRemoteDB+"', "
     query+= "'"+tableFromRemoteDB+"')";    
     sql.execute query
-    sql.execute "CREATE TABLE COMMUNE_MAPUCE( SELECT * FROM COMMUNE_MAPUCE_TEMP)"    	
+    sql.execute "CREATE TABLE COMMUNE_MAPUCE as SELECT * FROM COMMUNE_MAPUCE_TEMP"    	
     sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP"
     
     logger.warn "Importing the IRIS geometries"
