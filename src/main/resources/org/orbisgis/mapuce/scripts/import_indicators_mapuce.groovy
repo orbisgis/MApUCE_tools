@@ -33,9 +33,8 @@ def processing() {
  * This method is used to import all data from the remote database 
  */
 def importData(String code){
-    logger.warn "Importing buildings and their indicators"
     
-    //Importing building indicators
+    logger.warn "Importing buildings and their indicators"    
     sql.execute "DROP TABLE IF EXISTS building_indicators_tmp"
     def schemaFromRemoteDB = "labsticc"	
     def tableFromRemoteDB = "(SELECT a.*, b.the_geom  FROM  labsticc.building_indicators_metropole as a, lienss.bati_topo as b  WHERE a.pk_building=b.pk and id_zone="+code+")"
@@ -50,7 +49,6 @@ def importData(String code){
     
     
     logger.warn "Importing usrs and their indicators"
-    //Importing usr indicators
     sql.execute "DROP TABLE IF EXISTS usr_indicators_tmp"
     schemaFromRemoteDB = "labsticc"	
     tableFromRemoteDB = "(SELECT a.*, b.the_geom  FROM  labsticc.usr_indicators_metropole as a, lienss.usr as b  WHERE a.pk_usr=b.pk and id_zone="+code+")"
@@ -65,10 +63,9 @@ def importData(String code){
     
     
     logger.warn "Importing blocks and their indicators"
-    //Importing usr indicators
     sql.execute "DROP TABLE IF EXISTS block_indicators_tmp"
     schemaFromRemoteDB = "labsticc"	
-    tableFromRemoteDB = "select * from labsticc.block_indicators_metropole where pk_usr in (select distinct pk_usr from labsticc.usr_indicators_metropole where id_zone="+code+"))"
+    tableFromRemoteDB = "(select * from labsticc.block_indicators_metropole where pk_usr in (select distinct pk_usr from labsticc.usr_indicators_metropole where id_zone="+code+"))"
     query = "CREATE LINKED TABLE block_indicators_tmp ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
     query+=" '"+ login+"',"
     query+="'"+password+"', '"+schemaFromRemoteDB+"', "
@@ -77,6 +74,34 @@ def importData(String code){
     sql.execute "INSERT INTO block_indicators_metropole (select * from block_indicators_tmp)";        
      
     sql.execute "drop table if exists block_indicators_tmp"
+    
+    
+    logger.warn "Importing building typologies"
+    sql.execute "DROP TABLE IF EXISTS typo_building_tmp"
+    schemaFromRemoteDB = "labsticc"	
+    tableFromRemoteDB = "(SELECT a.*, b.the_geom  FROM  labsticc.typo_building_metropole as a, lienss.bati_topo as b  WHERE a.pk_building=b.pk and a.id_zone="+code+")"
+    query = "CREATE LINKED TABLE typo_building_tmp ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
+    query+=" '"+ login+"',"
+    query+="'"+password+"', '"+schemaFromRemoteDB+"', "
+    query+= "'"+tableFromRemoteDB+"')";
+    sql.execute query    
+    sql.execute "INSERT INTO typo_building_metropole (select * from typo_building_tmp)";        
+     
+    sql.execute "drop table if exists typo_building_tmp"
+    
+    
+    logger.warn "Importing usr typologies"
+    sql.execute "DROP TABLE IF EXISTS typo_usr_tmp"
+    schemaFromRemoteDB = "labsticc"	
+    tableFromRemoteDB = "(SELECT a.*, b.the_geom  FROM  labsticc.typo_usr_metropole as a, lienss.usr as b  WHERE a.pk_usr=b.pk and id_zone="+code+")"
+    query = "CREATE LINKED TABLE typo_usr_tmp ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
+    query+=" '"+ login+"',"
+    query+="'"+password+"', '"+schemaFromRemoteDB+"', "
+    query+= "'"+tableFromRemoteDB+"')";
+    sql.execute query    
+    sql.execute "INSERT INTO typo_usr_metropole (select * from typo_usr_tmp)";        
+     
+    sql.execute "drop table if exists typo_usr_tmp"
   
     
  }
