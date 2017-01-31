@@ -221,11 +221,13 @@ def mergeIndicatorsIntoFinalTables(){
     sql.execute "INSERT INTO FINAL_BUILDING_INDICATORS (SELECT * FROM BUILDING_INDICATORS);"
     sql.execute "INSERT INTO FINAL_BLOCK_INDICATORS (SELECT * FROM BLOCK_INDICATORS);"
     sql.execute "INSERT INTO FINAL_USR_INDICATORS (SELECT * FROM USR_INDICATORS);"
+    sql.exceute "INSERT INTO FINAL_COMMUNES (SELECT * FROM COMMUNE_MAPUCE);"
+    sql.exceute "INSERT INTO FINAL_IRIS (SELECT * FROM IRIS_MAPUCE)"
   }
   
 def cleanTables(){
       sql.execute "DROP TABLE IF EXISTS USR_INDICATORS, BUILDING_INDICATORS,BLOCK_INDICATORS, COMMUNE_MAPUCE, USR_MAPUCE, ROADS_MAPUCE,BUILDINGS_MAPUCE ;"
-      sql.execute "DROP TABLE IF EXISTS TYPO_BUILDINGS_MAPUCE,TYPO_USR_MAPUCE ;"
+      sql.execute "DROP TABLE IF EXISTS TYPO_BUILDINGS_MAPUCE,TYPO_USR_MAPUCE,IRIS_MAPUCE ;"
 }
 
 /**
@@ -292,7 +294,7 @@ def cleanTables(){
     query+="'"+password+"', '"+schemaFromRemoteDB+"', "
     query+= "'"+tableFromRemoteDB+"')";    
     sql.execute query
-    sql.execute "INSERT INTO FINAL_COMMUNES( SELECT * FROM COMMUNE_MAPUCE_TEMP)"    	
+    sql.execute "CREATE TABLE COMMUNE_MAPUCE( SELECT * FROM COMMUNE_MAPUCE_TEMP)"    	
     sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP"
     
     logger.warn "Importing the IRIS geometries"
@@ -304,7 +306,7 @@ def cleanTables(){
     query+="'"+password+"', '"+schemaFromRemoteDB+"', "
     query+= "'"+tableFromRemoteDB+"')";  
     sql.execute query
-    sql.execute "INSERT INTO FINAL_IRIS (SELECT * FROM IRIS_MAPUCE_TEMP)"        
+    sql.execute "CREATE TABLE IRIS_MAPUCE AS SELECT * FROM IRIS_MAPUCE_TEMP"        
     sql.execute "DROP TABLE IF EXISTS IRIS_MAPUCE_TEMP"
     
     }
