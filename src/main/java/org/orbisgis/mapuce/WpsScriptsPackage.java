@@ -171,6 +171,7 @@ public class WpsScriptsPackage {
             customLoadScript("scripts/import_data_zone.groovy");
             customLoadScript("scripts/import_zones.groovy");
             customLoadScript("scripts/mapuce_chain.groovy");
+            customLoadScript("scripts/import_indicators_mapuce.groovy");
 
             //Transmit the REngine class
             propertiesMap.put("rEngine", new REngine());

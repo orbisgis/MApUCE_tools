@@ -100,22 +100,25 @@ def initChain(){
  * Prepare the 3 tables to store all results
  * */
 def prepareFinalTables(){
-    sql.execute "drop table if exists final_usr_indicators, final_block_indicators,final_building_indicators,FINAL_BUILDING_TYPO, FINAL_USR_TYPO, typo_label;"     
+    sql.execute "drop table if exists FINAL_communes, FINAL_iris,final_usr_indicators, final_block_indicators,final_building_indicators,FINAL_BUILDING_TYPO, FINAL_USR_TYPO, typo_label;"     
     sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS, USR_INDICATORS, BLOCK_INDICATORS"
     sql.execute "DROP SCHEMA IF EXISTS DATA_WORK"
-    sql.execute "CREATE TABLE final_building_indicators (PK_BUILDING INTEGER,PK_USR INTEGER, ID_ZONE INTEGER,  THE_GEOM POLYGON, HAUTEUR_ORIGIN  double precision,  NB_NIV  double precision, HAUTEUR  double precision, AREA  double precision, PERIMETER  double precision, INSEE_INDIVIDUS  double precision, FLOOR_AREA  double precision, VOL  double precision, COMPACITY_R  double precision, COMPACITY_N   double precision, COMPACTNESS  double precision, FORM_FACTOR  double precision, CONCAVITY  double precision, MAIN_DIR_DEG  double precision, B_FLOOR_LONG  double precision, B_WALL_AREA  double precision, P_WALL_LONG  double precision, P_WALL_AREA  double precision, NB_NEIGHBOR  double precision, FREE_P_WALL_LONG double precision, FREE_EXT_AREA double precision, CONTIGUITY double precision, P_VOL_RATIO double precision, FRACTAL_DIM double precision, MIN_DIST double precision, MEAN_DIST double precision, MAX_DIST double precision, STD_DIST double precision, NUM_POINTS integer, L_TOT double precision, L_CVX double precision, L_3M double precision, L_RATIO double precision, L_RATIO_CVX double precision, PK_BLOCK_ZONE INTEGER, THEME varchar, PAI_BDTOPO varchar, PAI_NATURE varchar);"
-    sql.execute "CREATE TABLE final_block_indicators (PK_BLOCK_ZONE INTEGER, PK_USR INTEGER,THE_GEOM POLYGON,  AREA double precision, FLOOR_AREA double precision, VOL double precision, H_MEAN double precision, H_STD double precision, COMPACITY double precision, HOLES_AREA double precision, HOLES_PERCENT double precision, MAIN_DIR_DEG double precision );"
+    sql.execute "CREATE TABLE final_building_indicators (PK_BUILDING INTEGER,PK_USR INTEGER, ID_ZONE INTEGER,  THE_GEOM POLYGON, HAUTEUR_ORIGIN  double precision,  NB_NIV  double precision, HAUTEUR  double precision, AREA  double precision, PERIMETER  double precision, INSEE_INDIVIDUS  double precision, FLOOR_AREA  double precision, VOL  double precision, COMPACITY_R  double precision, COMPACITY_N   double precision, COMPACTNESS  double precision, FORM_FACTOR  double precision, CONCAVITY  double precision, MAIN_DIR_DEG  double precision, B_FLOOR_LONG  double precision, B_WALL_AREA  double precision, P_WALL_LONG  double precision, P_WALL_AREA  double precision, NB_NEIGHBOR  double precision, FREE_P_WALL_LONG double precision, FREE_EXT_AREA double precision, CONTIGUITY double precision, P_VOL_RATIO double precision, FRACTAL_DIM double precision, MIN_DIST double precision, MEAN_DIST double precision, MAX_DIST double precision, STD_DIST double precision, NUM_POINTS integer, L_TOT double precision, L_CVX double precision, L_3M double precision, L_RATIO double precision, L_RATIO_CVX double precision, PK_BLOCK INTEGER, THEME varchar, PAI_BDTOPO varchar, PAI_NATURE varchar);"
+    sql.execute "CREATE TABLE final_block_indicators (PK_BLOCK INTEGER, PK_USR INTEGER,THE_GEOM POLYGON,  AREA double precision, FLOOR_AREA double precision, VOL double precision, H_MEAN double precision, H_STD double precision, COMPACITY double precision, HOLES_AREA double precision, HOLES_PERCENT double precision, MAIN_DIR_DEG double precision );"
     sql.execute "CREATE TABLE final_usr_indicators (PK_USR INTEGER, ID_ZONE integer NOT NULL,THE_GEOM MULTIPOLYGON,  insee_individus double precision,insee_menages double precision ,insee_men_coll double precision ,insee_men_surf double precision ,insee_surface_collectif double precision,VEGETATION_SURFACE double precision, ROUTE_SURFACE double precision,route_longueur double precision, trottoir_longueur double precision,   floor double precision,   floor_ratio double precision,   compac_mean_nw double precision,   compac_mean_w double precision,   contig_mean double precision,   contig_std double precision,   main_dir_std double precision,   h_mean double precision,   h_std double precision,   p_vol_ratio_mean double precision,   b_area double precision,   b_vol double precision,   b_vol_m double precision,   build_numb integer,   min_m_dist double precision,   mean_m_dist double precision,   mean_std_dist double precision,   b_holes_area_mean double precision,   b_std_h_mean double precision,   b_m_nw_compacity double precision,   b_m_w_compacity double precision,   b_std_compacity double precision,   dist_to_center double precision,   build_dens double precision,   hydro_dens double precision,   veget_dens double precision,   road_dens double precision,   ext_env_area double precision, dcomiris varchar )"
     
    
     sql.execute "create table FINAL_BUILDING_TYPO(the_geom geometry, pk_building integer,pk_usr integer,id_zone integer, typo varchar)"
     sql.execute "create table FINAL_USR_TYPO(the_geom geometry, pk_usr integer, id_zone integer,ba float,bgh float,icif float, icio float, id float, local float, pcif float, pcio float, pd float, psc float ,typo_maj varchar, typo_second varchar)"
-     
+    sql.execute "CREATE TABLE FINAL_communes( CODE_INSEE character varying(10), unite_urbaine character varying(256),the_geom geometry)"
+    sql.execute "CREATE TABLE FINAL_iris( pk integer,  the_geom geometry,  depcom character varying(5),    nom_com character varying(45),   dcomiris character varying(9),    m_49_74 double precision,  m_75_89 double precision,    m_90_04 double precision, a_49_74 double precision,    a_75_89 double precision, a_90_04 double precision,    m_a1946 double precision,  a_a1946 double precision,  m_46_49 double precision,  a_46_49 integer,   m_05_08 integer, a_05_08 integer,    m_09_11 integer,  a_09_11 integer,  id_zone integer)"
+
+    
     /**
     * Indicators definition
     **/
     sql.execute "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.the_geom IS ' External border of the union of a set of touching geometry buildings';"
-    sql.execute "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.PK_BLOCK_ZONE IS 'Unique identifier for a block geometry for the current commune';"
+    sql.execute "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.PK_BLOCK IS 'Unique identifier for a block geometry for the current commune';"
     sql.execute  "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.PK_USR IS 'Unique identifier of the usr';"
     sql.execute  "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.area IS 'Area of the block';"
     sql.execute  "COMMENT ON COLUMN FINAL_BLOCK_INDICATORS.floor_area IS 'Sum of building the floor areas in the block';"
@@ -130,7 +133,7 @@ def prepareFinalTables(){
     
     sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.the_geom IS 'Geometry of the building. This geometry is normalized to avoid topological errors';"
     sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.PK_BUILDING IS 'Unique identifier for a building';"
-    sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.PK_BLOCK_ZONE IS 'Unique identifier for a block geometry for the current commune';"
+    sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.PK_BLOCK IS 'Unique identifier for a block geometry for the current commune';"
     sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.perimeter IS 'Building perimeter';"
     sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.INSEE_INDIVIDUS IS 'Number of inhabitants derived from intersection of INSEE 200m gridded cells, taking into account the pai_nature (must be null), and the developped area (= area(building) * nb_niv)';"
     sql.execute "COMMENT ON COLUMN FINAL_BUILDING_INDICATORS.hauteur IS ' Heigth of the building';"
@@ -219,11 +222,13 @@ def mergeIndicatorsIntoFinalTables(){
     sql.execute "INSERT INTO FINAL_BUILDING_INDICATORS (SELECT * FROM BUILDING_INDICATORS);"
     sql.execute "INSERT INTO FINAL_BLOCK_INDICATORS (SELECT * FROM BLOCK_INDICATORS);"
     sql.execute "INSERT INTO FINAL_USR_INDICATORS (SELECT * FROM USR_INDICATORS);"
+    sql.execute "INSERT INTO FINAL_COMMUNES (SELECT * FROM COMMUNE_MAPUCE);"
+    sql.execute "INSERT INTO FINAL_IRIS (SELECT * FROM IRIS_MAPUCE)"
   }
   
 def cleanTables(){
       sql.execute "DROP TABLE IF EXISTS USR_INDICATORS, BUILDING_INDICATORS,BLOCK_INDICATORS, COMMUNE_MAPUCE, USR_MAPUCE, ROADS_MAPUCE,BUILDINGS_MAPUCE ;"
-      sql.execute "DROP TABLE IF EXISTS TYPO_BUILDINGS_MAPUCE,TYPO_USR_MAPUCE ;"
+      sql.execute "DROP TABLE IF EXISTS TYPO_BUILDINGS_MAPUCE,TYPO_USR_MAPUCE,IRIS_MAPUCE ;"
 }
 
 /**
@@ -290,7 +295,7 @@ def cleanTables(){
     query+="'"+password+"', '"+schemaFromRemoteDB+"', "
     query+= "'"+tableFromRemoteDB+"')";    
     sql.execute query
-    sql.execute "CREATE TABLE COMMUNE_MAPUCE AS SELECT * FROM COMMUNE_MAPUCE_TEMP"    	
+    sql.execute "CREATE TABLE COMMUNE_MAPUCE as SELECT * FROM COMMUNE_MAPUCE_TEMP"    	
     sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP"
     
     logger.warn "Importing the IRIS geometries"
@@ -489,7 +494,7 @@ def cleanTables(){
 
 
     logger.warn "Finalize the block indicators table"
-    sql.execute "CREATE TABLE BLOCK_INDICATORS (PK_BLOCK integer primary key, PK_USR integer, THE_GEOM geometry, AREA double precision, FLOOR_AREA double precision, VOL double precision, H_MEAN double precision, H_STD double precision, COMPACITY double precision, HOLES_AREA double precision, HOLES_PERCENT double precision, MAIN_DIR_DEG double precision) AS SELECT a.PK_BLOCK, a.PK_USR, a.THE_GEOM, b.AREA, b.FLOOR_AREA, b.VOL,c.H_MEAN, c.H_STD,d.COMPACITY, e.HOLES_AREA, e.HOLES_PERCENT,f.MAIN_DIR_DEG FROM DATA_WORK.BLOCK a LEFT JOIN DATA_WORK.BLOCK_AREA_VOL b ON a.PK_BLOCK = b.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_STD_HEIGHT c ON a.PK_BLOCK = c.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_COMPACITY d ON a.PK_BLOCK = d.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_COURTYARD e ON a.PK_BLOCK = e.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_MAIN_DIR f ON a.PK_BLOCK = f.PK_BLOCK"
+    sql.execute "CREATE TABLE BLOCK_INDICATORS (PK_BLOCK integer primary key, PK_USR integer, THE_GEOM geometry, AREA double precision, FLOOR_AREA double precision, VOL double precision, H_MEAN double precision, H_STD double precision, COMPACITY double precision, HOLES_AREA double precision, HOLES_PERCENT double precision, MAIN_DIR_DEG double precision) AS SELECT a.PK_BLOCK, a.PK_USR, ST_setsrid(a.THE_GEOM, 2154) as the_geom, b.AREA, b.FLOOR_AREA, b.VOL,c.H_MEAN, c.H_STD,d.COMPACITY, e.HOLES_AREA, e.HOLES_PERCENT,f.MAIN_DIR_DEG FROM DATA_WORK.BLOCK a LEFT JOIN DATA_WORK.BLOCK_AREA_VOL b ON a.PK_BLOCK = b.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_STD_HEIGHT c ON a.PK_BLOCK = c.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_COMPACITY d ON a.PK_BLOCK = d.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_COURTYARD e ON a.PK_BLOCK = e.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_MAIN_DIR f ON a.PK_BLOCK = f.PK_BLOCK"
     sql.execute "CREATE INDEX ON BLOCK_INDICATORS(PK_USR)"
 
     logger.warn "Update the block id for each buildings"
