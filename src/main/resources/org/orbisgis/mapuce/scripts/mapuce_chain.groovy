@@ -1,3 +1,4 @@
+import org.orbisgis.mapuce.WpsScriptsPackage;
 import org.orbisgis.wpsgroovyapi.input.*
 import org.orbisgis.wpsgroovyapi.output.*
 import org.orbisgis.wpsgroovyapi.process.*
