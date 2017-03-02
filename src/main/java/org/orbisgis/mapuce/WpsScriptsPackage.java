@@ -12,7 +12,7 @@ import java.util.*;
 import net.opengis.ows._2.CodeType;
 import org.apache.commons.io.IOUtils;
 import org.orbisgis.frameworkapi.CoreWorkspace;
-import org.orbisgis.r_engine.REngine;
+import org.orbisgis.rscriptengine.REngineFactory;
 import org.orbisgis.wpsclient.api.InternalWpsClient;
 import org.orbisgis.wpsservice.LocalWpsServer;
 import org.orbisgis.wpsservice.controller.process.ProcessIdentifier;
@@ -174,7 +174,7 @@ public class WpsScriptsPackage {
             customLoadScript("scripts/import_indicators_mapuce.groovy");
 
             //Transmit the REngine class
-            propertiesMap.put("rEngine", new REngine());
+            propertiesMap.put("rEngine", REngineFactory.createRScriptEngine());
             localWpsServer.addGroovyProperties(propertiesMap);
 
             //Check the WpsClient
