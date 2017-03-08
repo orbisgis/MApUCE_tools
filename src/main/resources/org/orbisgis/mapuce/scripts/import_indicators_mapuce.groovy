@@ -14,6 +14,7 @@ import javax.swing.JOptionPane;
     keywords = ["Vector","MAPuCE"])
 def processing() {
     if(!login.isEmpty()&& !password.isEmpty()){
+        sql.execute "SET MAX_MEMORY_ROWS 100";
         codesInsee = prepareCodes(fieldCodes,  codesInsee);  
         prepareFinalTables();
         int i=1;
