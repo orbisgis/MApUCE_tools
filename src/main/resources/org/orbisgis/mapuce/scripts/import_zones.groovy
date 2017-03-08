@@ -18,6 +18,7 @@ import org.orbisgis.wpsgroovyapi.process.*
         keywords = ["Vector","MAPuCE"])
 def processing() {
 if(!login.isEmpty()&& !password.isEmpty()){
+    sql.execute "SET MAX_MEMORY_ROWS 100";
     def schemaFromRemoteDB = "lienss"
     def tableFromRemoteDB = "(SELECT CODE_INSEE, unite_urbaine, ogc_fid as id_zone FROM lienss.zone_etude)"	
     sql.execute "DROP TABLE IF EXISTS COMMUNES_TEMP,COMMUNES_MAPUCE "

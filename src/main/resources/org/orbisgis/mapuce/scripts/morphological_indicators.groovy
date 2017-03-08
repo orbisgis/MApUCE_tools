@@ -19,7 +19,7 @@ import org.h2gis.utilities.*;
         keywords = ["Vector","MAPuCE"])
 def processing() {
     
-    
+    sql.execute "SET MAX_MEMORY_ROWS 100";
     sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS, USR_INDICATORS, BLOCK_INDICATORS"
     sql.execute "DROP SCHEMA IF EXISTS DATA_WORK"
     sql.execute "CREATE SCHEMA DATA_WORK"

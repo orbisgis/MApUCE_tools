@@ -17,7 +17,8 @@ import org.apache.commons.io.FileUtils
         description = "This script allows to chain all processes for a set of spatial units.<br>A spatial unit is a french commune area defined by a unique identifier called CODE_INSEE.<br>The user can select one of more spatial units based on a list of CODE_INSEE or a selection of unit area names.<br>If the user select a unit area a pre-process is done to return its corresponding list of CODE_INSEE.<br>For each spatial unit, 3 steps are executed : <ul> <li>1. Extract input data (USR, Buildings, Roads) from the Mapuce DataBase</li><li>2. Compute morphological indicators</li><li>3. Merge indicators into 3 tables : final_building_indicators,final_block_indicators,final_usr_indicators </li></ul><br>Note:<br> The imported data are stored into a remote database. Please contact info@orbigis.org to obtain an account. <br> The list of available communes must be already imported to get the list of available unit areas or CODE_INSEE. If not please execute the script to import all commune areas...",
         keywords = ["Vector","MAPuCE"])
 def processing() {
-if(!login.isEmpty()&& !password.isEmpty()){        
+if(!login.isEmpty()&& !password.isEmpty()){     
+        sql.execute "SET MAX_MEMORY_ROWS 100";
         codesInsee = prepareCodes(fieldCodes,  codesInsee);
         prepareFinalTables();
         engine = initChain();
