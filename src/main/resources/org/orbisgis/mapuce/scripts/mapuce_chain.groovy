@@ -5,6 +5,7 @@ import org.orbisgis.wpsgroovyapi.process.*
 import javax.swing.JOptionPane;
 import javax.script.ScriptEngine;
 import org.apache.commons.io.FileUtils
+import org.orbisgis.rscriptengine.REngineFactory
 
 
 /**
@@ -90,11 +91,10 @@ def initChain(){
         FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/$modelName"), file)   
     }
     
-    engine = rEngine.getScriptEngine();
-    engine.put("con", rEngine.getConnectionRObject(sql.getDataSource().getConnection())); 
-    engine.put("model_path", file.getAbsolutePath()) 
+    rEngine.put("con", REngineFactory.getConnectionRObject(sql.getDataSource().getConnection())); 
+    rEngine.put("model_path", file.getAbsolutePath()) 
     
-    return engine;
+    return rEngine;
     
 }
 /**

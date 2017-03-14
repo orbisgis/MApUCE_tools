@@ -14,6 +14,8 @@ import java.io.InputStreamReader
 import java.net.URL
 import java.sql.Connection
 import org.apache.commons.io.FileUtils
+import org.orbisgis.rscriptengine.REngineFactory
+
 
 
 /**
@@ -49,15 +51,15 @@ def processing() {
     sql.execute "create table TMP_TYPO_BUILDINGS_MAPUCE(pk integer, typo varchar)"
     sql.execute "create table TMP_TYPO_USR_MAPUCE(pk_usr integer,ba float,bgh float,icif float, icio float, id float, local float, pcif float, pcio float, pd float, psc float , typo_maj varchar, typo_second varchar)"
     
-    engine = rEngine.getScriptEngine();
     
-    engine.put("con", rEngine.getConnectionRObject(sql.getDataSource().getConnection())); 
-    engine.put("model_path", file.getAbsolutePath())
+    
+    rEngine.put("con", REngineFactory.getConnectionRObject(sql.getDataSource().getConnection())); 
+    rEngine.put("model_path", file.getAbsolutePath())
     
     r = WpsScriptsPackage.class.getResourceAsStream("scripts/randomforest_typo.R")
     
     
-    engine.eval(new InputStreamReader(r));
+    rEngine.eval(new InputStreamReader(r));
     
     logger.warn "End classification."
     
