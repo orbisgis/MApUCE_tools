@@ -4,7 +4,7 @@
     <groupId>org.orbisgis</groupId>
     <artifactId>MApUCE_tools</artifactId>
     <name>MApUCE_tools</name>
-    <version>1.0.13</version>
+    <version>1.0.14-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <parent>
         <groupId>org.orbisgis</groupId>
