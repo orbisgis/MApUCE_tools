@@ -11,10 +11,8 @@ import java.util.*;
 
 import net.opengis.ows._2.CodeType;
 import org.apache.commons.io.IOUtils;
-import org.orbisgis.frameworkapi.CoreWorkspace;
 import org.orbisgis.rscriptengine.REngineFactory;
-import org.orbisgis.wpsclient.api.InternalWpsClient;
-import org.orbisgis.wpsservice.LocalWpsServer;
+import org.orbisgis.wpsservice.WpsServer;
 import org.orbisgis.wpsservice.controller.process.ProcessIdentifier;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -29,8 +27,8 @@ import org.slf4j.LoggerFactory;
  * In the WpsService, the script are organized in a tree, which has the WpsService as root.
  *
  * Scripts can be add to the tree under a specific node path with custom icon with the following method :
- *      localWpsServer.addLocalScript('processFile', 'icon', 'boolean', 'nodePath');
- * with the folowing parameter :
+ *      wpsServer.addLocalScript('processFile', 'icon', 'boolean', 'nodePath');
+ * with the following parameter :
  *      processFile : The File object corresponding to the script. Be careful, the plugin resource files can't be
  *              accessed from the outside of the plugin. So you have to copy it (in a temporary file as example) before
  *              adding it to the WpsService.
@@ -68,20 +66,10 @@ public class WpsScriptsPackage {
     private Map<String, Object> propertiesMap = new HashMap<>();
 
     /**
-     * OrbisGIS core workspace.
-     */
-    protected CoreWorkspace coreWorkspace;
-
-    /**
      * The WPS service of OrbisGIS.
      * The WPS service contains all the declared processes avaliable for the client (in OrbisGIS the toolbox).
      */
-    private LocalWpsServer localWpsServer;
-
-    /**
-     * The WPS client of OrbisGIS.
-     */
-    private InternalWpsClient wpsClient;
+    private WpsServer wpsServer;
 
     /**
      * List of identifier of the processes loaded by this plusgin.
@@ -89,54 +77,20 @@ public class WpsScriptsPackage {
     private List<CodeType> listIdProcess;
 
     /**
-     * OSGI method used to give to the plugin the CoreWorkspace. (Be careful before any modification)
-     * @param coreWorkspace
-     */
-    @Reference
-    public void setCoreWorkspace(CoreWorkspace coreWorkspace) {
-        this.coreWorkspace = coreWorkspace;
-    }
-
-    /**
-     * OSGI method used to remove from the plugin the CoreWorkspace. (Be careful before any modification)
-     * @param coreWorkspace
-     */
-    public void unsetCoreWorkspace(CoreWorkspace coreWorkspace) {
-        this.coreWorkspace = null;
-    }
-
-    /**
      * OSGI method used to give to the plugin the WpsService. (Be careful before any modification)
-     * @param localWpsServer
+     * @param wpsServer
      */
     @Reference
-    public void setLocalWpsServer(LocalWpsServer localWpsServer) {
-        this.localWpsServer = localWpsServer;
+    public void setWpsServer(WpsServer wpsServer) {
+        this.wpsServer = wpsServer;
     }
 
     /**
      * OSGI method used to remove from the plugin the WpsService. (Be careful before any modification)
      * @param localWpsService
      */
-    public void unsetLocalWpsServer(LocalWpsServer localWpsService) {
-        this.localWpsServer = null;
-    }
-
-    /**
-     * OSGI method used to give to the plugin the WpsClient. (Be careful before any modification)
-     * @param wpsClient
-     */
-    @Reference
-    public void setInternalWpsClient(InternalWpsClient wpsClient) {
-        this.wpsClient = wpsClient;
-    }
-
-    /**
-     * OSGI method used to remove from the plugin the WpsClient. (Be careful before any modification)
-     * @param wpsClient
-     */
-    public void unsetInternalWpsClient(InternalWpsClient wpsClient) {
-        this.wpsClient = null;
+    public void unsetWpsServer(WpsServer localWpsService) {
+        this.wpsServer = null;
     }
 
     /**
@@ -164,7 +118,7 @@ public class WpsScriptsPackage {
     public void activate(){        
         listIdProcess = new ArrayList<>();
         //Check the WpsService
-        if(localWpsServer != null){
+        if(wpsServer != null){
             //Default method to load the scripts
             customLoadScript("scripts/classification.groovy");
             customLoadScript("scripts/morphological_indicators.groovy");
@@ -175,13 +129,7 @@ public class WpsScriptsPackage {
 
             //Transmit the REngine class
             propertiesMap.put("rEngine", REngineFactory.createRScriptEngine());
-            localWpsServer.addGroovyProperties(propertiesMap);
-
-            //Check the WpsClient
-            if(wpsClient != null){
-                //Refresh the client
-                wpsClient.refreshAvailableScripts();
-            }
+            wpsServer.addGroovyProperties(propertiesMap);
         }
         else{
             LoggerFactory.getLogger(WpsScriptsPackage.class).error(
@@ -199,12 +147,9 @@ public class WpsScriptsPackage {
      */
     @Deactivate
     public void deactivate(){        
-        if(localWpsServer != null) {
+        if(wpsServer != null) {
             removeAllScripts();
-            localWpsServer.removeGroovyProperties(propertiesMap);
-            if(wpsClient != null) {
-                wpsClient.refreshAvailableScripts();
-            }
+            wpsServer.removeGroovyProperties(propertiesMap);
         }
         else{
             LoggerFactory.getLogger(WpsScriptsPackage.class).error(
@@ -220,7 +165,7 @@ public class WpsScriptsPackage {
      */
     private void customLoadScript(String scriptPath){
         URL scriptUrl = this.getClass().getResource(scriptPath);
-        String tempFolderPath = coreWorkspace.getApplicationFolder();
+        String tempFolderPath = wpsServer.getScriptFolder();
         File tempFolder = new File(tempFolderPath, "wpsscripts");
         if(!tempFolder.exists()) {
             if(!tempFolder.mkdirs()){
@@ -246,7 +191,7 @@ public class WpsScriptsPackage {
             LOGGER.error("Unable to copy the content of the script to the temporary file.");
             return;
         }
-        List<ProcessIdentifier> piList = localWpsServer.addLocalSource(tempFile,
+        List<ProcessIdentifier> piList = wpsServer.addProcess(tempFile,
                 new String[]{loadIcon("mapuce.png")},
                 false,
                 "MAPuCE");
@@ -260,7 +205,7 @@ public class WpsScriptsPackage {
      */
     private void removeAllScripts(){
         for(CodeType idProcess : listIdProcess){
-            localWpsServer.removeProcess(URI.create(idProcess.getValue()));
+            wpsServer.removeProcess(URI.create(idProcess.getValue()));
         }
     }
 
@@ -269,7 +214,7 @@ public class WpsScriptsPackage {
      */
     private String loadIcon(String iconName){
         URL iconUrl = this.getClass().getResource("icons/"+iconName);
-        String tempFolderPath = coreWorkspace.getApplicationFolder();
+        String tempFolderPath = wpsServer.getScriptFolder();
         File tempFolder = new File(tempFolderPath, "wpsscripts");
         if(!tempFolder.exists()) {
             if(!tempFolder.mkdirs()){
