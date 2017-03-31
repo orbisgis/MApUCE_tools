@@ -639,6 +639,7 @@ String password
         title = "Spatial unit",
         description = "Select a column to obtain a list of area identifiers : code insee or  urban area names.",
         jdbcTableReference = "\$communes_mapuce\$",
+        excludedNames=["id_zone"],
         multiSelection = false)
 String[] fieldCodes
 
