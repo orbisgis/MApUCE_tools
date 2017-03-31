@@ -116,9 +116,9 @@ String login
 String password 
 
 /** The list of Commune identifier */
-@JDBCTableFieldValueInput(title="Commune identifier",
+@JDBCValueInput(title="Commune identifier",
         description="Select the code insee of a commune to import the data.",
-        jdbcTableFieldReference = "\$communes_mapuce\$code_insee\$",
+        jdbcColumnReference = "\$communes_mapuce\$code_insee\$",
         multiSelection = false)
 String[] codeInsee
 

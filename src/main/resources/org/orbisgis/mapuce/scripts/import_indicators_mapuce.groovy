@@ -204,7 +204,7 @@ String login
     description="Password to the database")
 String password 
 
-@JDBCTableFieldInput(
+@JDBCColumnInput(
     title = "Spatial unit",
     description = "Select a column to obtain a list of area identifiers : code insee or  urban area names.",
     jdbcTableReference = "\$communes_mapuce\$",
@@ -212,9 +212,9 @@ String password
 String[] fieldCodes
 
 /** The list of Commune identifier */
-@JDBCTableFieldValueInput(title="Spatial unit identifiers",
+@JDBCValueInput(title="Spatial unit identifiers",
     description="Select one or more  identifiers and start the script.",
-    jdbcTableFieldReference = "fieldCodes",
+    jdbcColumnReference = "fieldCodes",
     multiSelection = true)
 String[] codesInsee
 
