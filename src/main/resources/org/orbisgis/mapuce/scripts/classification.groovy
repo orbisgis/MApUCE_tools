@@ -1,9 +1,9 @@
 package org.orbisgis.mapuce.scripts
 
 import org.orbisgis.mapuce.WpsScriptsPackage;
-import org.orbisgis.orbiswpsgroovyapi.input.*
-import org.orbisgis.orbiswpsgroovyapi.output.*
-import org.orbisgis.orbiswpsgroovyapi.process.*
+import org.orbiswps.groovyapi.input.*
+import org.orbiswps.groovyapi.output.*
+import org.orbiswps.groovyapi.process.*
 
 
 import javax.swing.JOptionPane
