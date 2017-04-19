@@ -4,7 +4,7 @@
     <groupId>org.orbisgis</groupId>
     <artifactId>MApUCE_tools</artifactId>
     <name>MApUCE_tools</name>
-    <version>1.1.2-SNAPSHOT</version>
+    <version>1.1.2</version>
     <packaging>bundle</packaging>
     <parent>
         <groupId>org.orbisgis</groupId>
@@ -89,6 +89,11 @@
         <dependency>
             <groupId>org.orbiswps</groupId>
             <artifactId>server</artifactId>
+            <version>5.1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.orbiswps</groupId>
+            <artifactId>client</artifactId>
             <version>5.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
