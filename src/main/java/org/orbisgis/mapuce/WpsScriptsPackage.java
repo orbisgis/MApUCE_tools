@@ -12,8 +12,10 @@ import java.util.*;
 import net.opengis.ows._2.CodeType;
 import org.apache.commons.io.IOUtils;
 import org.orbisgis.rscriptengine.REngineFactory;
+import org.orbiswps.client.api.WpsClient;
 import org.orbiswps.server.WpsServer;
 import org.orbiswps.server.controller.process.ProcessIdentifier;
+import org.orbiswps.server.utils.ProcessMetadata;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -72,6 +74,11 @@ public class WpsScriptsPackage {
     private WpsServer wpsServer;
 
     /**
+     * The WPS client.
+     */
+    protected WpsClient wpsClient;
+
+    /**
      * List of identifier of the processes loaded by this plusgin.
      */
     private List<CodeType> listIdProcess;
@@ -91,6 +98,23 @@ public class WpsScriptsPackage {
      */
     public void unsetWpsServer(WpsServer localWpsService) {
         this.wpsServer = null;
+    }
+
+    /**
+     * OSGI method used to give to the plugin the WpsClient. (Be careful before any modification)
+     * @param wpsClient
+     */
+    @Reference
+    public void setWpsClient(WpsClient wpsClient) {
+        this.wpsClient = wpsClient;
+    }
+
+    /**
+     * OSGI method used to remove from the plugin the WpsClient. (Be careful before any modification)
+     * @param wpsClient
+     */
+    public void unsetWpsClient(WpsClient wpsClient) {
+        this.wpsClient = null;
     }
 
     /**
@@ -191,11 +215,20 @@ public class WpsScriptsPackage {
             LOGGER.error("Unable to copy the content of the script to the temporary file.");
             return;
         }
-        List<ProcessIdentifier> piList = wpsServer.addProcess(tempFile,
-                new String[]{loadIcon("mapuce.png")},
-                false,
-                "MAPuCE");
-        for(ProcessIdentifier pi : piList){
+        List<ProcessIdentifier> piList = wpsServer.addProcess(tempFile);
+
+        for (ProcessIdentifier pi : piList) {
+            if (pi == null || pi.getProcessDescriptionType() == null || pi.getProcessDescriptionType().getInput() == null) {
+                LOGGER.error("Error, the ProcessIdentifier get is malformed.");
+            }
+            if (wpsClient != null) {
+                URI uri = URI.create(pi.getProcessDescriptionType().getIdentifier().getValue());
+                Map<ProcessMetadata.INTERNAL_METADATA, Object> metadataMap = new HashMap<>();
+                metadataMap.put(ProcessMetadata.INTERNAL_METADATA.IS_REMOVABLE, false);
+                metadataMap.put(ProcessMetadata.INTERNAL_METADATA.NODE_PATH, "MAPuCE");
+                metadataMap.put(ProcessMetadata.INTERNAL_METADATA.ICON_ARRAY, new String[]{loadIcon("mapuce.png")});
+                wpsClient.addProcessMetadata(uri, metadataMap);
+            }
             listIdProcess.add(pi.getProcessDescriptionType().getIdentifier());
         }
     }
