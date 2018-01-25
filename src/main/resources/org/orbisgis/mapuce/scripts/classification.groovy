@@ -1,9 +1,9 @@
 package org.orbisgis.mapuce.scripts
 
 import org.orbisgis.mapuce.WpsScriptsPackage;
-import org.orbiswps.groovyapi.input.*
-import org.orbiswps.groovyapi.output.*
-import org.orbiswps.groovyapi.process.*
+import org.orbisgis.orbiswps.groovyapi.input.*
+import org.orbisgis.orbiswps.groovyapi.output.*
+import org.orbisgis.orbiswps.groovyapi.process.*
 
 
 import javax.swing.JOptionPane
@@ -35,7 +35,7 @@ def processing() {
     
     def modelName = "mapuce-rf-2.2.RData";
 
-    logger.warn "Download the MAPuCE model - $modelName - used to classify the buildings."
+    logger.warn i18n.tr("Download the MAPuCE model - {0} - used to classify the buildings.", modelName)
     
     
 
@@ -46,7 +46,7 @@ def processing() {
         FileUtils.copyURLToFile(new URL("https://github.com/orbisgis/MApUCE_tools/raw/master/model/$modelName"), file)   
     }
     
-    logger.warn "Download model finished. Start classification."
+    logger.warn i18n.tr("Download model finished. Start classification.")
     
     sql.execute "drop table if exists TMP_TYPO_BUILDINGS_MAPUCE, TMP_TYPO_USR_MAPUCE,TYPO_BUILDINGS_MAPUCE, TYPO_USR_MAPUCE, typo_label";
     sql.execute "create table TMP_TYPO_BUILDINGS_MAPUCE(pk integer, typo varchar)"
@@ -62,7 +62,7 @@ def processing() {
     
     rEngine.eval(new InputStreamReader(r));
     
-    logger.warn "End classification."
+    logger.warn i18n.tr("End classification.")
     
     // Create final tables with geometries
     sql.execute "CREATE INDEX ON TMP_TYPO_BUILDINGS_MAPUCE(PK); CREATE TABLE TYPO_BUILDINGS_MAPUCE AS SELECT a.the_geom, b.pk as pk_building, a.pk_usr, a.id_zone, b.typo from BUILDINGS_MAPUCE a, TMP_TYPO_BUILDINGS_MAPUCE b where a.pk=b.pk; "
@@ -82,7 +82,7 @@ def processing() {
     sql.execute "insert into typo_label VALUES ('ba', 'Bâtiment d''activité')"
     sql.execute "insert into typo_label VALUES ('id' , 'Immeuble discontinu')"
 
-    literalOutput = "The classification has been done. The tables USR_TYPO and BUILDING_TYPO have been created correctly" 
+    literalOutput = i18n.tr("The classification has been done. The tables USR_TYPO and BUILDING_TYPO have been created correctly")
 }
 
 

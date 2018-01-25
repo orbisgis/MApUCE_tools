@@ -1,27 +1,22 @@
 package org.orbisgis.mapuce;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.*;
-
-import net.opengis.ows._2.CodeType;
-import org.apache.commons.io.IOUtils;
+import org.orbisgis.orbiswps.serviceapi.WpsScriptBundle;
+import org.orbisgis.orbiswps.serviceapi.process.ProcessMetadata;
 import org.orbisgis.rscriptengine.REngineFactory;
-import org.orbiswps.client.api.WpsClient;
-import org.orbiswps.server.WpsServer;
-import org.orbiswps.server.controller.process.ProcessIdentifier;
-import org.orbiswps.server.utils.ProcessMetadata;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
+
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.*;
 
 /**
  * Main class of the plugin which declares the scripts to add, their locations in the process tree and the icons
@@ -61,220 +56,76 @@ import org.slf4j.LoggerFactory;
  *
  */
 @Component
-public class WpsScriptsPackage {
+public class WpsScriptsPackage implements WpsScriptBundle {
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(WpsScriptsPackage.class);
+    /** Resource path to the folder containing the scripts. */
+    private static final String SCRIPTS_RESOURCE_FOLDER_PATH = "scripts";
+    /** Resource path to the folder containing the icons. */
+    private static final String ICONS_RESOURCE_FOLDER_PATH = "icons";
+    /** Name of the icon file to use. */
+    private static final String ICON_NAME = "mapuce.png";
+    /** {@link I18n} object */
+    private static I18n I18N;
 
-    private Map<String, Object> propertiesMap = new HashMap<>();
-
-    /**
-     * The WPS service of OrbisGIS.
-     * The WPS service contains all the declared processes avaliable for the client (in OrbisGIS the toolbox).
-     */
-    private WpsServer wpsServer;
-
-    /**
-     * The WPS client.
-     */
-    protected WpsClient wpsClient;
-
-    /**
-     * List of identifier of the processes loaded by this plusgin.
-     */
-    private List<CodeType> listIdProcess;
-
-    /**
-     * OSGI method used to give to the plugin the WpsService. (Be careful before any modification)
-     * @param wpsServer
-     */
-    @Reference
-    public void setWpsServer(WpsServer wpsServer) {
-        this.wpsServer = wpsServer;
-    }
-
-    /**
-     * OSGI method used to remove from the plugin the WpsService. (Be careful before any modification)
-     * @param localWpsService
-     */
-    public void unsetWpsServer(WpsServer localWpsService) {
-        this.wpsServer = null;
-    }
-
-    /**
-     * OSGI method used to give to the plugin the WpsClient. (Be careful before any modification)
-     * @param wpsClient
-     */
-    @Reference
-    public void setWpsClient(WpsClient wpsClient) {
-        this.wpsClient = wpsClient;
-    }
-
-    /**
-     * OSGI method used to remove from the plugin the WpsClient. (Be careful before any modification)
-     * @param wpsClient
-     */
-    public void unsetWpsClient(WpsClient wpsClient) {
-        this.wpsClient = null;
-    }
-
-    /**
-     * This methods is called once the plugin is loaded.
-     *
-     * It first check if the WpsService is ready.
-     * If it is the case:
-     *      Load the processes in the WpsService and save their identifier in the 'listIdProcess' list.
-     *      Check if the WpsClient is ready.
-     *      If it is the case :
-     *          Refresh the WpsClient to display the processes.
-     *      If not :
-     *          Warn the user in the log that the WpsClient could not be found.
-     * If not :
-     *      Log the error and skip the process loading.
-     *
-     * In this class there is two methods to add the scripts :
-     * The default one :
-     *      This method adds all the scripts of the contained by the 'scripts' resources folder under the specified
-     *      'nodePath' in the WpsClient. It keeps the file tree structure.
-     * The custom one :
-     *      This methods adds each script one by one under a specific node for each one.
-     */
     @Activate
-    public void activate(){        
-        listIdProcess = new ArrayList<>();
-        //Check the WpsService
-        if(wpsServer != null){
-            //Default method to load the scripts
-            customLoadScript("scripts/classification.groovy");
-            customLoadScript("scripts/morphological_indicators.groovy");
-            customLoadScript("scripts/import_data_zone.groovy");
-            customLoadScript("scripts/import_zones.groovy");
-            customLoadScript("scripts/mapuce_chain.groovy");
-            customLoadScript("scripts/import_indicators_mapuce.groovy");
-
-            //Transmit the REngine class
-            propertiesMap.put("rEngine", REngineFactory.createRScriptEngine());
-            wpsServer.addGroovyProperties(propertiesMap);
-        }
-        else{
-            LoggerFactory.getLogger(WpsScriptsPackage.class).error(
-                    "Unable to retrieve the WpsService from OrbisGIS.\n" +
-                            "The processes won't be loaded.");
-        }
-        
+    public void activate(){
+        I18N = I18nFactory.getI18n(WpsScriptsPackage.class);
     }
 
-    /**
-     * This method is called when the plugin is deactivated.
-     * If the WpsService is ready, removes all the previously loaded scripts.
-     * If not, log the error and skip the process removing.
-     * Then if the WpsClient is ready, refresh it.
-     */
-    @Deactivate
-    public void deactivate(){        
-        if(wpsServer != null) {
-            removeAllScripts();
-            wpsServer.removeGroovyProperties(propertiesMap);
-        }
-        else{
-            LoggerFactory.getLogger(WpsScriptsPackage.class).error(
-                    "Unable to retrieve the WpsService from OrbisGIS.\n" +
-                            "The processes won't be removed.");
-        }
-        
+    @Override
+    public Map<String, Object> getGroovyProperties() {
+        Map<String, Object> propertiesMap = new HashMap<>();
+        propertiesMap.put("rEngine", REngineFactory.createRScriptEngine());
+        return propertiesMap;
     }
 
-    /**
-     * This method loads the scripts one by one under different node path with different icons.
-     * (Be careful before any modification)
-     */
-    private void customLoadScript(String scriptPath){
-        URL scriptUrl = this.getClass().getResource(scriptPath);
-        String tempFolderPath = wpsServer.getScriptFolder();
-        File tempFolder = new File(tempFolderPath, "wpsscripts");
-        if(!tempFolder.exists()) {
-            if(!tempFolder.mkdirs()){
-                LOGGER.error("Unable to create the OrbisGIS temporary folder.");
-                return;
-            }
-        }
-        final File tempFile = new File(tempFolder.getAbsolutePath(), new File(scriptUrl.getFile()).getName());
-        if(!tempFile.exists()) {
-            try{
-                if(!tempFile.createNewFile()){
-                    LOGGER.error("Unable to create the script file.");
-                    return;
+    @Override
+    public List<URL> getScriptsList() {
+        URL url = this.getClass().getResource(SCRIPTS_RESOURCE_FOLDER_PATH);
+        List<URL> childUrl = new ArrayList<>();
+
+        //Case of an osgi bundle
+        Bundle bundle = FrameworkUtil.getBundle(this.getClass());
+        if(bundle != null) {
+            Enumeration<URL> enumUrl = bundle.findEntries(url.getFile(), "*", false);
+            while(enumUrl.hasMoreElements()) {
+                URL fileUrl = enumUrl.nextElement();
+                if(fileUrl.getFile().endsWith(".groovy")) {
+                    childUrl.add(fileUrl);
                 }
-            } catch (IOException e) {
-                LoggerFactory.getLogger(WpsScriptsPackage.class).error(e.getMessage());
             }
+            return childUrl;
         }
-        try (FileOutputStream out = new FileOutputStream(tempFile)) {
-            IOUtils.copy(scriptUrl.openStream(), out);
-        }
-        catch (Exception e){
-            LOGGER.error("Unable to copy the content of the script to the temporary file.");
-            return;
-        }
-        List<ProcessIdentifier> piList = wpsServer.addProcess(tempFile);
 
-        for (ProcessIdentifier pi : piList) {
-            if (pi == null || pi.getProcessDescriptionType() == null || pi.getProcessDescriptionType().getInput() == null) {
-                LOGGER.error("Error, the ProcessIdentifier get is malformed.");
-            }
-            if (wpsClient != null) {
-                URI uri = URI.create(pi.getProcessDescriptionType().getIdentifier().getValue());
-                Map<ProcessMetadata.INTERNAL_METADATA, Object> metadataMap = new HashMap<>();
-                metadataMap.put(ProcessMetadata.INTERNAL_METADATA.IS_REMOVABLE, false);
-                metadataMap.put(ProcessMetadata.INTERNAL_METADATA.NODE_PATH, "MAPuCE");
-                metadataMap.put(ProcessMetadata.INTERNAL_METADATA.ICON_ARRAY, new String[]{loadIcon("mapuce.png")});
-                wpsClient.addProcessMetadata(uri, metadataMap);
-            }
-            listIdProcess.add(pi.getProcessDescriptionType().getIdentifier());
-        }
-    }
-
-    /**
-     * This method removes all the scripts contained in the 'listIdProcess' list. (Be careful before any modification)
-     */
-    private void removeAllScripts(){
-        for(CodeType idProcess : listIdProcess){
-            wpsServer.removeProcess(URI.create(idProcess.getValue()));
-        }
-    }
-
-    /**
-     * This method copy the an icon into the temporary system folder to make it accessible by the WpsClient
-     */
-    private String loadIcon(String iconName){
-        URL iconUrl = this.getClass().getResource("icons/"+iconName);
-        String tempFolderPath = wpsServer.getScriptFolder();
-        File tempFolder = new File(tempFolderPath, "wpsscripts");
-        if(!tempFolder.exists()) {
-            if(!tempFolder.mkdirs()){
-                LOGGER.error("Unable to create the OrbisGIS temporary folder.");
-                return null;
-            }
-        }
-        //Create a temporary File object
-        final File tempFile = new File(tempFolder.getAbsolutePath(), iconName);
-        if(!tempFile.exists()) {
-            try{
-                if(!tempFile.createNewFile()){
-                    LOGGER.error("Unable to create the icon file.");
-                    return null;
+        //Other case
+        try {
+            File f = new File(url.toURI());
+            if(f.exists()){
+                for(File child : f.listFiles()){
+                    childUrl.add(child.toURI().toURL());
                 }
-            } catch (IOException e) {
-                LoggerFactory.getLogger(WpsScriptsPackage.class).error(e.getMessage());
+                return childUrl;
             }
-        }
-        //Copy the content of the resource file in the temporary file.
-        try (FileOutputStream out = new FileOutputStream(tempFile)) {
-            IOUtils.copy(iconUrl.openStream(), out);
-        }
-        catch (Exception e){
-            LOGGER.error("Unable to copy the content of the icon to the temporary file.");
-            return null;
-        }
-        return tempFile.getAbsolutePath();
+        } catch (URISyntaxException |MalformedURLException ignored) {}
+
+        //Unknown case, return empty list
+        LOGGER.error(I18N.tr("Unable to explore the URL {0}", url));
+        return new ArrayList<>();
+    }
+
+    @Override
+    public Map<ProcessMetadata.INTERNAL_METADATA, Object> getScriptMetadata(URL url) {
+        Map<ProcessMetadata.INTERNAL_METADATA, Object> metadataMap = new HashMap<>();
+        metadataMap.put(ProcessMetadata.INTERNAL_METADATA.IS_REMOVABLE, false);
+        metadataMap.put(ProcessMetadata.INTERNAL_METADATA.NODE_PATH, "MAPuCE");
+        URL[] icons = new URL[]{this.getClass().getResource(ICONS_RESOURCE_FOLDER_PATH+File.separator+ICON_NAME)};
+        metadataMap.put(ProcessMetadata.INTERNAL_METADATA.ICON_ARRAY, icons);
+        return metadataMap;
+    }
+
+    @Override
+    public I18n getI18n() {
+        return I18N;
     }
 }

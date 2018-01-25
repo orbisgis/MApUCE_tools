@@ -1,9 +1,9 @@
 package org.orbisgis.mapuce.scripts
 
 import org.orbisgis.mapuce.WpsScriptsPackage;
-import org.orbiswps.groovyapi.input.*
-import org.orbiswps.groovyapi.output.*
-import org.orbiswps.groovyapi.process.*
+import org.orbisgis.orbiswps.groovyapi.input.*
+import org.orbisgis.orbiswps.groovyapi.output.*
+import org.orbisgis.orbiswps.groovyapi.process.*
 import javax.swing.JOptionPane;
 import javax.script.ScriptEngine;
 import org.apache.commons.io.FileUtils
@@ -25,21 +25,21 @@ if(!login.isEmpty()&& !password.isEmpty()){
         codesInsee = prepareCodes(fieldCodes,  codesInsee);
         prepareFinalTables();
         engine = initChain();
-        logger.warn "Number of selected areas : ${codesInsee.length}" 
+        logger.warn i18n.tr("Number of selected areas : {1}", codesInsee.length)
         int i=1;
         for (code in codesInsee) {
-            logger.warn "Start processing for area : ${code} -> Number ${i} on ${codesInsee.length}"  
+            logger.warn i18n.tr("Start processing for area : {1} -> Number {2} on {3}" , code, i, codesInsee.length)
             if(importData(code)){
-            //Compute indicators
-            computeIndicators(code);
-            mergeIndicatorsIntoFinalTables();
-            //Apply random forest classification
-            applyRandomForest(engine)
-            cleanTables();
-            logger.warn "End processing for area : ${code}"               
+                //Compute indicators
+                computeIndicators(code);
+                mergeIndicatorsIntoFinalTables();
+                //Apply random forest classification
+                applyRandomForest(engine)
+                cleanTables();
+                logger.warn(i18n.tr("End processing for area : {1}"), code)
             }
             else{
-                logger.warn "Cannot import the data for the area : ${code}."   
+                logger.warn(i18n.tr("Cannot import the data for the area : {1}.", code))
             }
             i++;
         }
@@ -57,7 +57,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
     sql.execute "insert into typo_label VALUES ('ba', 'Bâtiment d''activité')"
     sql.execute "insert into typo_label VALUES ('id' , 'Immeuble discontinu')"
    
-    literalOutput = "The chain has been executed..."
+    literalOutput = i18n.tr("The chain has been executed...")
 }
 
 }
@@ -83,7 +83,7 @@ def prepareCodes(String[] fieldCodes, String[] codesInsee ){
 def initChain(){
     def modelName = "mapuce-rf-2.2.RData";
 
-    logger.warn "Download the MAPuCE model - $modelName - used to classify the buildings."    
+    logger.warn i18n.tr("Download the MAPuCE model - {1} - used to classify the buildings.", modelName)
     
 
     //Do not download the file is already exist
@@ -238,7 +238,7 @@ def cleanTables(){
  * This method is used to import all data from the remote database 
  */
  def importData(String code){   
-   logger.warn "Importing the USR"
+   logger.warn i18n.tr("Importing the USR")
    sql.execute "DROP TABLE IF EXISTS USR_TEMP"
             def schemaFromRemoteDB = "lienss"	
             def tableFromRemoteDB = "(SELECT * FROM lienss.usr WHERE CODE_INSEE=''"+code+"'')"
@@ -253,7 +253,7 @@ def cleanTables(){
             sql.execute "CREATE INDEX ON USR_MAPUCE(PK);"
             sql.execute "DROP TABLE USR_TEMP"
 
-            logger.warn "Importing the buildings"
+            logger.warn i18n.tr("Importing the buildings")
     sql.execute "DROP TABLE IF EXISTS BUILDINGS_TEMP"
             tableFromRemoteDB = "(SELECT a.IDZONE, a.THE_GEOM, a.HAUTEUR, a.IDILOT as PK_USR, a.PK, a.NB_NIV, a.HAUTEUR_CORRIGEE, a.INSEE_INDIVIDUS, a.THEME,a.PAI_BDTOPO,a.PAI_NATURE, b.CODE_INSEE  FROM lienss.BATI_TOPO a, lienss.ZONE_ETUDE b WHERE a.IDZONE = b.OGC_FID and b.CODE_INSEE=''"+code+"'' and a.IDILOT IS NOT NULL and  ST_NUMGEOMETRIES(a.the_geom)=1 and ST_ISEMPTY(a.the_geom)=false)"
     query = "CREATE LINKED TABLE BUILDINGS_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
@@ -275,7 +275,7 @@ def cleanTables(){
     
     def cnt = sql.rows('SELECT  count(*) as cnt  FROM BUILDINGS_MAPUCE ;').cnt[0]    
     if(cnt>0){
-    logger.warn "Importing the roads"
+    logger.warn i18n.tr("Importing the roads")
     sql.execute "DROP TABLE IF EXISTS ROADS_TEMP"
     schemaFromRemoteDB = "ign_bd_topo_2014"
     tableFromRemoteDB = "(SELECT * FROM ign_bd_topo_2014.ROUTE WHERE INSEECOM_D=''"+code+"'' OR INSEECOM_G=''"+code+"'')"
@@ -289,7 +289,7 @@ def cleanTables(){
     sql.execute "CREATE SPATIAL INDEX ON ROADS_MAPUCE(THE_GEOM)"
     sql.execute "DROP TABLE IF EXISTS ROADS_TEMP"
 
-    logger.warn "Importing the geometry of the spatial unit"    
+    logger.warn i18n.tr("Importing the geometry of the spatial unit")
     sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP, COMMUNE_MAPUCE"
     schemaFromRemoteDB = "lienss"
     tableFromRemoteDB = "(SELECT DISTINCT ON (CODE_INSEE) CODE_INSEE, unite_urbaine, the_geom FROM lienss.zone_etude WHERE CODE_INSEE=''"+code+"'')"
@@ -301,7 +301,7 @@ def cleanTables(){
     sql.execute "CREATE TABLE COMMUNE_MAPUCE as SELECT * FROM COMMUNE_MAPUCE_TEMP"    	
     sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP"
     
-    logger.warn "Importing the IRIS geometries"
+    logger.warn i18n.tr("Importing the IRIS geometries")
     sql.execute "DROP TABLE IF EXISTS IRIS_MAPUCE_TEMP, IRIS_MAPUCE"
     schemaFromRemoteDB = "lra"
     tableFromRemoteDB = "(SELECT * FROM lra.iris_date_fm_3 where depcom=''"+code+"'')"
@@ -333,19 +333,19 @@ def cleanTables(){
     * Compute the building indicators
     **/
 
-    logger.warn "Compute area volume"
+    logger.warn i18n.tr("Compute area volume")
 
     sql.execute "CREATE TABLE DATA_WORK.BUILD_AREA_VOL (PK integer primary key, FLOOR_AREA double precision, VOL double precision) AS SELECT PK, (AREA * NB_NIV) AS FLOOR_AREA , (AREA * HAUTEUR) AS VOL FROM BUILDINGS_MAPUCE"
 
-    logger.warn "Compute form factor"
+    logger.warn i18n.tr("Compute form factor")
 
     sql.execute "CREATE TABLE DATA_WORK.BUILD_FORM_FACTOR (PK integer primary key , FORM_FACTOR double precision) AS SELECT PK , AREA / POWER(PERIMETER ,2) AS FORM_FACTOR FROM BUILDINGS_MAPUCE"
 
-    logger.warn "Compute concavity"
+    logger.warn i18n.tr("Compute concavity")
 
     sql.execute "CREATE TABLE DATA_WORK.BUILD_CONCAVITY (PK integer primary key, CONCAVITY double precision) AS SELECT PK, (AREA / ST_AREA(ST_CONVEXHULL(THE_GEOM))) AS CONCAVITY FROM BUILDINGS_MAPUCE"
 
-    logger.warn "Compute contiguity"
+    logger.warn i18n.tr("Compute contiguity")
 
 
     sql.execute "CREATE TABLE DATA_WORK.CONTIGUITY_INTERSECTION AS SELECT a.PK as PK_D, a.HAUTEUR as H_D, b.PK as PK_G, b.HAUTEUR as H_G, ST_AREA(a.THE_GEOM) as B_FLOOR_AREA, a.PERIMETER as B_FLOOR_LONG, (a.PERIMETER * a.HAUTEUR) as B_WALL_AREA, ST_INTERSECTION(a.THE_GEOM, b.THE_GEOM) as THE_GEOM FROM BUILDINGS_MAPUCE a, BUILDINGS_MAPUCE b WHERE a.PK <> b.PK AND a.THE_GEOM && b.THE_GEOM AND ST_INTERSECTS(a.THE_GEOM, b.THE_GEOM)"
@@ -360,7 +360,7 @@ def cleanTables(){
     sql.execute "ALTER TABLE DATA_WORK.BUILD_CONTIGUITY ADD COLUMN FREE_EXT_AREA double precision as (B_WALL_AREA - P_WALL_AREA + B_FLOOR_AREA)"
     sql.execute "ALTER TABLE DATA_WORK.BUILD_CONTIGUITY ADD COLUMN CONTIGUITY double precision as CASEWHEN(B_WALL_AREA>0, P_WALL_AREA/B_WALL_AREA, null)"
 
-    logger.warn "Compute compacity";
+    logger.warn i18n.tr("Compute compacity")
 
     sql.execute "CREATE TABLE DATA_WORK.BUILD_COMPACITY_TMP AS SELECT a.PK, a.THE_GEOM, a.HAUTEUR, b.FREE_EXT_AREA FROM BUILDINGS_MAPUCE a LEFT JOIN DATA_WORK.BUILD_CONTIGUITY b ON a.PK=b.PK"
 
@@ -369,15 +369,15 @@ def cleanTables(){
     // If a building has no neighbors, so the net compacity is equal to the raw compacity
     sql.execute "UPDATE DATA_WORK.BUILD_COMPACITY SET COMPACITY_N = COMPACITY_R WHERE COMPACITY_N is null"
 
-    logger.warn "Compute compactness"
+    logger.warn i18n.tr("Compute compactness")
 
     sql.execute "CREATE TABLE DATA_WORK.BUILD_COMPACTNESS (PK integer primary key, COMPACTNESS double precision) AS SELECT PK, (PERIMETER/(2 * SQRT(PI() * AREA))) AS COMPACTNESS FROM BUILDINGS_MAPUCE"
 
-    logger.warn "Compute main direction"
+    logger.warn i18n.tr("Compute main direction")
 
     sql.execute "CREATE TABLE DATA_WORK.BUILD_MAIN_DIR (PK integer primary key, MAIN_DIR_DEG double precision) AS SELECT PK, MOD(CASEWHEN(ST_LENGTH(ST_MINIMUMDIAMETER(THE_GEOM))<0.1, DEGREES(ST_AZIMUTH(ST_STARTPOINT(THE_GEOM), ST_ENDPOINT(THE_GEOM))), DEGREES(ST_AZIMUTH(ST_STARTPOINT(ST_ROTATE(ST_MINIMUMDIAMETER(THE_GEOM),pi()/2)), ST_ENDPOINT(ST_ROTATE(ST_MINIMUMDIAMETER(THE_GEOM),pi()/2))))),180) as ROADS_MIN_DIR FROM BUILDINGS_MAPUCE"
 
-    logger.warn "Compute passive volume ratio"
+    logger.warn i18n.tr("Compute passive volume ratio")
 
     // Initialisation of parameters
     // Tolerance distance (in meters)
@@ -391,11 +391,11 @@ def cleanTables(){
 
     sql.execute "CREATE TABLE DATA_WORK.BUILD_P_VOL_RATIO (PK integer PRIMARY KEY, THE_GEOM geometry, P_VOL_RATIO double precision) AS SELECT a.PK, b.THE_GEOM, ROUND(LEAST((ST_AREA(b.THE_GEOM)/AREA),1),2) as P_VOL_RATIO FROM BUILDINGS_MAPUCE a, DATA_WORK.in_buffer b WHERE a.PK=b.PK"
 
-    logger.warn "Compute fractal dimension"
+    logger.warn i18n.tr("Compute fractal dimension")
 
     sql.execute "CREATE TABLE DATA_WORK.BUILD_FRACTAL (PK integer PRIMARY KEY, FRACTAL_DIM double precision) AS SELECT PK, (2 * LOG(PERIMETER)) / LOG(AREA) AS FRACTAL_DIM FROM BUILDINGS_MAPUCE WHERE AREA<>1"
 
-    logger.warn "Compute the distance between buildings"
+    logger.warn i18n.tr("Compute the distance between buildings")
 
     sql.execute "CREATE TABLE DATA_WORK.DIST (PK integer PRIMARY KEY, MIN_DIST double precision,  MEAN_DIST double precision, MAX_DIST double precision, STD_DIST double precision, PK_USR integer)AS SELECT a.PK, MIN(ST_DISTANCE(a.THE_GEOM, b.THE_GEOM)) AS MIN_DIST, AVG(ST_DISTANCE(a.THE_GEOM, b.THE_GEOM)) AS MEAN_DIST, MAX(ST_DISTANCE(a.THE_GEOM, b.THE_GEOM)) AS MAX_DIST, STDDEV_POP(ST_DISTANCE(a.THE_GEOM, b.THE_GEOM)) AS STD_DIST,a.PK_USR FROM BUILDINGS_MAPUCE a, BUILDINGS_MAPUCE b WHERE a.PK<>b.PK AND a.PK_USR=b.PK_USR GROUP BY a.PK_USR, a.PK"
 
@@ -408,11 +408,11 @@ def cleanTables(){
 
     sql.execute "CREATE INDEX ON DATA_WORK.BUILD_DIST(PK_USR)"
 
-    logger.warn "Compute the number of points"
+    logger.warn i18n.tr("Compute the number of points")
 
     sql.execute "CREATE TABLE DATA_WORK.BUILD_NUM_POINT (PK integer PRIMARY KEY, NUM_POINTS double precision) AS SELECT PK, (ST_NPoints(THE_GEOM) - (1+ ST_NUMINTERIORRING(THE_GEOM))) AS NUM_POINTS FROM BUILDINGS_MAPUCE"
 
-    logger.warn "Compute the building wall near to the roads"
+    logger.warn i18n.tr("Compute the building wall near to the roads")
 
     def DIST_TO_ROAD = 3;
 
@@ -435,7 +435,7 @@ def cleanTables(){
     * Compute the block of buildings and their indicators
     **/
 
-    logger.warn "Compute block of buildings"
+    logger.warn i18n.tr("Compute block of buildings")
     sql.execute "CREATE TABLE DATA_WORK.BLOCK AS SELECT * FROM ST_EXPLODE('SELECT PK_USR, ST_UNION(ST_ACCUM(ST_BUFFER(THE_GEOM,0.01))) as THE_GEOM FROM BUILDINGS_MAPUCE GROUP BY PK_USR')"
     sql.execute "ALTER TABLE DATA_WORK.BLOCK ADD COLUMN PK_BLOCK serial"
     sql.execute "CREATE PRIMARY KEY ON DATA_WORK.BLOCK(PK_BLOCK)"
@@ -443,14 +443,14 @@ def cleanTables(){
     sql.execute "CREATE INDEX ON DATA_WORK.BLOCK(PK_USR)"
 
 
-    logger.warn "Compute the block matrix"
+    logger.warn i18n.tr("Compute the block matrix")
 
     sql.execute "CREATE TABLE DATA_WORK.BUILD_BLOCK_MATRIX (PK_BUILD integer primary key, PK_BLOCK integer) AS SELECT a.PK AS PK_BUILD, (SELECT b.PK_BLOCK FROM DATA_WORK.BLOCK b WHERE a.THE_GEOM && b.THE_GEOM ORDER BY ST_AREA(ST_INTERSECTION(a.THE_GEOM, b.THE_GEOM)) DESC LIMIT 1) AS PK_BLOCK FROM BUILDINGS_MAPUCE a"
     sql.execute "CREATE INDEX ON DATA_WORK.BUILD_BLOCK_MATRIX(PK_BLOCK)"
 
 
 
-    logger.warn "Finalize the building indicators table"
+    logger.warn i18n.tr("Finalize the building indicators table")
 
     sql.execute "DROP TABLE IF EXISTS BUILDING_INDICATORS"
     sql.execute "CREATE TABLE BUILDING_INDICATORS AS SELECT  a.PK, a.PK_USR , a.ID_ZONE , a.THE_GEOM, a.HAUTEUR_ORIGIN,  a.NB_NIV,a.HAUTEUR, a.AREA, a.PERIMETER, a.INSEE_INDIVIDUS, b.FLOOR_AREA, b.VOL, c.COMPACITY_R, c.COMPACITY_N, d.COMPACTNESS,e.FORM_FACTOR,f.CONCAVITY,g.MAIN_DIR_DEG,h.B_FLOOR_LONG, h.B_WALL_AREA, h.P_WALL_LONG, h.P_WALL_AREA, h.NB_NEIGHBOR, h.FREE_P_WALL_LONG, h.FREE_EXT_AREA, h.CONTIGUITY,i.P_VOL_RATIO,j.FRACTAL_DIM,k.MIN_DIST, k.MEAN_DIST, k.MAX_DIST,  k.STD_DIST, l.NUM_POINTS, m.L_TOT, a.L_CVX, m.L_3M, m.L_RATIO, m.L_RATIO_CVX,n.PK_BLOCK,a.THEME,a.PAI_BDTOPO,a.PAI_NATURE FROM BUILDINGS_MAPUCE a LEFT JOIN DATA_WORK.BUILD_AREA_VOL b ON a.PK =b.PK LEFT JOIN DATA_WORK.BUILD_COMPACITY c ON a.PK = c.PK LEFT JOIN DATA_WORK.BUILD_COMPACTNESS d ON a.PK = d.PK LEFT JOIN DATA_WORK.BUILD_FORM_FACTOR e ON a.PK = e.PK LEFT JOIN DATA_WORK.BUILD_CONCAVITY f ON a.PK = f.PK LEFT JOIN DATA_WORK.BUILD_MAIN_DIR g ON a.PK = g.PK LEFT JOIN DATA_WORK.BUILD_CONTIGUITY h ON a.PK = h.PK LEFT JOIN DATA_WORK.BUILD_P_VOL_RATIO i ON a.PK = i.PK LEFT JOIN DATA_WORK.BUILD_FRACTAL j ON a.PK = j.PK LEFT JOIN DATA_WORK.BUILD_DIST k ON a.PK = k.PK LEFT JOIN DATA_WORK.BUILD_NUM_POINT l ON a.PK =l.PK LEFT JOIN DATA_WORK.BUILD_NEXT_ROAD m ON a.PK = m.PK LEFT JOIN DATA_WORK.BUILD_BLOCK_MATRIX n ON a.PK = n.PK_BUILD"
@@ -476,69 +476,69 @@ def cleanTables(){
     sql.execute "UPDATE BUILDING_INDICATORS SET INSEE_INDIVIDUS = 0 WHERE INSEE_INDIVIDUS is null"
 
 
-    logger.warn "Compute the sum of the building area volume by block"
+    logger.warn i18n.tr("Compute the sum of the building area volume by block")
     sql.execute "CREATE TABLE DATA_WORK.BLOCK_AREA_VOL (PK_BLOCK integer primary key, AREA double precision, FLOOR_AREA double precision, VOL double precision) AS SELECT a.PK_BLOCK, SUM(b.AREA) AS AREA, SUM(b.FLOOR_AREA) AS FLOOR_AREA, SUM(b.VOL) AS VOL FROM DATA_WORK.BLOCK a, BUILDING_INDICATORS b, DATA_WORK.BUILD_BLOCK_MATRIX c WHERE a.PK_BLOCK=c.PK_BLOCK AND b.PK=c.PK_BUILD GROUP BY a.PK_BLOCK"
 
 
-    logger.warn "Compute the heigth statistics"
+    logger.warn i18n.tr("Compute the heigth statistics")
     sql.execute "CREATE TABLE DATA_WORK.BLOCK_STD_HEIGHT (PK_BLOCK integer primary key, H_MEAN double precision, H_STD double precision) AS SELECT a.PK_BLOCK, (SUM(ST_AREA(b.THE_GEOM) * b.HAUTEUR)/SUM(ST_AREA(b.THE_GEOM))) AS H_MEAN, STDDEV_POP(b.HAUTEUR) AS H_STD FROM DATA_WORK.BLOCK a, BUILDINGS_MAPUCE b, DATA_WORK.BUILD_BLOCK_MATRIX c WHERE a.PK_BLOCK=c.PK_BLOCK and b.PK=c.PK_BUILD GROUP BY a.PK_BLOCK"
 
 
-    logger.warn "Compute the sum of buildings compacity"
+    logger.warn i18n.tr("Compute the sum of buildings compacity")
     sql.execute "CREATE TABLE DATA_WORK.BLOCK_COMPACITY (PK_BLOCK integer primary key, COMPACITY double precision) AS SELECT a.PK_BLOCK, (SUM(b.FREE_EXT_AREA)/ POWER(SUM(b.VOL), (2./3.))) as COMPACITY FROM DATA_WORK.BLOCK a, BUILDING_INDICATORS b, DATA_WORK.BUILD_BLOCK_MATRIX c WHERE a.PK_BLOCK=c.PK_BLOCK AND b.PK=c.PK_BUILD AND b.VOL<>0 GROUP BY a.PK_BLOCK"
 
 
-    logger.warn "Compute the sum of courtyards"
+    logger.warn i18n.tr("Compute the sum of courtyards")
     sql.execute "CREATE TABLE DATA_WORK.BLOCK_COURTYARD (PK_BLOCK integer primary key, HOLES_AREA double precision, HOLES_PERCENT double precision) AS SELECT PK_BLOCK, ST_AREA(ST_HOLES(THE_GEOM)) as HOLES_AREA, (ST_AREA(ST_HOLES(THE_GEOM))/(ST_AREA(THE_GEOM)+ST_AREA(ST_HOLES(THE_GEOM)))*100) as HOLES_PERCENT FROM DATA_WORK.BLOCK"
 
 
-    logger.warn "Compute the main direction of the blocks"
+    logger.warn i18n.tr("Compute the main direction of the blocks")
     sql.execute "CREATE TABLE DATA_WORK.BLOCK_MAIN_DIR (PK_BLOCK integer primary key, MAIN_DIR_DEG double precision) AS SELECT PK_BLOCK, MOD(CASEWHEN(ST_LENGTH(ST_MINIMUMDIAMETER(THE_GEOM))<0.1, DEGREES(ST_AZIMUTH(ST_STARTPOINT(THE_GEOM), ST_ENDPOINT(THE_GEOM))), DEGREES(ST_AZIMUTH(ST_STARTPOINT(ST_ROTATE(ST_MINIMUMDIAMETER(THE_GEOM),pi()/2)), ST_ENDPOINT(ST_ROTATE(ST_MINIMUMDIAMETER(THE_GEOM),pi()/2))))),180) as MAIN_DIR_DEG FROM DATA_WORK.BLOCK"
 
 
-    logger.warn "Finalize the block indicators table"
+    logger.warn i18n.tr("Finalize the block indicators table")
     sql.execute "CREATE TABLE BLOCK_INDICATORS (PK_BLOCK integer primary key, PK_USR integer, THE_GEOM geometry, AREA double precision, FLOOR_AREA double precision, VOL double precision, H_MEAN double precision, H_STD double precision, COMPACITY double precision, HOLES_AREA double precision, HOLES_PERCENT double precision, MAIN_DIR_DEG double precision) AS SELECT a.PK_BLOCK, a.PK_USR, ST_setsrid(a.THE_GEOM, 2154) as the_geom, b.AREA, b.FLOOR_AREA, b.VOL,c.H_MEAN, c.H_STD,d.COMPACITY, e.HOLES_AREA, e.HOLES_PERCENT,f.MAIN_DIR_DEG FROM DATA_WORK.BLOCK a LEFT JOIN DATA_WORK.BLOCK_AREA_VOL b ON a.PK_BLOCK = b.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_STD_HEIGHT c ON a.PK_BLOCK = c.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_COMPACITY d ON a.PK_BLOCK = d.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_COURTYARD e ON a.PK_BLOCK = e.PK_BLOCK LEFT JOIN DATA_WORK.BLOCK_MAIN_DIR f ON a.PK_BLOCK = f.PK_BLOCK"
     sql.execute "CREATE INDEX ON BLOCK_INDICATORS(PK_USR)"
 
-    logger.warn "Update the block id for each buildings"
+    logger.warn i18n.tr("Update the block id for each buildings")
 
 
     /**
     * Compute the USR indicators
     **/
 
-    logger.warn "Compute the first USR indicators"
+    logger.warn i18n.tr("Compute the first USR indicators")
     sql.execute "CREATE TABLE DATA_WORK.USR_BUILD_TMP (PK_USR integer primary key,  COMPAC_MEAN_NW double precision, COMPAC_MEAN_W double precision,CONTIG_MEAN double precision, CONTIG_STD double precision,MAIN_DIR_STD double precision,H_MEAN double precision,H_STD double precision, P_VOL_RATIO_MEAN double precision,B_AREA double precision, B_VOL double precision, B_VOL_M double precision,BUILD_NUMB integer,MIN_M_DIST double precision, MEAN_M_DIST double precision, MEAN_STD_DIST double precision,EXT_ENV_AREA double precision)AS SELECT PK_USR,ROUND(AVG(COMPACITY_N),2) AS COMPAC_MEAN_NW, ROUND((SUM(ST_AREA(THE_GEOM) * COMPACITY_N)/SUM(ST_AREA(THE_GEOM))),2) AS COMPAC_MEAN_W,ROUND((SUM(AREA * CONTIGUITY)/SUM(AREA)),2) AS CONTIG_MEAN, ROUND(STDDEV_POP(CONTIGUITY),2) AS CONTIG_STD,ROUND(STDDEV_POP(MAIN_DIR_DEG),2) AS MAIN_DIR_STD,ROUND((SUM(AREA * HAUTEUR)/SUM(AREA)),2) AS H_MEAN,ROUND(STDDEV_POP(HAUTEUR),2) AS H_STD, ROUND((SUM(AREA * P_VOL_RATIO)/SUM(AREA)),2) AS P_VOL_RATIO_MEAN,ROUND(SUM(AREA),2) as B_AREA, ROUND(SUM(VOL),2) AS B_VOL, ROUND((SUM(VOL)/COUNT(*)),2) AS B_VOL_M,COUNT(*) as BUILD_NUMB,ROUND(AVG(MIN_DIST),2) AS MIN_M_DIST, ROUND(AVG(MEAN_DIST),2) AS MEAN_M_DIST, ROUND(STDDEV_POP(MEAN_DIST),2) AS MEAN_STD_DIST,ROUND(SUM(B_WALL_AREA-P_WALL_AREA),2) as EXT_ENV_AREA FROM BUILDING_INDICATORS GROUP BY PK_USR"
 
-    logger.warn "Compute the floor ratio"
+    logger.warn i18n.tr("Compute the floor ratio")
     sql.execute "CREATE TABLE DATA_WORK.USR_BUILD_FLOOR_RATIO (PK_USR integer primary key, FLOOR double precision, FLOOR_RATIO double precision) AS SELECT a.PK as PK_USR, ROUND(SUM(b.FLOOR_AREA),2) AS FLOOR, ROUND(SUM(b.FLOOR_AREA)/a.USR_AREA,2) AS FLOOR_RATIO FROM USR_MAPUCE a, BUILDING_INDICATORS b WHERE a.PK = b.PK_USR GROUP BY a.PK"
 
 
-    logger.warn "Compute the distance for the center of the commune"
+    logger.warn i18n.tr("Compute the distance for the center of the commune")
     sql.execute "CREATE TABLE DATA_WORK.USR_TO_CENTER (PK_USR integer primary key, DIST_TO_CENTER double precision) AS SELECT a.PK as PK_USR, ST_DISTANCE(ST_CENTROID(a.THE_GEOM), ST_CENTROID(b.THE_GEOM)) AS DIST_TO_CENTER FROM USR_MAPUCE a, COMMUNE_MAPUCE b"
 
 
-    logger.warn "Compute the density of building areas"
+    logger.warn i18n.tr("Compute the density of building areas")
     sql.execute "CREATE TABLE DATA_WORK.USR_DENS_AREA_BUILD (PK_USR integer primary key, BUILD_DENS double precision) AS SELECT a.PK as PK_USR, ROUND(SUM(b.AREA)/a.USR_AREA,4) as BUILD_DENS FROM USR_MAPUCE a, BUILDING_INDICATORS b WHERE a.PK=b.PK_USR GROUP BY a.PK"
 
 
-    logger.warn "Compute the density of water surfaces"
+    logger.warn i18n.tr("Compute the density of water surfaces")
     sql.execute "CREATE TABLE DATA_WORK.USR_DENS_AREA_HYDRO (PK_USR integer primary key, HYDRO_DENS double precision) AS SELECT PK as PK_USR, ROUND(HYDRO_SURFACE/USR_AREA,4) as HYDRO_DENS FROM USR_MAPUCE"
 
-    logger.warn "Compute the density of vegetation"
+    logger.warn i18n.tr("Compute the density of vegetation")
     sql.execute "CREATE TABLE DATA_WORK.USR_DENS_AREA_VEGET (PK_USR integer primary key, VEGET_DENS double precision) AS SELECT PK as PK_USR, ROUND(VEGETATION_SURFACE/USR_AREA,4) as VEGET_DENS FROM USR_MAPUCE"
 
-    logger.warn "Compute the density of road surfaces"
+    logger.warn i18n.tr("Compute the density of road surfaces")
     sql.execute "CREATE TABLE DATA_WORK.USR_DENS_AREA_ROADS (PK_USR integer primary key, ROAD_DENS double precision) AS SELECT PK as PK_USR, ROUND(ROUTE_SURFACE/USR_AREA,4) as ROAD_DENS FROM USR_MAPUCE"
 
-    logger.warn "Merging previous indicators"
+    logger.warn i18n.tr("Merging previous indicators")
     sql.execute "CREATE TABLE DATA_WORK.USR_DENS_AREA (PK_USR integer primary key, BUILD_DENS double precision, HYDRO_DENS double precision, VEGET_DENS double precision, ROAD_DENS double precision) AS SELECT a.PK as PK_USR,b.BUILD_DENS,c.HYDRO_DENS,d.VEGET_DENS,e.ROAD_DENS FROM USR_MAPUCE a LEFT JOIN DATA_WORK.USR_DENS_AREA_BUILD b ON a.PK = b.PK_USR LEFT JOIN DATA_WORK.USR_DENS_AREA_HYDRO c ON a.PK = c.PK_USR LEFT JOIN DATA_WORK.USR_DENS_AREA_VEGET d ON a.PK = d.PK_USR LEFT JOIN DATA_WORK.USR_DENS_AREA_ROADS e ON a.PK = e.PK_USR"
 
-    logger.warn "Cleaning indicators"
+    logger.warn i18n.tr("Cleaning indicators")
     sql.execute "CREATE TABLE DATA_WORK.USR_BLOCK_TMP  (PK_USR integer primary key, B_HOLES_AREA_MEAN double precision,B_STD_H_MEAN double precision, B_M_NW_COMPACITY double precision, B_M_W_COMPACITY double precision, B_STD_COMPACITY double  precision) AS SELECT PK_USR, ROUND((SUM(AREA * HOLES_AREA)/SUM(AREA)),2) AS B_HOLES_AREA_MEAN, ROUND((SUM(AREA * H_STD)/SUM(AREA)),2) AS B_STD_H_MEAN, ROUND(SUM(COMPACITY)/COUNT(*),2) AS B_M_NW_COMPACITY, ROUND(SUM(AREA*COMPACITY)/SUM(AREA),2) AS B_M_W_COMPACITY, ROUND(STDDEV_POP(COMPACITY),2) AS B_STD_COMPACITY FROM BLOCK_INDICATORS  GROUP BY PK_USR"
 
 
-    logger.warn "Finalize the USR indicators table"
+    logger.warn i18n.tr("Finalize the USR indicators table")
     sql.execute "CREATE TABLE USR_INDICATORS  AS SELECT a.PK,a.id_zone, a.the_geom,a.insee_individus,a.insee_menages,a.insee_men_coll,a.insee_men_surf,a.insee_surface_collectif,a.vegetation_surface , a.route_surface ,a.route_longueur , a.trottoir_longueur,b.FLOOR, b.FLOOR_RATIO,c.COMPAC_MEAN_NW, c.COMPAC_MEAN_W, c.CONTIG_MEAN,c.CONTIG_STD,c.MAIN_DIR_STD,c.H_MEAN,c.H_STD,c.P_VOL_RATIO_MEAN,c.B_AREA, c.B_VOL, c.B_VOL_M,c.BUILD_NUMB, c.MIN_M_DIST, c.MEAN_M_DIST, c.MEAN_STD_DIST,m.B_HOLES_AREA_MEAN,m.B_STD_H_MEAN,m.B_M_NW_COMPACITY, m.B_M_W_COMPACITY, m.B_STD_COMPACITY, p.DIST_TO_CENTER,q.BUILD_DENS, q.HYDRO_DENS, q.VEGET_DENS, q.ROAD_DENS, c.EXT_ENV_AREA FROM USR_MAPUCE a LEFT JOIN DATA_WORK.USR_BUILD_FLOOR_RATIO b ON a.PK = b.PK_USR LEFT JOIN DATA_WORK.USR_BUILD_TMP c ON a.PK = c.PK_USR LEFT JOIN DATA_WORK.USR_BLOCK_TMP  m ON a.PK = m.PK_USR LEFT JOIN DATA_WORK.USR_TO_CENTER p ON a.PK = p.PK_USR LEFT JOIN DATA_WORK.USR_DENS_AREA q ON a.PK = q.PK_USR"
 
     sql.execute "ALTER TABLE USR_INDICATORS  ALTER COLUMN PK SET NOT NULL"
@@ -620,7 +620,7 @@ def applyRandomForest(ScriptEngine engine){
     sql.execute "INSERT INTO FINAL_USR_TYPO (SELECT * FROM TYPO_USR_MAPUCE);"
        
 
-    logger.warn "The classification has been done. The tables FINAL_USR_TYPO and FINAL_BUILDING_TYPO have been created correctly" 
+    logger.warn i18n.tr("The classification has been done. The tables FINAL_USR_TYPO and FINAL_BUILDING_TYPO have been created correctly")
 }
 
 
