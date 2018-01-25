@@ -1,8 +1,8 @@
 package org.orbisgis.mapuce.scripts
 
-import org.orbiswps.groovyapi.input.*
-import org.orbiswps.groovyapi.output.*
-import org.orbiswps.groovyapi.process.*
+import org.orbisgis.orbiswps.groovyapi.input.*
+import org.orbisgis.orbiswps.groovyapi.output.*
+import org.orbisgis.orbiswps.groovyapi.process.*
 import javax.swing.JOptionPane;
 
 
@@ -21,7 +21,7 @@ def processing() {
         prepareFinalTables();
         int i=1;
         for (code in codesInsee) {
-            logger.warn "Start importing the indicators for area : ${code} -> Number ${i} on ${codesInsee.length}" 
+            logger.warn i18n.tr("Start importing the indicators for area : {1} -> Number {2} on {3}", code, i, codesInsee.length)
             importData(code);
             i++;
         }
@@ -30,7 +30,7 @@ def processing() {
         documentTables();
            
     
-        literalOutput = "The data have been successfully imported."
+        literalOutput = i18n.tr("The data have been successfully imported.")
     }
 
 }

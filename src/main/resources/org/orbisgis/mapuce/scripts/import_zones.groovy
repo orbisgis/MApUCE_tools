@@ -1,8 +1,8 @@
 package org.orbisgis.mapuce.scripts
 
-import org.orbiswps.groovyapi.input.*
-import org.orbiswps.groovyapi.output.*
-import org.orbiswps.groovyapi.process.*
+import org.orbisgis.orbiswps.groovyapi.input.*
+import org.orbisgis.orbiswps.groovyapi.output.*
+import org.orbisgis.orbiswps.groovyapi.process.*
 
 
 /**
@@ -34,7 +34,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
     sql.execute "CREATE INDEX ON COMMUNES_MAPUCE (CODE_INSEE)"
     sql.execute "CREATE INDEX ON COMMUNES_MAPUCE (id_zone)"
     sql.execute "DROP TABLE IF EXISTS COMMUNES_TEMP"
-    literalOutput = "The commune areas have been imported."
+    literalOutput = i18n.tr("The commune areas have been imported.")
 }
 
 }

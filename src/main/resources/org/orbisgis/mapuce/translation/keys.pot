@@ -1,0 +1,460 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-01-25 10:03+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy:27
+msgid "Importing the USR from the remote database"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy:44
+msgid "Importing the buildings from the remote database"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy:61
+msgid "Importing the roads from the remote database"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy:75
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:292
+msgid "Importing the geometry of the spatial unit"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy:89
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:304
+msgid "Importing the IRIS geometries"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy:102
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy:33
+msgid "The data have been successfully imported."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/classification.groovy:38
+#, java-format
+msgid "Download the MAPuCE model - {0} - used to classify the buildings."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/classification.groovy:49
+msgid "Download model finished. Start classification."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/classification.groovy:65
+msgid "End classification."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/classification.groovy:85
+msgid ""
+"The classification has been done. The tables USR_TYPO and BUILDING_TYPO have "
+"been created correctly"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:33
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:336
+msgid "Compute area volume"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:37
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:340
+msgid "Compute form factor"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:41
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:344
+msgid "Compute concavity"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:45
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:348
+msgid "Compute contiguity"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:60
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:363
+msgid "Compute compacity"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:69
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:372
+msgid "Compute compactness"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:73
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:376
+msgid "Compute main direction"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:77
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:380
+msgid "Compute passive volume ratio"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:91
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:394
+msgid "Compute fractal dimension"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:95
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:398
+msgid "Compute the distance between buildings"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:108
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:411
+msgid "Compute the number of points"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:112
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:415
+msgid "Compute the building wall near to the roads"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:135
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:438
+msgid "Compute block of buildings"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:143
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:446
+msgid "Compute the block matrix"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:150
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:453
+msgid "Finalize the building indicators table"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:176
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:479
+msgid "Compute the sum of the building area volume by block"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:180
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:483
+msgid "Compute the heigth statistics"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:184
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:487
+msgid "Compute the sum of buildings compacity"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:188
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:491
+msgid "Compute the sum of courtyards"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:192
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:495
+msgid "Compute the main direction of the blocks"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:196
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:499
+msgid "Finalize the block indicators table"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:200
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:503
+msgid "Update the block id for each buildings"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:207
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:510
+msgid "Compute the first USR indicators"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:210
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:513
+msgid "Compute the floor ratio"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:214
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:517
+msgid "Compute the distance for the center of the commune"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:218
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:521
+msgid "Compute the density of building areas"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:222
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:525
+msgid "Compute the density of water surfaces"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:225
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:528
+msgid "Compute the density of vegetation"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:228
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:531
+msgid "Compute the density of road surfaces"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:231
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:534
+msgid "Merging previous indicators"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:234
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:537
+msgid "Cleaning indicators"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:238
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:541
+msgid "Finalize the USR indicators table"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:294
+msgid "Cleaning the database"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy:398
+msgid ""
+"All morphological indicators have calculated and stored in 3 tables "
+"USR_INDICATORS, BLOCK_INDICATORS and BUILDING_INDICATORS."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy:24
+#, java-format
+msgid "Start importing the indicators for area : {1} -> Number {2} on {3}"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_zones.groovy:37
+msgid "The commune areas have been imported."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:28
+#, java-format
+msgid "Number of selected areas : {1}"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:31
+#, java-format
+msgid "Start processing for area : {1} -> Number {2} on {3}"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:39
+#, java-format
+msgid "End processing for area : {1}"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:42
+#, java-format
+msgid "Cannot import the data for the area : {1}."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:60
+msgid "The chain has been executed..."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:86
+#, java-format
+msgid "Download the MAPuCE model - {1} - used to classify the buildings."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:241
+msgid "Importing the USR"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:256
+msgid "Importing the buildings"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:278
+msgid "Importing the roads"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy:623
+msgid ""
+"The classification has been done. The tables FINAL_USR_TYPO and "
+"FINAL_BUILDING_TYPO have been created correctly"
+msgstr ""
+
+#: java/org/orbisgis/mapuce/WpsScriptsPackage.java:113
+#, java-format
+msgid "Unable to explore the URL {0}"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy4931351629970328177.tmp:1
+msgid "2-Import the USR, buildings and roads"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy4931351629970328177.tmp:2
+msgid ""
+"Import the data (USR, buildings and roads) needed to compute morphological "
+"indicators for a specified commune.<br> The imported data are stored into a "
+"remote database. Please contact info@orbigis.org to obtain an account. <br> "
+"Note : The list of available communes must be already imported. If not "
+"please execute the script to import all commune areas..."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy4931351629970328177.tmp:3
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy4931351629970328177.tmp:4
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:5
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:6
+#: resources/org/orbisgis/mapuce/scripts/import_zones.groovy2233688763722947675.tmp:5
+#: resources/org/orbisgis/mapuce/scripts/import_zones.groovy2233688763722947675.tmp:6
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy8066148078938992569.tmp:3
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy8066148078938992569.tmp:4
+msgid "Login to the database"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy4931351629970328177.tmp:5
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy4931351629970328177.tmp:6
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:7
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:8
+#: resources/org/orbisgis/mapuce/scripts/import_zones.groovy2233688763722947675.tmp:7
+#: resources/org/orbisgis/mapuce/scripts/import_zones.groovy2233688763722947675.tmp:8
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy8066148078938992569.tmp:5
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy8066148078938992569.tmp:6
+msgid "Password to the database"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy4931351629970328177.tmp:7
+msgid "Commune identifier"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy4931351629970328177.tmp:8
+msgid "Select the code insee of a commune to import the data."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy4931351629970328177.tmp:9
+#: resources/org/orbisgis/mapuce/scripts/classification.groovy1981180923836374444.tmp:3
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy1050899787745942313.tmp:3
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:13
+#: resources/org/orbisgis/mapuce/scripts/import_zones.groovy2233688763722947675.tmp:9
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy8066148078938992569.tmp:11
+msgid "Output message"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_data_zone.groovy4931351629970328177.tmp:10
+#: resources/org/orbisgis/mapuce/scripts/classification.groovy1981180923836374444.tmp:4
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy1050899787745942313.tmp:4
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:14
+#: resources/org/orbisgis/mapuce/scripts/import_zones.groovy2233688763722947675.tmp:10
+msgid "The output message"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/classification.groovy1981180923836374444.tmp:1
+msgid "4-Classify the BUILDING and USR features"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/classification.groovy1981180923836374444.tmp:2
+msgid ""
+"This process is used to classify the building and USR features using a "
+"RandomForest algorithm."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy1050899787745942313.tmp:1
+msgid "3-Compute morphological indicators"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/morphological_indicators.groovy1050899787745942313.tmp:2
+msgid ""
+"Compute a set of morphological indicators based on the french national "
+"vector database called BD Topo.<br> The indicators are computed at 3 levels "
+"of spatial unit : building, block, USR and stored in 3 tables.<br> <ul> "
+"<li>A building is the main geometry (output table name  : "
+"BUILDING_INDICATORS).</li> <li> A block represents the union of a set of "
+"touching geometry buildings (output table name  : BLOCK_INDICATORS).</li> "
+"<li> USR (Unité Spatiale de Référence – Reference Spatial Unit) is the "
+"smallest area that is surrounded by streets (output table name  : "
+"USR_INDICATORS).</li></ul><br>Note : Please use the extract metadata script "
+"in the toolbox to get some basic information on the indicators stored in the "
+"3 output tables."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:1
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:3
+msgid "Import computed indicators"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:2
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:4
+msgid ""
+"Import all indicators already computed and available in the Mapuce database. "
+"Please contact info@orbigis.org to obtain an account. <br> Note : The list "
+"of available communes must be already imported. If not please execute the "
+"script to import all commune areas..."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:9
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy8066148078938992569.tmp:7
+msgid "Spatial unit"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:10
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy8066148078938992569.tmp:8
+msgid ""
+"Select a column to obtain a list of area identifiers : code insee or  urban "
+"area names."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:11
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy8066148078938992569.tmp:9
+msgid "Spatial unit identifiers"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_indicators_mapuce.groovy5042341409871898629.tmp:12
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy8066148078938992569.tmp:10
+msgid "Select one or more  identifiers and start the script."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_zones.groovy2233688763722947675.tmp:1
+#: resources/org/orbisgis/mapuce/scripts/import_zones.groovy2233688763722947675.tmp:3
+msgid "1-Import commune areas"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/import_zones.groovy2233688763722947675.tmp:2
+#: resources/org/orbisgis/mapuce/scripts/import_zones.groovy2233688763722947675.tmp:4
+msgid ""
+"Import the commune areas table. <br> This table lists all communes for which "
+"the USR, buildings and roads data have been prepared.<br> The commune areas "
+"table is stored into a remote database. Please contact info@orbigis.org to "
+"obtain an account."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy8066148078938992569.tmp:1
+msgid "Complete geoprocessing chain"
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy8066148078938992569.tmp:2
+msgid ""
+"This script allows to chain all processes for a set of spatial units.<br>A "
+"spatial unit is a french commune area defined by a unique identifier called "
+"CODE_INSEE.<br>The user can select one of more spatial units based on a list "
+"of CODE_INSEE or a selection of unit area names.<br>If the user select a "
+"unit area a pre-process is done to return its corresponding list of "
+"CODE_INSEE.<br>For each spatial unit, 3 steps are executed : <ul> <li>1. "
+"Extract input data (USR, Buildings, Roads) from the Mapuce DataBase</"
+"li><li>2. Compute morphological indicators</li><li>3. Merge indicators into "
+"3 tables : final_building_indicators,final_block_indicators,"
+"final_usr_indicators </li></ul><br>Note:<br> The imported data are stored "
+"into a remote database. Please contact info@orbigis.org to obtain an "
+"account. <br> The list of available communes must be already imported to get "
+"the list of available unit areas or CODE_INSEE. If not please execute the "
+"script to import all commune areas..."
+msgstr ""
+
+#: resources/org/orbisgis/mapuce/scripts/mapuce_chain.groovy8066148078938992569.tmp:12
+msgid "The geoprocessing chain has been executed."
+msgstr ""

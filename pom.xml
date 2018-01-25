@@ -4,7 +4,7 @@
     <groupId>org.orbisgis</groupId>
     <artifactId>MApUCE_tools</artifactId>
     <name>MApUCE_tools</name>
-    <version>1.1.2</version>
+    <version>1.1.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <parent>
         <groupId>org.orbisgis</groupId>
@@ -59,6 +59,27 @@
                     </instructions>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.orbisgis.orbiswps</groupId>
+                <version>1.2.5-SNAPSHOT</version>
+                <executions>
+                    <execution>
+                        <id>convert-po-class</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>dist</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <artifactId>gettext-maven-plugin</artifactId>
+                <configuration>
+                    <sourceDirectory>${basedir}/src/main/</sourceDirectory>
+                    <poDirectory>src/main/resources/org/orbisgis/mapuce/translation/</poDirectory>
+                    <targetBundle>org.orbisgis.mapuce.Messages</targetBundle>
+                    <keywords>-ktr -kmarktr</keywords>
+                    <outputFormat>properties</outputFormat>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -87,19 +108,29 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.orbiswps</groupId>
-            <artifactId>server</artifactId>
+            <groupId>org.orbisgis.orbiswps</groupId>
+            <artifactId>service-api</artifactId>
             <version>5.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.orbiswps</groupId>
-            <artifactId>client</artifactId>
-            <version>5.1.0-SNAPSHOT</version>
+            <groupId>org.orbisgis.orbiswps</groupId>
+            <artifactId>gettext-maven-plugin</artifactId>
+            <version>1.2.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.orbisgis</groupId>
             <artifactId>r-script-engine</artifactId>
             <version>5.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>4.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.gettext-commons</groupId>
+            <artifactId>gettext-commons</artifactId>
+            <version>0.9.8</version>
         </dependency>
     </dependencies>
 </project>

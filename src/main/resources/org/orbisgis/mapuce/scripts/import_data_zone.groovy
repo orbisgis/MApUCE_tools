@@ -1,8 +1,8 @@
 package org.orbisgis.mapuce.scripts
 
-import org.orbiswps.groovyapi.input.*
-import org.orbiswps.groovyapi.output.*
-import org.orbiswps.groovyapi.process.*
+import org.orbisgis.orbiswps.groovyapi.input.*
+import org.orbisgis.orbiswps.groovyapi.output.*
+import org.orbisgis.orbiswps.groovyapi.process.*
 import javax.swing.JOptionPane;
 
 
@@ -24,7 +24,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
     login = login.trim();
     password = password.trim();
 
-    logger.warn "Importing the USR from the remote database"
+    logger.warn i18n.tr("Importing the USR from the remote database")
         
     sql.execute "DROP TABLE IF EXISTS USR_TEMP"
             def schemaFromRemoteDB = "lienss"	
@@ -41,7 +41,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
             sql.execute "CREATE  INDEX ON USR_MAPUCE(PK);"
             sql.execute "DROP TABLE USR_TEMP"
 
-            logger.warn "Importing the buildings from the remote database"
+            logger.warn i18n.tr("Importing the buildings from the remote database")
     sql.execute "DROP TABLE IF EXISTS BUILDINGS_TEMP"
             tableFromRemoteDB = "(SELECT a.IDZONE, a.THE_GEOM, a.HAUTEUR, a.IDILOT as PK_USR, a.PK, a.NB_NIV, a.HAUTEUR_CORRIGEE, a.INSEE_INDIVIDUS, a.THEME,a.PAI_BDTOPO,a.PAI_NATURE, b.CODE_INSEE  FROM lienss.BATI_TOPO a, lienss.ZONE_ETUDE b WHERE a.IDZONE = b.OGC_FID and b.CODE_INSEE=''"+codeInsee[0]+"'' and ST_NUMGEOMETRIES(a.the_geom)=1 and ST_ISEMPTY(a.the_geom)=false)"
     query = "CREATE LINKED TABLE BUILDINGS_TEMP ('org.orbisgis.postgis_jts.Driver', 'jdbc:postgresql_h2://ns380291.ip-94-23-250.eu:5432/mapuce'," 
@@ -58,7 +58,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
     sql.execute "CREATE INDEX ON BUILDINGS_MAPUCE(PK_USR)"
     sql.execute "DROP TABLE  BUILDINGS_TEMP"
 
-    logger.warn "Importing the roads from the remote database"
+    logger.warn i18n.tr("Importing the roads from the remote database")
     sql.execute "DROP TABLE IF EXISTS ROADS_TEMP"
     schemaFromRemoteDB = "ign_bd_topo_2014"
     tableFromRemoteDB = "(SELECT * FROM ign_bd_topo_2014.ROUTE WHERE INSEECOM_D=''"+codeInsee[0]+"'' OR INSEECOM_G=''"+codeInsee[0]+"'')"
@@ -72,7 +72,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
     sql.execute "CREATE SPATIAL INDEX ON ROADS_MAPUCE(THE_GEOM)"
     sql.execute "DROP TABLE IF EXISTS ROADS_TEMP"
     
-    logger.warn "Importing the geometry of the spatial unit"
+    logger.warn i18n.tr("Importing the geometry of the spatial unit")
     
     sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP, COMMUNE_MAPUCE"
     schemaFromRemoteDB = "lienss"
@@ -86,7 +86,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
     	
     sql.execute "DROP TABLE IF EXISTS COMMUNE_MAPUCE_TEMP"    
         
-    logger.warn "Importing the IRIS geometries"
+    logger.warn i18n.tr("Importing the IRIS geometries")
     sql.execute "DROP TABLE IF EXISTS IRIS_MAPUCE_TEMP, IRIS_MAPUCE"
     schemaFromRemoteDB = "lra"
     tableFromRemoteDB = "(SELECT * FROM lra.iris_date_fm_3 where depcom=''"+codeInsee[0]+"'')"
@@ -99,7 +99,7 @@ if(!login.isEmpty()&& !password.isEmpty()){
     sql.execute "DROP TABLE IF EXISTS IRIS_MAPUCE_TEMP"
         
     
-    literalOutput = "The data have been successfully imported."
+    literalOutput = i18n.tr("The data have been successfully imported.")
 }
 
 }
