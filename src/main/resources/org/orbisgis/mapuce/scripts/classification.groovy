@@ -58,7 +58,8 @@ def processing() {
     rEngine.put("model_path", file.getAbsolutePath())
     
     r = WpsScriptsPackage.class.getResourceAsStream("scripts/randomforest_typo.R")
-    
+
+    logger.warn i18n.tr("Start classification.")
     
     rEngine.eval(new InputStreamReader(r));
     
