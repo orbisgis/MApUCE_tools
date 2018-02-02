@@ -119,7 +119,7 @@ public class WpsScriptsPackage implements WpsScriptBundle {
         Map<ProcessMetadata.INTERNAL_METADATA, Object> metadataMap = new HashMap<>();
         metadataMap.put(ProcessMetadata.INTERNAL_METADATA.IS_REMOVABLE, false);
         metadataMap.put(ProcessMetadata.INTERNAL_METADATA.NODE_PATH, "MAPuCE");
-        URL[] icons = new URL[]{this.getClass().getResource(ICONS_RESOURCE_FOLDER_PATH+File.separator+ICON_NAME)};
+        URL[] icons = new URL[]{this.getClass().getResource(ICONS_RESOURCE_FOLDER_PATH+"/"+ICON_NAME)};
         metadataMap.put(ProcessMetadata.INTERNAL_METADATA.ICON_ARRAY, icons);
         return metadataMap;
     }
